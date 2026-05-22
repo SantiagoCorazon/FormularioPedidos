@@ -557,7 +557,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 
 <!-- TOTAL BAR -->
 <div class="total-bar" id="totalBar">
-  <div><div class="total-label">Total del pedido</div><div class="total-amount" id="totalAmount">$ 82.000</div></div>
+  <div><div class="total-label">Total del pedido</div><div class="total-amount" id="totalAmount">$ 0</div></div>
   <div class="btn-row">
     <button class="btn btn-secondary" id="btnAtras" onclick="irAtras()" style="display:none">← Atrás</button>
     <button class="btn-skip" id="btnSkip" style="display:none" onclick="irSiguiente(true)">Saltar este paso</button>
@@ -566,8 +566,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 </div>
 
 <script>
-const SUPABASE_URL = 'https://sbhbcgxmxnxyfuzggegj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiaGJjZ3hteG54eWZ1emdnZWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTI5MDEsImV4cCI6MjA5NDk2ODkwMX0.VgRnvGvKZzKJdAJ4hS4TzEZ9N79ckgHO_LjhdGgiqsc';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyW-tAm82ZtW8XN4W1g7uKxw8Nhowl0sivp_FU92hHcaMo3diZQmdSS1zizH0iORnXm/exec';
 const fmt = n => '$ ' + Math.max(0,Number(n)).toLocaleString('es-CO');
 const $ = id => document.getElementById(id);
 const today = () => new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
@@ -647,7 +646,7 @@ const ENVIOS = [
 document.addEventListener('DOMContentLoaded', () => {
   $('headerDate').textContent = today();
   // Warm up script
-  // ping removido — ahora usamos Supabase directo
+  fetch(SCRIPT_URL + '?action=ping').catch(()=>{});
 });
 
 // NAVIGATION
@@ -820,22 +819,8 @@ async function buscarTercero() {
   if(!doc) { alert('Ingresa un número de cédula o NIT.'); return; }
   $('searchTxt').textContent = '...';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${encodeURIComponent(doc)}&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const rows = await r.json();
-    const d = rows.length > 0
-      ? { encontrado: true, tercero: {
-          id: rows[0].id, tipoCliente: rows[0].tipocliente || 'Personal',
-          cedula: rows[0].numerodoc || '', nit: rows[0].nitempresa || '',
-          nombres: rows[0].nombres || '', apellidos: rows[0].apellidos || '',
-          razonSocial: rows[0].razonsocial || '', contacto: rows[0].contactoempresa || '',
-          direccion: rows[0].direccion || '', departamento: rows[0].departamento || '',
-          ciudad: rows[0].ciudad || '', celular: rows[0].telefono1 || rows[0].telefono2 || '',
-          telefono: rows[0].telefono1 || '', correo: rows[0].correo_principal || '',
-          correoFactura: rows[0].correoelectronica || '', correoInst: rows[0].correoinstitucional || ''
-        }}
-      : { encontrado: false };
+    const r = await fetch(`${SCRIPT_URL}?action=buscarTercero&cedula=${encodeURIComponent(doc)}`);
+    const d = await r.json();
     if(d.encontrado) {
       const t = d.tercero;
       S.esNuevo = false;
@@ -934,7 +919,7 @@ function renderAcomps(cat) {
   const cats = Object.keys(ACOMPS);
   $('acompTabs').innerHTML = cats.map(c => `<button class="atab${c===cat?' active':''}" onclick="renderAcomps('${c}')">${c}</button>`).join('');
   $('acompGrid').innerHTML = ACOMPS[cat].map((a,i) => `
-    <div class="acomp-card${S.acompanante&&S.acompanante.n===a.n?' sel':''}" onclick="selAcomp('${cat}',${i})">
+    <div class="acomp-card${(S.acompanantes||[]).some(x=>x.n===a.n)||(S.acompanante&&S.acompanante.n===a.n)?' sel':''}" onclick="selAcomp('${cat}',${i})">
       <img src="${a.img}" onerror="this.style.display='none'">
       <div class="acomp-info"><div class="acomp-nombre">${a.n}</div><div class="acomp-precio">+ ${fmt(a.p)}</div></div>
     </div>`).join('');
@@ -942,14 +927,26 @@ function renderAcomps(cat) {
 
 function selAcomp(cat, idx) {
   const a = ACOMPS[cat][idx];
-  if(S.acompanante && S.acompanante.n === a.n) {
-    S.acompanante = null;
-    $('acomp-sel').style.display = 'none';
+  // Inicializar lista de acompañantes si no existe
+  if(!S.acompanantes) S.acompanantes = [];
+  const existeIdx = S.acompanantes.findIndex(x => x.n === a.n);
+  if(existeIdx >= 0) {
+    // Si ya está, lo quita
+    S.acompanantes.splice(existeIdx, 1);
   } else {
-    S.acompanante = a;
-    $('acomp-nombre').textContent = a.n;
-    $('acomp-precio-txt').textContent = '+ '+fmt(a.p);
+    // Si no está, lo agrega
+    S.acompanantes.push(a);
+  }
+  // Mantener S.acompanante para compatibilidad (primer acompañante)
+  S.acompanante = S.acompanantes.length > 0 ? S.acompanantes[0] : null;
+  if(S.acompanantes.length > 0) {
+    const nombres = S.acompanantes.map(x => x.n).join(', ');
+    const total = S.acompanantes.reduce((sum, x) => sum + x.p, 0);
+    $('acomp-nombre').textContent = nombres;
+    $('acomp-precio-txt').textContent = '+ '+fmt(total);
     $('acomp-sel').style.display = 'block';
+  } else {
+    $('acomp-sel').style.display = 'none';
   }
   renderAcomps(cat);
   actualizarTotal();
@@ -974,9 +971,11 @@ function selEnvio(label, precio) {
 
 // TOTAL
 function getTotal() {
-  let t = S.esDonacion ? (S.valorDonacion||0) : PRECIO_BASE;
-  if(!S.esDonacion && S.empaque) t += S.empaque.precio;
-  if(!S.esDonacion && S.acompanante) t += S.acompanante.p;
+  if(S.esDonacion) return Math.max(0, S.valorDonacion||0);
+  // Solo suma el bono si ya se seleccionó un empaque (paso 4 completado)
+  let t = S.empaque ? PRECIO_BASE : 0;
+  if(S.empaque) t += S.empaque.precio;
+  if(S.acompanantes && S.acompanantes.length > 0) t += S.acompanantes.reduce((sum, x) => sum + x.p, 0); else if(S.acompanante) t += S.acompanante.p;
   if(S.envio) t += S.envio.p;
   return Math.max(0, t);
 }
@@ -1067,9 +1066,9 @@ async function confirmarPedido() {
       firma:S.firma, observaciones:S.notas
     },
     carrito:[
-      {nombre:S.esDonacion?'Donación':`Bono ${S.esPesame?'Pésame':'Toda Ocasión'}`,precio:S.esDonacion?0:PRECIO_BASE,qty:1,cat:'Bono'},
-      ...(S.empaque?[{nombre:'Empaque: '+S.empaque.nombre,precio:S.empaque.precio,qty:1,cat:'Empaque'}]:[]),
-      ...(S.acompanante?[{nombre:S.acompanante.n,precio:S.acompanante.p,qty:1,cat:'Acompañante'}]:[]),
+      {nombre:S.esDonacion?'Donación':`Bono ${S.esPesame?'Pésame':'Toda Ocasión'}`,precio:S.esDonacion?0:PRECIO_BASE,qty:1,cat:'Bono',sub:S.motivo||''},
+      ...(S.empaque?[{nombre:'Empaque: '+S.empaque.nombre,precio:S.empaque.precio,qty:1,cat:'Empaque',sub:S.empaque.nombre}]:[]),
+      ...(S.acompanantes&&S.acompanantes.length>0?S.acompanantes.map(a=>({nombre:a.n,precio:a.p,qty:1,cat:'Acompañante',sub:a.n})):S.acompanante?[{nombre:S.acompanante.n,precio:S.acompanante.p,qty:1,cat:'Acompañante',sub:S.acompanante.n}]:[]),
     ],
     envio:S.envio||{l:'Sin definir',p:0},
     subtotal:getTotal()-(S.envio?.p||0),
@@ -1085,100 +1084,7 @@ async function confirmarPedido() {
       const b64 = await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
       payload.comprobante = {nombre:file.name,tipo:file.type,datos:b64};
     }
-    // Llamada directa a Supabase
-    const fecha = new Date();
-    const fechaStr = fecha.toISOString().split('T')[0];
-    const horaStr = fecha.toTimeString().slice(0,8);
-
-    // 1. Buscar o crear tercero
-    let terceroId = null;
-    const docNum = (payload.comprador.cedula || payload.comprador.nit || '').replace(/\D/g,'');
-    if (docNum) {
-      const tRes = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${docNum}&select=id&limit=1`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const tRows = await tRes.json();
-      if (tRows.length > 0) {
-        terceroId = tRows[0].id;
-      } else {
-        const c = payload.comprador;
-        const tNew = await fetch(`${SUPABASE_URL}/rest/v1/terceros`, {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-                     'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            tipodoc: c.tipo === 'Empresa' ? 'NIT' : 'CC',
-            numerodoc: docNum, tipocliente: c.tipo || 'Personal',
-            nombres: c.nombres || '', apellidos: c.apellidos || '',
-            nombrecompleto: c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'') + ' ' + (c.apellidos||'')).trim(),
-            razonsocial: c.razonSocial || '', nitempresa: c.nit || '',
-            contactoempresa: c.contacto || '', direccion: c.direccion || '',
-            departamento: c.departamento || '', ciudad: c.ciudad || '',
-            telefono1: c.celular || c.telefono || '', correo_principal: c.correo || '',
-            correoelectronica: c.correoFactura || '', fuente: 'Formulario Web'
-          })
-        });
-        const tNewData = await tNew.json();
-        if (tNewData && tNewData[0]) terceroId = tNewData[0].id;
-      }
-    }
-
-    // 2. Insertar pedido
-    const c = payload.comprador;
-    const nombreComprador = c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'') + ' ' + (c.apellidos||'')).trim();
-    const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-                 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        nro_pedido: payload.orderNum, fecha: fechaStr, hora: horaStr,
-        canal: payload.canal || 'Formulario Web', tipo_cliente: c.tipo || 'Personal',
-        tercero_id: terceroId, id_nit_comprador: docNum,
-        nombre_razon_social: nombreComprador,
-        direccion_comprador: c.direccion || '', departamento: c.departamento || '',
-        ciudad_comprador: c.ciudad || '', telefono_comprador: c.celular || c.telefono || '',
-        correo_comprador: c.correo || '', correo_factura: c.correoFactura || '',
-        nombres_destinatario: payload.destinatario.nombres || '',
-        apellidos_destinatario: payload.destinatario.apellidos || '',
-        telefono_destinatario: payload.destinatario.celular || '',
-        ciudad_entrega: payload.destinatario.ciudad || '',
-        direccion_entrega: payload.destinatario.direccion || '',
-        referencia_entrega: payload.destinatario.referencia || '',
-        ocasion: payload.quienRecibe.ocasion || '',
-        protagonista: payload.quienRecibe.nombre || '',
-        detalle_protagonista: payload.quienRecibe.fallecido || '',
-        mensaje: payload.quienRecibe.mensaje || '',
-        firma_mensaje: payload.quienRecibe.firma || '',
-        observaciones: payload.quienRecibe.observaciones || '',
-        envio_descripcion: payload.envio ? payload.envio.label : '',
-        costo_envio: payload.totalEnvio || 0,
-        subtotal_productos: payload.subtotal || 0,
-        total_pedido: payload.total || 0,
-        metodo_pago: payload.metodoPago || '',
-        atendido_por: payload.atendidoPor || '',
-        estado: 'Pendiente'
-      })
-    });
-    const pedidoData = await pedidoRes.json();
-    const pedidoId = pedidoData && pedidoData[0] ? pedidoData[0].id : null;
-
-    // 3. Insertar detalle
-    if (pedidoId && payload.carrito) {
-      for (const item of payload.carrito) {
-        const subtLinea = item.esDonacion ? (item.valorLibre || 0) : (item.precio || 0) * (item.qty || 1);
-        await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-                     'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pedido_id: pedidoId, nro_pedido: payload.orderNum, fecha: fechaStr,
-            categoria: item.cat || '', subcategoria: item.sub || '',
-            producto: item.nombre || '', cantidad: item.esDonacion ? 1 : (item.qty || 1),
-            precio_unitario: item.precio || 0, subtotal_linea: subtLinea
-          })
-        });
-      }
-    }
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
   } catch(e){console.warn(e)}
 
   $('loadingOverlay').classList.remove('show');
