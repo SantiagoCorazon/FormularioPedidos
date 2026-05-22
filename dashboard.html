@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Santiago Corazón</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#E8176B;--pink-dk:#C4105A;--pink-lt:#FDE8F2;
+  --ink:#1A0A10;--ink-mid:#5A3A48;--ink-lt:#9A7A88;
+  --border:#F0D8E4;--cream:#FDF8FB;--white:#fff;
+  --shadow:0 4px 24px rgba(232,23,107,.10);--radius:12px;
+  --font:'Poppins',Arial,sans-serif;
+  --sidebar:240px;
+}
+body{background:var(--cream);font-family:var(--font);color:var(--ink);min-height:100vh}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pink-lt) 0%,var(--white) 60%)}
+.login-box{background:var(--white);border-radius:20px;box-shadow:0 8px 48px rgba(232,23,107,.15);padding:48px 40px;width:100%;max-width:400px;text-align:center}
+.login-logo{height:60px;margin-bottom:20px}
+.login-title{font-size:1.4rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+.login-sub{font-size:.82rem;color:var(--ink-lt);margin-bottom:28px}
+.login-field{text-align:left;margin-bottom:16px}
+.login-field label{font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}
+.login-field input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.88rem;outline:none;transition:all .2s}
+.login-field input:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(232,23,107,.08)}
+.btn-login{width:100%;padding:13px;background:var(--pink);color:var(--white);border:none;border-radius:8px;font-family:var(--font);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-login:hover{background:var(--pink-dk);transform:translateY(-1px)}
+.login-error{background:#fde8e8;border:1px solid #f5a0a0;color:#c0392b;border-radius:8px;padding:10px 14px;font-size:.82rem;margin-bottom:16px;display:none}
+
+/* ── LAYOUT ── */
+.app{display:none;min-height:100vh}
+.app.show{display:flex}
+.sidebar{width:var(--sidebar);background:var(--ink);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo img{height:36px}
+.sidebar-user{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-user-name{font-size:.82rem;font-weight:600;color:var(--white)}
+.sidebar-user-rol{font-size:.7rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em}
+.sidebar-nav{flex:1;padding:16px 0}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.7);cursor:pointer;transition:all .2s;font-size:.85rem;font-weight:500;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:var(--white)}
+.nav-item.active{background:rgba(232,23,107,.2);color:var(--pink);border-left-color:var(--pink)}
+.nav-icon{font-size:1.1rem;width:20px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.btn-logout{width:100%;padding:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:none;border-radius:8px;font-family:var(--font);font-size:.8rem;cursor:pointer;transition:all .2s}
+.btn-logout:hover{background:rgba(232,23,107,.3);color:var(--white)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;padding:28px;min-height:100vh}
+.page{display:none}
+.page.active{display:block;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-size:1.5rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+.page-sub{font-size:.83rem;color:var(--ink-lt);margin-bottom:24px}
+
+/* ── CARDS MÉTRICAS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.metric-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--pink)}
+.metric-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-lt);font-weight:600;margin-bottom:6px}
+.metric-value{font-size:1.8rem;font-weight:700;color:var(--ink)}
+.metric-sub{font-size:.75rem;color:var(--ink-lt);margin-top:4px}
+
+/* ── TABLA ── */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:1rem;font-weight:600;color:var(--ink)}
+.card-body{padding:20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--cream);padding:10px 12px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mid);font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle}
+tr:hover td{background:var(--pink-lt)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-pendiente{background:#fff3e0;color:#e65100}
+.badge-preparacion{background:#e3f2fd;color:#1565c0}
+.badge-despachado{background:#f3e5f5;color:#6a1b9a}
+.badge-entregado{background:#e8f5e9;color:#2e7d32}
+.badge-cancelado{background:#fde8e8;color:#c0392b}
+
+/* ── BOTONES ── */
+.btn{padding:10px 20px;border-radius:8px;font-family:var(--font);font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--pink);color:var(--white)}
+.btn-primary:hover{background:var(--pink-dk)}
+.btn-secondary{background:var(--white);color:var(--ink-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--ink-mid)}
+.btn-success{background:#2e7d32;color:var(--white)}
+.btn-success:hover{background:#1b5e20}
+.btn-sm{padding:6px 12px;font-size:.75rem}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field.col-full{grid-column:1/-1}
+.form-field label{font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em}
+.form-field input,.form-field select,.form-field textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none;transition:all .2s;background:var(--cream)}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--pink);background:var(--white)}
+.form-field textarea{resize:vertical;min-height:80px}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,10,16,.5);z-index:500;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--white);border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+.modal-sub{font-size:.82rem;color:var(--ink-lt);margin-bottom:20px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── LOADING ── */
+.loading{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── SEARCH ── */
+.search-bar{display:flex;gap:10px;margin-bottom:16px}
+.search-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none}
+.search-input:focus{border-color:var(--pink)}
+
+/* ── PAGINACIÓN ── */
+.pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:12px}
+.pag-btn{padding:6px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);cursor:pointer;font-size:.78rem;font-family:var(--font)}
+.pag-btn.active{background:var(--pink);color:var(--white);border-color:var(--pink)}
+.pag-btn:hover:not(.active){border-color:var(--pink)}
+
+/* ── TOGGLE ── */
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:22px;cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;transition:.3s}
+.toggle input:checked + .toggle-slider{background:var(--pink)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:var(--white);padding:12px 20px;border-radius:10px;font-size:.85rem;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:#2e7d32}
+.toast.error{background:#c0392b}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .main{margin-left:0}
+  .metrics{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- LOGIN -->
+<!-- ══════════════════════════════════════════ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <img src="https://santiagocorazon.org/cdn/shop/files/logo_2x_bbc620f1-38c8-4061-b2f2-1f87b357546e.png?v=1614736127&width=200" class="login-logo" onerror="this.style.display='none'">
+    <div class="login-title">Dashboard Administrativo</div>
+    <div class="login-sub">Ingresa tus credenciales para continuar</div>
+    <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
+    <div class="login-field">
+      <label>Correo electrónico</label>
+      <input type="email" id="loginEmail" placeholder="tu@santiagocorazon.org" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn-login" onclick="login()" id="btnLogin">Ingresar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- APP -->
+<!-- ══════════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://santiagocorazon.org/cdn/shop/files/logo_2x_bbc620f1-38c8-4061-b2f2-1f87b357546e.png?v=1614736127&width=200" onerror="this.style.display='none'" style="filter:brightness(0) invert(1)">
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="sidebarName">Cargando...</div>
+      <div class="sidebar-user-rol" id="sidebarRol">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="irA('inicio')"><span class="nav-icon">🏠</span> Inicio</div>
+      <div class="nav-item" onclick="irA('pedidos')"><span class="nav-icon">📦</span> Pedidos</div>
+      <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
+      <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
+      <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
+      <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
+      <div class="nav-item" onclick="exportarExcel()"><span class="nav-icon">📥</span> Exportar a Excel</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- INICIO -->
+    <div class="page active" id="page-inicio">
+      <div class="page-title">Buen día ❤</div>
+      <div class="page-sub" id="sub-inicio">Resumen del sistema</div>
+      <div class="metrics" id="metricsGrid"></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Últimos 10 pedidos</div>
+          <button class="btn btn-secondary btn-sm" onclick="irA('pedidos')">Ver todos →</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table id="tablaRecientes"><tbody><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div class="page" id="page-pedidos">
+      <div class="page-title">Pedidos</div>
+      <div class="page-sub">Todos los pedidos registrados en el sistema</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar" style="margin:0;flex:1">
+            <input class="search-input" id="searchPedidos" placeholder="Buscar por N° pedido, nombre, ciudad..." oninput="filtrarPedidos()">
+            <select id="filtrEstado" onchange="filtrarPedidos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+              <option value="">Todos los estados</option>
+              <option>Pendiente</option>
+              <option>En preparación</option>
+              <option>Despachado</option>
+              <option>Entregado</option>
+              <option>Cancelado</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table id="tablaPedidos">
+            <thead><tr>
+              <th>N° Pedido</th><th>Fecha</th><th>Cliente</th>
+              <th>Ciudad</th><th>Total</th><th>Canal</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyPedidos"><tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+          <div class="pagination" id="pagPedidos"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="page" id="page-terceros">
+      <div class="page-title">Clientes y Benefactores</div>
+      <div class="page-sub">Maestro único de terceros</div>
+      <div class="card">
+        <div class="card-header">
+          <input class="search-input" id="searchTerceros" placeholder="Buscar por nombre, cédula, correo..." oninput="filtrarTerceros()" style="max-width:400px">
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>ID</th><th>Documento</th><th>Nombre / Razón Social</th>
+              <th>Ciudad</th><th>Teléfono</th><th>Correo</th><th>Tipo</th>
+            </tr></thead>
+            <tbody id="bodyTerceros"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+          <div class="pagination" id="pagTerceros"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATÁLOGO -->
+    <div class="page" id="page-catalogo">
+      <div class="page-title">Catálogo de Productos</div>
+      <div class="page-sub">Gestiona los productos, bonos y empaques del formulario</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Productos activos</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalProducto()">+ Nuevo producto</button>
+        </div>
+        <div class="card-body">
+          <div class="search-bar">
+            <input class="search-input" id="searchCatalogo" placeholder="Buscar producto..." oninput="filtrarCatalogo()">
+            <select id="filtrTipo" onchange="filtrarCatalogo()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+              <option value="">Todos los tipos</option>
+              <option value="bono_base">Bonos Base</option>
+              <option value="empaque">Empaques</option>
+              <option value="acompanante">Acompañantes</option>
+              <option value="empresarial">Empresarial</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Imagen</th><th>Nombre</th><th>Tipo</th><th>Subcategoría</th>
+              <th>Precio</th><th>Activo</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyCatalogo"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPAÑAS -->
+    <div class="page" id="page-campanas">
+      <div class="page-title">Campañas de Donación</div>
+      <div class="page-sub">Gestiona las campañas activas que aparecen en el formulario</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Campañas</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalCampana()">+ Nueva campaña</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Nombre</th><th>Descripción</th><th>Meta</th>
+              <th>Inicio</th><th>Fin</th><th>Activa</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyCampanas"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="page" id="page-usuarios">
+      <div class="page-title">Usuarios del Dashboard</div>
+      <div class="page-sub">Solo visible para administradores</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Usuarios</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Nombre</th><th>Email</th><th>Rol</th><th>Activo</th><th>Último acceso</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyUsuarios"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════ -->
+<!-- MODALES -->
+<!-- ══════════════════════════════════════════ -->
+
+<!-- Modal Producto -->
+<div class="modal-overlay" id="modalProducto">
+  <div class="modal">
+    <div class="modal-title" id="modalProdTitle">Nuevo Producto</div>
+    <div class="modal-sub">Completa los datos del producto</div>
+    <input type="hidden" id="prod_id">
+    <div class="form-grid">
+      <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="prod_nombre" placeholder="Nombre del producto"></div>
+      <div class="form-field"><label>Tipo <span style="color:var(--pink)">*</span></label>
+        <select id="prod_tipo">
+          <option value="bono_base">Bono Base</option>
+          <option value="empaque">Empaque</option>
+          <option value="acompanante">Acompañante</option>
+          <option value="empresarial">Empresarial</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Subcategoría</label><input type="text" id="prod_sub" placeholder="Ej: Plantas, Velas, Línea de Corazón"></div>
+      <div class="form-field"><label>Precio (COP) <span style="color:var(--pink)">*</span></label><input type="number" id="prod_precio" placeholder="82000" min="0"></div>
+      <div class="form-field"><label>Orden</label><input type="number" id="prod_orden" placeholder="1" min="1"></div>
+      <div class="form-field col-full"><label>URL de imagen</label><input type="text" id="prod_img" placeholder="https://..."></div>
+      <div class="form-field col-full">
+        <label style="display:flex;align-items:center;gap:10px;text-transform:none;font-size:.85rem">
+          <input type="checkbox" id="prod_virtual" style="width:auto;accent-color:var(--pink)">
+          Es producto virtual (sin envío físico)
+        </label>
+      </div>
+    </div>
+    <div id="prod_img_preview" style="margin-top:12px;display:none">
+      <img id="prod_img_thumb" style="height:100px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalProducto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Campaña -->
+<div class="modal-overlay" id="modalCampana">
+  <div class="modal">
+    <div class="modal-title" id="modalCampTitle">Nueva Campaña</div>
+    <div class="modal-sub">Las campañas activas aparecen en el formulario de donación</div>
+    <input type="hidden" id="camp_id">
+    <div class="form-grid">
+      <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="camp_nombre" placeholder="Nombre de la campaña"></div>
+      <div class="form-field col-full"><label>Descripción</label><textarea id="camp_desc" placeholder="Describe el objetivo de la campaña..."></textarea></div>
+      <div class="form-field"><label>Meta (COP)</label><input type="number" id="camp_meta" placeholder="1000000" min="0"></div>
+      <div class="form-field"><label>URL de imagen</label><input type="text" id="camp_img" placeholder="https://..."></div>
+      <div class="form-field"><label>Fecha inicio</label><input type="date" id="camp_inicio"></div>
+      <div class="form-field"><label>Fecha fin</label><input type="date" id="camp_fin"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalCampana')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCampana()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Usuario -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-title">Nuevo Usuario</div>
+    <div class="modal-sub">El usuario podrá acceder al Dashboard con estas credenciales</div>
+    <input type="hidden" id="usr_id">
+    <div class="form-grid">
+      <div class="form-field"><label>Nombre completo <span style="color:var(--pink)">*</span></label><input type="text" id="usr_nombre" placeholder="Nombre"></div>
+      <div class="form-field"><label>Email <span style="color:var(--pink)">*</span></label><input type="email" id="usr_email" placeholder="correo@santiagocorazon.org"></div>
+      <div class="form-field"><label>Contraseña <span style="color:var(--pink)">*</span></label><input type="password" id="usr_pass" placeholder="Mínimo 8 caracteres"></div>
+      <div class="form-field"><label>Rol</label>
+        <select id="usr_rol">
+          <option value="operador">Operador — ve pedidos y clientes</option>
+          <option value="admin">Administrador — acceso total</option>
+          <option value="consulta">Consulta — solo lectura</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalUsuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarUsuario()">Crear usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle pedido -->
+<div class="modal-overlay" id="modalPedido">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-title">Detalle del Pedido</div>
+    <div id="detallePedidoContent" style="font-size:.85rem;color:var(--ink-mid);line-height:1.8"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalPedido')">Cerrar</button>
+      <select id="cambiarEstado" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem;outline:none">
+        <option value="">Cambiar estado...</option>
+        <option>Pendiente</option>
+        <option>En preparación</option>
+        <option>Despachado</option>
+        <option>Entregado</option>
+        <option>Cancelado</option>
+      </select>
+      <button class="btn btn-primary" onclick="actualizarEstado()">Actualizar estado</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const SUPABASE_URL = 'https://sbhbcgxmxnxyfuzggegj.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiaGJjZ3hteG54eWZ1emdnZWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTI5MDEsImV4cCI6MjA5NDk2ODkwMX0.VgRnvGvKZzKJdAJ4hS4TzEZ9N79ckgHO_LjhdGgiqsc';
+const SUPABASE_SRK  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiaGJjZ3hteG54eWZ1emdnZWdqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTM5MjkwMSwiZXhwIjoyMDk0OTY4OTAxfQ.2_fOKHCoQqQsI2SuvvgTn_kOMCgYKCc2gEl3ewSRED4';
+
+const fmt = n => '$ ' + Number(n||0).toLocaleString('es-CO');
+const $ = id => document.getElementById(id);
+let usuarioActual = null;
+let pedidoActual = null;
+let todosLosPedidos = [];
+let todosLosTerceros = [];
+let todoElCatalogo = [];
+
+// ============================================================
+// AUTENTICACIÓN (simple — hash en cliente)
+// ============================================================
+async function login() {
+  const email = $('loginEmail').value.trim().toLowerCase();
+  const pass  = $('loginPass').value;
+  if (!email || !pass) { mostrarLoginError('Completa todos los campos.'); return; }
+
+  $('btnLogin').innerHTML = '<div class="loading"></div>';
+  $('btnLogin').disabled = true;
+
+  try {
+    // Buscar usuario por email con service role
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?email=eq.${encodeURIComponent(email)}&activo=eq.true&limit=1`, {
+      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` }
+    });
+    const users = await r.json();
+
+    if (!users.length) {
+      mostrarLoginError('Usuario no encontrado o inactivo.');
+      resetBtn();
+      return;
+    }
+
+    const user = users[0];
+
+    // Verificación simple de contraseña (en producción usar bcrypt)
+    // Por ahora verificamos contra una contraseña hasheada manualmente
+    const passOk = await verificarPassword(pass, user.password_hash, email);
+
+    if (!passOk) {
+      mostrarLoginError('Contraseña incorrecta.');
+      resetBtn();
+      return;
+    }
+
+    // Actualizar último acceso
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ultimo_acceso: new Date().toISOString() })
+    });
+
+    usuarioActual = user;
+    sessionStorage.setItem('dashboard_user', JSON.stringify(user));
+    iniciarApp();
+
+  } catch(e) {
+    mostrarLoginError('Error de conexión. Intenta de nuevo.');
+    resetBtn();
+  }
+}
+
+async function verificarPassword(pass, hash, email) {
+  // Sistema simple: la contraseña por defecto es 'Santiago2026*'
+  // En el hash guardamos simplemente un marcador — en producción usar bcrypt
+  // Para usuarios nuevos, comparamos directamente
+  if (pass === 'Santiago2026*') return true;
+  // Para contraseñas personalizadas, comparar con hash simple
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + email);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hash === hashHex;
+}
+
+function mostrarLoginError(msg) {
+  const el = $('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetBtn() {
+  $('btnLogin').innerHTML = 'Ingresar';
+  $('btnLogin').disabled = false;
+}
+
+function logout() {
+  sessionStorage.removeItem('dashboard_user');
+  usuarioActual = null;
+  $('app').classList.remove('show');
+  $('loginWrap').style.display = 'flex';
+  $('loginError').style.display = 'none';
+  $('loginEmail').value = '';
+  $('loginPass').value = '';
+}
+
+// ============================================================
+// INICIAR APP
+// ============================================================
+function iniciarApp() {
+  $('loginWrap').style.display = 'none';
+  $('app').classList.add('show');
+  $('sidebarName').textContent = usuarioActual.nombre;
+  $('sidebarRol').textContent = usuarioActual.rol === 'admin' ? 'Administrador' : usuarioActual.rol === 'operador' ? 'Operador' : 'Consulta';
+  if (usuarioActual.rol === 'admin') $('nav-usuarios').style.display = 'flex';
+  cargarInicio();
+}
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+function irA(pagina) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  $(`page-${pagina}`)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().toLowerCase().includes(pagina === 'inicio' ? 'inicio' : pagina === 'pedidos' ? 'pedido' : pagina === 'terceros' ? 'cliente' : pagina === 'catalogo' ? 'catálogo' : pagina === 'campanas' ? 'campaña' : pagina === 'usuarios' ? 'usuario' : '')) n.classList.add('active');
+  });
+  if (pagina === 'inicio') cargarInicio();
+  if (pagina === 'pedidos') cargarPedidos();
+  if (pagina === 'terceros') cargarTerceros();
+  if (pagina === 'catalogo') cargarCatalogo();
+  if (pagina === 'campanas') cargarCampanas();
+  if (pagina === 'usuarios') cargarUsuarios();
+}
+
+// ============================================================
+// INICIO — MÉTRICAS
+// ============================================================
+async function cargarInicio() {
+  $('sub-inicio').textContent = `Hoy es ${new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+  try {
+    const [rPed, rTerc, rPend] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=id`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?select=id`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.Pendiente&select=id`, { headers: hdrs() }),
+    ]);
+    const [pedidos, terceros, pendientes] = await Promise.all([rPed.json(), rTerc.json(), rPend.json()]);
+
+    // Pedidos hoy
+    const hoy = new Date().toISOString().split('T')[0];
+    const rHoy = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?fecha=eq.${hoy}&select=id`, { headers: hdrs() });
+    const hoyData = await rHoy.json();
+
+    $('metricsGrid').innerHTML = `
+      <div class="metric-card"><div class="metric-label">Total Pedidos</div><div class="metric-value">${pedidos.length.toLocaleString()}</div><div class="metric-sub">Registrados en el sistema</div></div>
+      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${pendientes.length}</div><div class="metric-sub">Por procesar</div></div>
+      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${hoyData.length}</div><div class="metric-sub">${hoy}</div></div>
+      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${terceros.length.toLocaleString()}</div><div class="metric-sub">En el maestro</div></div>
+    `;
+
+    // Últimos 10 pedidos
+    const rRec = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=10`, { headers: hdrs() });
+    const recientes = await rRec.json();
+    $('tablaRecientes').innerHTML = `
+      <thead><tr><th>N° Pedido</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Canal</th><th>Estado</th></tr></thead>
+      <tbody>${recientes.map(p => `<tr>
+        <td><strong>${p.nro_pedido||'—'}</strong></td>
+        <td>${p.fecha||'—'}</td>
+        <td>${p.nombre_razon_social||'—'}</td>
+        <td>${fmt(p.total_pedido)}</td>
+        <td>${p.canal||'—'}</td>
+        <td><span class="badge badge-${(p.estado||'').toLowerCase().replace(' ','-').replace('ó','o').replace('é','e')}">${p.estado||'—'}</span></td>
+      </tr>`).join('')}</tbody>`;
+  } catch(e) { console.error(e); }
+}
+
+// ============================================================
+// PEDIDOS
+// ============================================================
+async function cargarPedidos() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc`, { headers: hdrs() });
+  todosLosPedidos = await r.json();
+  renderPedidos(todosLosPedidos);
+}
+
+function filtrarPedidos() {
+  const q = $('searchPedidos').value.toLowerCase();
+  const est = $('filtrEstado').value;
+  const filtrados = todosLosPedidos.filter(p =>
+    (!q || (p.nro_pedido||'').toLowerCase().includes(q) || (p.nombre_razon_social||'').toLowerCase().includes(q) || (p.ciudad_comprador||'').toLowerCase().includes(q)) &&
+    (!est || p.estado === est)
+  );
+  renderPedidos(filtrados);
+}
+
+function renderPedidos(lista) {
+  $('bodyPedidos').innerHTML = lista.length ? lista.map(p => `<tr>
+    <td><strong>${p.nro_pedido||'—'}</strong></td>
+    <td>${p.fecha||'—'}</td>
+    <td>${p.nombre_razon_social||'—'}</td>
+    <td>${p.ciudad_comprador||'—'}</td>
+    <td>${fmt(p.total_pedido)}</td>
+    <td>${p.canal||'—'}</td>
+    <td><span class="badge badge-${badgeClass(p.estado)}">${p.estado||'—'}</span></td>
+    <td><button class="btn btn-secondary btn-sm" onclick="verPedido(${p.id})">Ver</button></td>
+  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron pedidos</td></tr>';
+}
+
+async function verPedido(id) {
+  const p = todosLosPedidos.find(x => x.id === id);
+  if (!p) return;
+  pedidoActual = p;
+  const rDet = await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?pedido_id=eq.${id}`, { headers: hdrs() });
+  const detalle = await rDet.json();
+  $('cambiarEstado').value = p.estado || '';
+  $('detallePedidoContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div><strong>N° Pedido:</strong> ${p.nro_pedido}<br><strong>Fecha:</strong> ${p.fecha} ${p.hora||''}<br><strong>Canal:</strong> ${p.canal||'—'}<br><strong>Estado:</strong> ${p.estado||'—'}</div>
+      <div><strong>Cliente:</strong> ${p.nombre_razon_social||'—'}<br><strong>Tel:</strong> ${p.telefono_comprador||'—'}<br><strong>Ciudad:</strong> ${p.ciudad_comprador||'—'}<br><strong>Correo:</strong> ${p.correo_comprador||'—'}</div>
+      <div><strong>Destinatario:</strong> ${p.nombres_destinatario||''} ${p.apellidos_destinatario||''}<br><strong>Tel:</strong> ${p.telefono_destinatario||'—'}<br><strong>Ciudad entrega:</strong> ${p.ciudad_entrega||'—'}<br><strong>Dirección:</strong> ${p.direccion_entrega||'—'}</div>
+      <div><strong>Ocasión:</strong> ${p.ocasion||'—'}<br><strong>Para:</strong> ${p.protagonista||'—'}<br><strong>Pago:</strong> ${p.metodo_pago||'—'}<br><strong>Total:</strong> <strong style="color:var(--pink)">${fmt(p.total_pedido)}</strong></div>
+    </div>
+    ${p.mensaje?`<div style="background:var(--pink-lt);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-style:italic">"${p.mensaje}"${p.firma_mensaje?' — '+p.firma_mensaje:''}</div>`:''}
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead><tr style="background:var(--cream)"><th style="padding:8px;text-align:left;border-bottom:1px solid var(--border)">Producto</th><th style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">Precio</th></tr></thead>
+      <tbody>${detalle.map(d=>`<tr><td style="padding:8px;border-bottom:1px solid var(--border)">${d.categoria||''} — ${d.producto||''} (x${d.cantidad||1})</td><td style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">${fmt(d.subtotal_linea)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td style="padding:8px;font-weight:700">TOTAL</td><td style="padding:8px;text-align:right;font-weight:700;color:var(--pink)">${fmt(p.total_pedido)}</td></tr></tfoot>
+    </table>`;
+  abrirModal('modalPedido');
+}
+
+async function actualizarEstado() {
+  const nuevoEstado = $('cambiarEstado').value;
+  if (!nuevoEstado || !pedidoActual) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoActual.id}`, {
+    method: 'PATCH',
+    headers: { ...hdrs(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estado: nuevoEstado })
+  });
+  toast('Estado actualizado', 'success');
+  cerrarModal('modalPedido');
+  cargarPedidos();
+}
+
+// ============================================================
+// TERCEROS
+// ============================================================
+async function cargarTerceros() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=500`, { headers: hdrs() });
+  todosLosTerceros = await r.json();
+  renderTerceros(todosLosTerceros);
+}
+
+function filtrarTerceros() {
+  const q = $('searchTerceros').value.toLowerCase();
+  const filtrados = todosLosTerceros.filter(t =>
+    (t.nombrecompleto||'').toLowerCase().includes(q) ||
+    (t.numerodoc||'').includes(q) ||
+    (t.correo_principal||'').toLowerCase().includes(q) ||
+    (t.razonsocial||'').toLowerCase().includes(q)
+  );
+  renderTerceros(filtrados);
+}
+
+function renderTerceros(lista) {
+  $('bodyTerceros').innerHTML = lista.length ? lista.map(t => `<tr>
+    <td>${t.id}</td>
+    <td>${t.tipodoc||''} ${t.numerodoc||''}</td>
+    <td><strong>${t.nombrecompleto||t.razonsocial||'—'}</strong></td>
+    <td>${t.ciudad||'—'}</td>
+    <td>${t.telefono1||'—'}</td>
+    <td>${t.correo_principal||'—'}</td>
+    <td>${t.tipocliente||'—'}</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron clientes</td></tr>';
+}
+
+// ============================================================
+// CATÁLOGO
+// ============================================================
+async function cargarCatalogo() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrs() });
+  todoElCatalogo = await r.json();
+  renderCatalogo(todoElCatalogo);
+}
+
+function filtrarCatalogo() {
+  const q = $('searchCatalogo').value.toLowerCase();
+  const tipo = $('filtrTipo').value;
+  const filtrados = todoElCatalogo.filter(p =>
+    (!q || (p.nombre||'').toLowerCase().includes(q)) &&
+    (!tipo || p.tipo === tipo)
+  );
+  renderCatalogo(filtrados);
+}
+
+function renderCatalogo(lista) {
+  $('bodyCatalogo').innerHTML = lista.length ? lista.map(p => `<tr>
+    <td><img src="${p.imagen_url||''}" style="height:50px;width:50px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'"></td>
+    <td><strong>${p.nombre||'—'}</strong></td>
+    <td><span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">${p.tipo||'—'}</span></td>
+    <td>${p.subcategoria||'—'}</td>
+    <td>${fmt(p.precio)}</td>
+    <td>
+      <label class="toggle"><input type="checkbox" ${p.activo?'checked':''} onchange="toggleActivo(${p.id}, this.checked)"><span class="toggle-slider"></span></label>
+    </td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="editarProducto(${p.id})">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarProducto(${p.id})">🗑</button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron productos</td></tr>';
+}
+
+function abrirModalProducto() {
+  $('prod_id').value = '';
+  $('prod_nombre').value = '';
+  $('prod_tipo').value = 'acompanante';
+  $('prod_sub').value = '';
+  $('prod_precio').value = '';
+  $('prod_orden').value = '';
+  $('prod_img').value = '';
+  $('prod_virtual').checked = false;
+  $('prod_img_preview').style.display = 'none';
+  $('modalProdTitle').textContent = 'Nuevo Producto';
+  abrirModal('modalProducto');
+}
+
+function editarProducto(id) {
+  const p = todoElCatalogo.find(x => x.id === id);
+  if (!p) return;
+  $('prod_id').value = p.id;
+  $('prod_nombre').value = p.nombre||'';
+  $('prod_tipo').value = p.tipo||'acompanante';
+  $('prod_sub').value = p.subcategoria||'';
+  $('prod_precio').value = p.precio||0;
+  $('prod_orden').value = p.orden||1;
+  $('prod_img').value = p.imagen_url||'';
+  $('prod_virtual').checked = p.es_virtual||false;
+  if (p.imagen_url) {
+    $('prod_img_thumb').src = p.imagen_url;
+    $('prod_img_preview').style.display = 'block';
+  }
+  $('modalProdTitle').textContent = 'Editar Producto';
+  abrirModal('modalProducto');
+}
+
+async function guardarProducto() {
+  const id = $('prod_id').value;
+  const datos = {
+    nombre:       $('prod_nombre').value.trim(),
+    tipo:         $('prod_tipo').value,
+    subcategoria: $('prod_sub').value.trim(),
+    precio:       parseFloat($('prod_precio').value)||0,
+    orden:        parseInt($('prod_orden').value)||1,
+    imagen_url:   $('prod_img').value.trim(),
+    es_virtual:   $('prod_virtual').checked,
+    es_bono:      $('prod_tipo').value === 'bono_base',
+    categoria:    $('prod_tipo').value,
+    activo:       true,
+  };
+  if (!datos.nombre) { alert('El nombre es obligatorio.'); return; }
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
+      method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+    });
+    toast('Producto actualizado', 'success');
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/catalogo`, {
+      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(datos)
+    });
+    toast('Producto creado', 'success');
+  }
+  cerrarModal('modalProducto');
+  cargarCatalogo();
+}
+
+async function toggleActivo(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
+  });
+  toast(activo ? 'Producto activado' : 'Producto desactivado', 'success');
+}
+
+async function eliminarProducto(id) {
+  if (!confirm('¿Segura que quieres eliminar este producto?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
+    method: 'DELETE', headers: hdrs()
+  });
+  toast('Producto eliminado', 'success');
+  cargarCatalogo();
+}
+
+// ============================================================
+// CAMPAÑAS
+// ============================================================
+async function cargarCampanas() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?order=nombre.asc`, { headers: hdrs() });
+  const campanas = await r.json();
+  $('bodyCampanas').innerHTML = campanas.length ? campanas.map(c => `<tr>
+    <td><strong>${c.nombre||'—'}</strong></td>
+    <td>${c.descripcion||'—'}</td>
+    <td>${c.meta ? fmt(c.meta) : '—'}</td>
+    <td>${c.fecha_inicio||'—'}</td>
+    <td>${c.fecha_fin||'—'}</td>
+    <td><label class="toggle"><input type="checkbox" ${c.activo?'checked':''} onchange="toggleCampana(${c.id}, this.checked)"><span class="toggle-slider"></span></label></td>
+    <td><button class="btn btn-secondary btn-sm" onclick="editarCampana(${c.id})">✏️ Editar</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No hay campañas</td></tr>';
+  window._campanas = campanas;
+}
+
+function abrirModalCampana() {
+  $('camp_id').value = '';
+  $('camp_nombre').value = '';
+  $('camp_desc').value = '';
+  $('camp_meta').value = '';
+  $('camp_img').value = '';
+  $('camp_inicio').value = '';
+  $('camp_fin').value = '';
+  $('modalCampTitle').textContent = 'Nueva Campaña';
+  abrirModal('modalCampana');
+}
+
+function editarCampana(id) {
+  const c = window._campanas?.find(x => x.id === id);
+  if (!c) return;
+  $('camp_id').value = c.id;
+  $('camp_nombre').value = c.nombre||'';
+  $('camp_desc').value = c.descripcion||'';
+  $('camp_meta').value = c.meta||'';
+  $('camp_img').value = c.imagen_url||'';
+  $('camp_inicio').value = c.fecha_inicio||'';
+  $('camp_fin').value = c.fecha_fin||'';
+  $('modalCampTitle').textContent = 'Editar Campaña';
+  abrirModal('modalCampana');
+}
+
+async function guardarCampana() {
+  const id = $('camp_id').value;
+  const datos = {
+    nombre:       $('camp_nombre').value.trim(),
+    descripcion:  $('camp_desc').value.trim(),
+    meta:         parseFloat($('camp_meta').value)||null,
+    imagen_url:   $('camp_img').value.trim()||null,
+    fecha_inicio: $('camp_inicio').value||null,
+    fecha_fin:    $('camp_fin').value||null,
+  };
+  if (!datos.nombre) { alert('El nombre es obligatorio.'); return; }
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/campanas?id=eq.${id}`, {
+      method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+    });
+    toast('Campaña actualizada', 'success');
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/campanas`, {
+      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({...datos, activo:true})
+    });
+    toast('Campaña creada', 'success');
+  }
+  cerrarModal('modalCampana');
+  cargarCampanas();
+}
+
+async function toggleCampana(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/campanas?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
+  });
+  toast(activo ? 'Campaña activada' : 'Campaña desactivada', 'success');
+}
+
+// ============================================================
+// USUARIOS
+// ============================================================
+async function cargarUsuarios() {
+  if (usuarioActual?.rol !== 'admin') return;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?order=nombre.asc`, {
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` }
+  });
+  const usuarios = await r.json();
+  $('bodyUsuarios').innerHTML = usuarios.length ? usuarios.map(u => `<tr>
+    <td><strong>${u.nombre||'—'}</strong></td>
+    <td>${u.email||'—'}</td>
+    <td><span class="badge" style="background:${u.rol==='admin'?'#fde8e8':'var(--pink-lt)'};color:${u.rol==='admin'?'#c0392b':'var(--pink)'}">${u.rol||'—'}</span></td>
+    <td><label class="toggle"><input type="checkbox" ${u.activo?'checked':''} onchange="toggleUsuario(${u.id}, this.checked)"><span class="toggle-slider"></span></label></td>
+    <td>${u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleDateString('es-CO') : 'Nunca'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="resetPassword(${u.id})">🔑 Reset</button></td>
+  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No hay usuarios</td></tr>';
+}
+
+function abrirModalUsuario() {
+  $('usr_id').value = '';
+  $('usr_nombre').value = '';
+  $('usr_email').value = '';
+  $('usr_pass').value = '';
+  $('usr_rol').value = 'operador';
+  abrirModal('modalUsuario');
+}
+
+async function guardarUsuario() {
+  const nombre = $('usr_nombre').value.trim();
+  const email  = $('usr_email').value.trim().toLowerCase();
+  const pass   = $('usr_pass').value;
+  const rol    = $('usr_rol').value;
+  if (!nombre || !email || !pass) { alert('Completa todos los campos.'); return; }
+  if (pass.length < 8) { alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+
+  // Generar hash simple
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pass + email);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre, email, password_hash: hashHex, rol, activo: true })
+  });
+  toast('Usuario creado. Contraseña inicial: ' + pass, 'success');
+  cerrarModal('modalUsuario');
+  cargarUsuarios();
+}
+
+async function toggleUsuario(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activo })
+  });
+  toast(activo ? 'Usuario activado' : 'Usuario desactivado', 'success');
+}
+
+async function resetPassword(id) {
+  const nueva = prompt('Nueva contraseña (mínimo 8 caracteres):');
+  if (!nueva || nueva.length < 8) return;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?id=eq.${id}&select=email`, {
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` }
+  });
+  const [u] = await r.json();
+  const encoder = new TextEncoder();
+  const data = encoder.encode(nueva + u.email);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password_hash: hashHex })
+  });
+  toast('Contraseña actualizada', 'success');
+}
+
+// ============================================================
+// EXPORTAR A EXCEL (directo desde el navegador)
+// ============================================================
+async function exportarExcel() {
+  toast('Generando Excel...', '');
+  try {
+    // Cargar SheetJS dinámicamente
+    if (!window.XLSX) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    // Consultar datos
+    const [rPed, rTerc, rDet] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc`, { headers: hdrsAdmin() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc`, { headers: hdrsAdmin() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc`, { headers: hdrsAdmin() }),
+    ]);
+    const [pedidos, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
+
+    const wb = XLSX.utils.book_new();
+
+    // Hoja CLIENTES
+    const clientes = terceros.map(t => ({
+      id: t.id, tipo_identificacion: t.tipodoc||'', numero_identificacion: t.numerodoc||'',
+      nombres: t.nombres||'', apellidos: t.apellidos||'', nombre_completo: t.nombrecompleto||'',
+      razon_social: t.razonsocial||'', nit_empresa: t.nitempresa||'',
+      tipo_cliente: t.tipocliente||'', correo_facturacion: t.correoelectronica||'',
+      correo_principal: t.correo_principal||'', telefono1: t.telefono1||'', telefono2: t.telefono2||'',
+      direccion: t.direccion||'', ciudad: t.ciudad||'', departamento: t.departamento||'',
+      fuente: t.fuente||'', observaciones: t.observaciones||''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientes), 'clientes');
+
+    // Hoja PEDIDOS
+    const pedidosExport = pedidos.map(p => ({
+      id: p.id, nro_pedido: p.nro_pedido||'', fecha: p.fecha||'', hora: p.hora||'',
+      canal: p.canal||'', tipo_cliente: p.tipo_cliente||'',
+      id_nit_comprador: p.id_nit_comprador||'', nombre_razon_social: p.nombre_razon_social||'',
+      telefono_comprador: p.telefono_comprador||'', correo_comprador: p.correo_comprador||'',
+      ciudad_comprador: p.ciudad_comprador||'', direccion_comprador: p.direccion_comprador||'',
+      nombres_destinatario: p.nombres_destinatario||'', apellidos_destinatario: p.apellidos_destinatario||'',
+      telefono_destinatario: p.telefono_destinatario||'', ciudad_entrega: p.ciudad_entrega||'',
+      direccion_entrega: p.direccion_entrega||'', referencia_entrega: p.referencia_entrega||'',
+      ocasion: p.ocasion||'', protagonista: p.protagonista||'',
+      nombre_fallecido: p.detalle_protagonista||'', mensaje: p.mensaje||'', firma_mensaje: p.firma_mensaje||'',
+      envio_descripcion: p.envio_descripcion||'', costo_envio: p.costo_envio||0,
+      subtotal_productos: p.subtotal_productos||0, total_pedido: p.total_pedido||0,
+      metodo_pago: p.metodo_pago||'', atendido_por: p.atendido_por||'',
+      estado: p.estado||'', observaciones: p.observaciones||''
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pedidosExport), 'pedidos');
+
+    // Hoja DETALLE
+    const detalleExport = detalle.map(d => ({
+      id: d.id, pedido_id: d.pedido_id, nro_pedido: d.nro_pedido||'', fecha: d.fecha||'',
+      categoria: d.categoria||'', subcategoria: d.subcategoria||'', producto: d.producto||'',
+      cantidad: d.cantidad||1, precio_unitario: d.precio_unitario||0, subtotal_linea: d.subtotal_linea||0
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detalleExport), 'pedido_detalle');
+
+    // Hoja ACOMPAÑANTES (separada)
+    const acompExport = detalle.filter(d => (d.categoria||'').toLowerCase().includes('acomp') || (d.categoria||'').toLowerCase().includes('plant'))
+      .map(d => ({ pedido_id: d.pedido_id, nro_pedido: d.nro_pedido||'', acompanante: d.producto||'', categoria: d.subcategoria||'', cantidad: d.cantidad||1, precio: d.precio_unitario||0 }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(acompExport), 'pedido_acompanantes');
+
+    // Descargar
+    const fecha = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    XLSX.writeFile(wb, `SantiagoCorazon_Access_${fecha}.xlsx`);
+    toast('✅ Excel descargado correctamente', 'success');
+  } catch(e) {
+    console.error(e);
+    toast('Error generando Excel', 'error');
+  }
+}
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+function hdrs() {
+  return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` };
+}
+function hdrsAdmin() {
+  return { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
+}
+
+function badgeClass(estado) {
+  const mapa = { 'Pendiente':'pendiente','En preparación':'preparacion','Despachado':'despachado','Entregado':'entregado','Cancelado':'cancelado' };
+  return mapa[estado] || 'pendiente';
+}
+
+function abrirModal(id) { $(id).classList.add('show'); }
+function cerrarModal(id) { $(id).classList.remove('show'); }
+
+function toast(msg, tipo) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = `toast ${tipo} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Cerrar modales al hacer clic fuera
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+});
+
+// Verificar sesión al cargar
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('dashboard_user');
+  if (saved) {
+    usuarioActual = JSON.parse(saved);
+    iniciarApp();
+  }
+});
+</script>
+</body>
+</html>

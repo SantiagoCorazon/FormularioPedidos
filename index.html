@@ -320,7 +320,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="grid-2">
       <div class="field"><label>Nombre del fallecido <span class="req">*</span></label><input type="text" id="p_fallecido" placeholder="Nombre completo"></div>
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="p_dirigido" placeholder="Familia García, la señora Ana..."></div>
-      <div class="field col-full"><label>Quién hace la atención</label><input type="text" id="p_quien_atiende" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
+
     </div>
     <hr class="div">
     <div class="sub-title">Color de tarjeta preimpresa</div>
@@ -343,17 +343,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
-    <div class="sub-title">✉ Mensaje para la tarjeta</div>
-    <div class="field"><label>Mensaje <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(se escribe a mano en caligrafía)</span></label>
-      <textarea id="p_mensaje_pesame" placeholder="Escribe el mensaje que irá en la tarjeta..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
+    <div class="sub-title">📝 Notas adicionales a tu pedido</div>
+    <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
+      <textarea id="p_mensaje_pesame" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
       <div class="char-count"><span id="cnt_mp">0</span>/170</div>
     </div>
     <div class="field"><label>¿De parte de quién?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
-    <hr class="div">
-    <div class="field"><label>📝 Notas adicionales</label>
-      <textarea id="p_notas_pesame" placeholder="Instrucciones especiales..." maxlength="170" oninput="cc(this,'cnt_np')"></textarea>
-      <div class="char-count"><span id="cnt_np">0</span>/170</div>
-    </div>
   </div>
 </div>
 
@@ -365,7 +360,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="section-sub">Cuéntanos los detalles para personalizar el bono.</div>
     <div class="grid-2">
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="t_dirigido" placeholder="María, el equipo de ventas..."></div>
-      <div class="field"><label>Quién hace la atención</label><input type="text" id="t_quien" placeholder="Tu familia, La empresa XYZ..."></div>
+
     </div>
     <hr class="div">
     <div class="sub-title">Color de tarjeta preimpresa</div>
@@ -384,17 +379,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
-    <div class="sub-title">✉ Mensaje para la tarjeta</div>
-    <div class="field"><label>Mensaje</label>
-      <textarea id="t_mensaje" placeholder="Escribe el mensaje que irá en la tarjeta..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
+    <div class="sub-title">📝 Notas adicionales a tu pedido</div>
+    <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
+      <textarea id="t_mensaje" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
       <div class="char-count"><span id="cnt_mt">0</span>/170</div>
     </div>
     <div class="field"><label>¿De parte de quién?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
-    <hr class="div">
-    <div class="field"><label>📝 Notas adicionales</label>
-      <textarea id="t_notas" placeholder="Instrucciones especiales..." maxlength="170" oninput="cc(this,'cnt_nt')"></textarea>
-      <div class="char-count"><span id="cnt_nt">0</span>/170</div>
-    </div>
   </div>
 </div>
 
@@ -579,19 +569,37 @@ async function cargarCatalogo() {
     const data = await r.json();
     // Organizar por tipo
     CATALOGO = {
-      bonos_pesame:     data.filter(p => p.tipo === 'pesame' && p.es_bono),
-      bonos_toda:       data.filter(p => p.tipo === 'toda_ocasion' && p.es_bono),
-      empaques_pesame:  data.filter(p => p.tipo === 'pesame' && !p.es_bono && p.subcategoria === 'Empaque'),
-      empaques_toda:    data.filter(p => p.tipo === 'toda_ocasion' && !p.es_bono && p.subcategoria === 'Empaque'),
-      acompanantes:     data.filter(p => p.tipo === 'acompanante'),
-      productos:        data.filter(p => p.tipo === 'acompanante'),
-      empresarial:      data.filter(p => p.tipo === 'empresarial'),
+      bonos_base:   data.filter(p => p.tipo === 'bono_base' && p.es_bono),
+      empaques:     data.filter(p => p.tipo === 'empaque' && !p.es_bono),
+      acompanantes: data.filter(p => p.tipo === 'acompanante'),
+      productos:    data.filter(p => p.tipo === 'acompanante'),
+      empresarial:  data.filter(p => p.tipo === 'empresarial'),
     };
-    // Empaques de pésame también aplican a toda ocasión si no hay específicos
-    if (!CATALOGO.empaques_toda.length) CATALOGO.empaques_toda = CATALOGO.empaques_pesame;
     console.log('✅ Catálogo cargado:', data.length, 'productos');
+    console.log('  Bonos base:', CATALOGO.bonos_base.length);
+    console.log('  Empaques:', CATALOGO.empaques.length);
+    console.log('  Acompañantes:', CATALOGO.acompanantes.length);
   } catch(e) {
     console.error('Error cargando catálogo:', e);
+  }
+  // Cargar campañas
+  await cargarCampanas();
+}
+
+async function cargarCampanas() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?activo=eq.true&order=nombre.asc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const campanas = await r.json();
+    const select = $('p_campana');
+    if (select) {
+      select.innerHTML = '<option value="">— Selecciona una campaña —</option>' +
+        campanas.map(c => `<option value="${c.id}">${c.nombre}${c.descripcion?' — '+c.descripcion:''}</option>`).join('');
+    }
+    console.log('✅ Campañas cargadas:', campanas.length);
+  } catch(e) {
+    console.error('Error cargando campañas:', e);
   }
 }
 
@@ -616,6 +624,8 @@ const S = {
   productosElegidos: [], // para pedidos de solo producto
   envio: null,
   valorDonacion: 0,
+  campana_id: null,
+  campana: '',
   metodoPago: '', atendidoPor: '',
   esNuevo: false,
   // Flujo dinámico
@@ -643,14 +653,14 @@ const PASOS_LABELS = {
 };
 
 const ENVIOS = [
-  {l:'Medellín, Envigado, Sabaneta, Itagüi — Bonos',p:0},
-  {l:'Envío nacional — Solo bono sin acompañante',p:15000},
-  {l:'Área metropolitana Medellín — Con acompañante',p:17500},
-  {l:'Corregimientos Medellín, Caldas, La Estrella',p:24000},
-  {l:'Acompañante — Envío nacional',p:25000},
-  {l:'Guarne, Girardota, El Retiro',p:36000},
-  {l:'Rionegro, La Ceja, Barbosa',p:54000},
-  {l:'Bonos con plantas — Envío nacional',p:58000},
+  {l:'Medellín, Envigado, Sabaneta, Itagüi — Bonos (1 a 3 días hábiles)',p:0},
+  {l:'Envío nacional — Solo bono (caja, organza, sobre) sin acompañante (3 a 5 días hábiles)',p:15000},
+  {l:'Medellín y Área Metropolitana — Con acompañante (1 a 3 días hábiles)',p:17500},
+  {l:'5 Corregimientos de Medellín, Alto Palmas, Caldas, La Estrella (1 a 3 días hábiles)',p:24000},
+  {l:'Abrazadores, velas, kits con bono o solos — Envío nacional (3 a 5 días hábiles)',p:25000},
+  {l:'Guarne, Girardota, El Retiro (1 a 3 días hábiles)',p:36000},
+  {l:'Rionegro, La Ceja, Barbosa (1 a 3 días hábiles)',p:54000},
+  {l:'Bonos con plantas — Nacionales o fuera del área metropolitana (3 a 5 días hábiles)',p:58000},
 ];
 
 // ============================================================
@@ -823,19 +833,19 @@ function validar(secId) {
     if (!$('p_dirigido').value.trim()) { alert('Indica para quién va dirigido.'); return false; }
     S.fallecido = $('p_fallecido').value.trim();
     S.dirigido = $('p_dirigido').value.trim();
-    S.quienAtiende = $('p_quien_atiende').value.trim();
+    S.quienAtiende = '';
     S.mensaje = $('p_mensaje_pesame').value.trim();
     S.firma = $('p_firma_pesame').value.trim();
-    S.notas = $('p_notas_pesame').value.trim();
+    S.notas = $('p_mensaje_pesame').value.trim();
     return true;
   }
   if (secId === 'sec-3-toda') {
     if (!$('t_dirigido').value.trim()) { alert('Indica para quién va dirigido.'); return false; }
     S.dirigido = $('t_dirigido').value.trim();
-    S.quienAtiende = $('t_quien').value.trim();
+    S.quienAtiende = '';
     S.mensaje = $('t_mensaje').value.trim();
     S.firma = $('t_firma').value.trim();
-    S.notas = $('t_notas').value.trim();
+    S.notas = $('t_mensaje').value.trim();
     return true;
   }
   if (secId === 'sec-3-producto') {
@@ -847,9 +857,12 @@ function validar(secId) {
     return true;
   }
   if (secId === 'sec-3-donacion') {
+    if (!$('p_campana').value) { alert('Selecciona la campaña a la que va tu donación.'); return false; }
     const val = parseInt($('p_valor_donacion').value) || 0;
     if (val <= 0) { alert('Ingresa el valor de la donación.'); return false; }
     S.valorDonacion = val;
+    S.campana_id = $('p_campana').value;
+    S.campana = $('p_campana').options[$('p_campana').selectedIndex].text;
     S.notas = $('p_notas_donacion').value.trim();
     // Para donación, destinatario = comprador
     S.destinatario = {...S.comprador};
@@ -947,8 +960,8 @@ function selTarjeta(card, val, scope) {
 // RENDER BONOS (desde Supabase)
 // ============================================================
 function renderBonos() {
-  const lista = S.tipoPedido === 'pesame' ? CATALOGO.bonos_pesame : CATALOGO.bonos_toda;
-  if (!lista || !lista.length) {
+  const lista = CATALOGO.bonos_base || [];
+  if (!lista.length) {
     $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando bonos...</p>';
     return;
   }
@@ -988,7 +1001,7 @@ function selSinBono() {
 }
 
 function selBono(idx) {
-  const lista = S.tipoPedido === 'pesame' ? CATALOGO.bonos_pesame : CATALOGO.bonos_toda;
+  const lista = CATALOGO.bonos_base || [];
   const p = lista[idx];
   if (!S.bonos) S.bonos = [];
   S.sinBono = false;
@@ -1018,8 +1031,8 @@ function selBono(idx) {
 // RENDER EMPAQUES (desde Supabase)
 // ============================================================
 function renderEmpaques() {
-  const lista = S.tipoPedido === 'pesame' ? CATALOGO.empaques_pesame : CATALOGO.empaques_toda;
-  if (!lista || !lista.length) {
+  const lista = CATALOGO.empaques || [];
+  if (!lista.length) {
     $('empaqueGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando empaques...</p>';
     return;
   }
@@ -1034,7 +1047,7 @@ function renderEmpaques() {
 }
 
 function selEmpaque(idx) {
-  const lista = S.tipoPedido === 'pesame' ? CATALOGO.empaques_pesame : CATALOGO.empaques_toda;
+  const lista = CATALOGO.empaques || [];
   S.empaque = lista[idx];
   renderEmpaques();
   $('emp-sel-nombre').textContent = S.empaque.nombre;
@@ -1057,11 +1070,17 @@ function renderProductos(cat) {
   $('prodGrid').innerHTML = filtrados.map((p,i) => {
     const selIdx = lista.indexOf(p);
     const sel = S.productosElegidos.some(x => x.id === p.id);
-    return `<div class="prod-card${sel?' sel':''}" onclick="selProducto(${selIdx})">
+    const qty = S.productosElegidos.find(x=>x.id===p.id)?.qty || 1;
+    return `<div class="prod-card${sel?' sel':''}" onclick="selProducto(${selIdx})" style="position:relative">
       <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
       <div class="prod-info">
         <div class="prod-nombre">${p.nombre}</div>
         <div class="prod-precio">${fmt(p.precio)}</div>
+        ${sel?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+          <button onclick="event.stopPropagation();cambiarQty(${selIdx},-1)" style="width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pink);background:var(--white);color:var(--pink);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+          <span style="font-weight:600;color:var(--ink)">${qty}</span>
+          <button onclick="event.stopPropagation();cambiarQty(${selIdx},1)" style="width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pink);background:var(--pink);color:white;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+        </div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1074,6 +1093,19 @@ function selProducto(idx) {
   const existeIdx = S.productosElegidos.findIndex(x => x.id === p.id);
   if (existeIdx >= 0) S.productosElegidos.splice(existeIdx, 1);
   else S.productosElegidos.push(p);
+  const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
+  renderProductos(catActiva);
+  actualizarTotal();
+}
+
+function cambiarQty(idx, delta) {
+  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
+  const p = lista[idx];
+  const existeIdx = S.productosElegidos.findIndex(x => x.id === p.id);
+  if (existeIdx >= 0) {
+    S.productosElegidos[existeIdx].qty = Math.max(1, (S.productosElegidos[existeIdx].qty || 1) + delta);
+    if (S.productosElegidos[existeIdx].qty === 0) S.productosElegidos.splice(existeIdx, 1);
+  }
   const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
   renderProductos(catActiva);
   actualizarTotal();
@@ -1157,7 +1189,7 @@ function getTotal() {
   else if (S.bono) t += S.bono.precio;
   if (S.empaque && S.empaque.precio) t += S.empaque.precio;
   t += S.acompanantes.reduce((s,a)=>s+a.precio,0);
-  t += S.productosElegidos.reduce((s,p)=>s+p.precio,0);
+  t += S.productosElegidos.reduce((s,p)=>s+(p.precio*(p.qty||1)),0);
   if (S.envio) t += S.envio.p;
   return Math.max(0, t);
 }
@@ -1332,7 +1364,8 @@ async function confirmarPedido() {
         subtotal_productos: getTotal() - (S.envio ? S.envio.p : 0),
         total_pedido: getTotal(),
         metodo_pago: S.metodoPago || '', atendido_por: S.atendidoPor || '',
-        estado: 'Pendiente'
+        estado: 'Pendiente',
+        campana_id: S.campana_id ? parseInt(S.campana_id) : null
       })
     });
     const pedidoData = await pedidoRes.json();
@@ -1348,7 +1381,7 @@ async function confirmarPedido() {
       }
       if (S.empaque && S.empaque.precio) lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Empaque',subcategoria:'Empaque',producto:S.empaque.nombre,cantidad:1,precio_unitario:S.empaque.precio,subtotal_linea:S.empaque.precio});
       S.acompanantes.forEach(a => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Acompañante',subcategoria:a.subcategoria||'',producto:a.nombre,cantidad:1,precio_unitario:a.precio,subtotal_linea:a.precio}));
-      S.productosElegidos.forEach(p => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Producto',subcategoria:p.subcategoria||'',producto:p.nombre,cantidad:1,precio_unitario:p.precio,subtotal_linea:p.precio}));
+      S.productosElegidos.forEach(p => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Producto',subcategoria:p.subcategoria||'',producto:p.nombre,cantidad:p.qty||1,precio_unitario:p.precio,subtotal_linea:p.precio*(p.qty||1)}));
       if (S.tipoPedido === 'donacion') lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Donación',subcategoria:'Donación',producto:'Donación',cantidad:1,precio_unitario:S.valorDonacion,subtotal_linea:S.valorDonacion});
       for (const linea of lineas) {
         await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
