@@ -558,7 +558,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 // CONFIGURACIÓN SUPABASE
 // ============================================================
 const SUPABASE_URL = 'https://sbhbcgxmxnxyfuzggegj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiaGJjZ3hteG54eWZ1emdnZWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTI5MDEsImV4cCI6MjA5NDk2ODkwMX0.VgRnvGvKZzKJdAJ4hS4TzEZ9N79ckgHO_LjhdGgiqsc';
+const SUPABASE_KEY = 'PEGA_AQUI_TU_ANON_KEY';
 
 const fmt = n => '$ ' + Math.max(0,Number(n)).toLocaleString('es-CO');
 const $ = id => document.getElementById(id);
@@ -608,7 +608,9 @@ const S = {
   // Info bono toda ocasión
   ocasion:'', 
   // Selecciones
-  bono: null,       // producto elegido como bono base
+  bonos: [],        // lista de bonos elegidos
+  sinBono: false,   // eligió sin bono
+  bono: null,       // primer bono elegido (compatibilidad)
   empaque: null,    // empaque elegido
   acompanantes: [], // lista de acompañantes
   productosElegidos: [], // para pedidos de solo producto
@@ -742,9 +744,9 @@ function irSiguiente(skip=false) {
   const secActual = S.flujo[S.flujoIdx];
   if (secActual === 'sec-orden') { confirmarPedido(); return; }
   if (!skip && !validar(secActual)) return;
-  // Si eligió bono virtual, saltar empaque
-  if (secActual === 'sec-4-bono' && S.bono && S.bono.es_virtual) {
-    S.empaque = {nombre:'Virtual', precio:0, es_virtual:true};
+  // Si eligió sin bono o bono virtual, saltar empaque
+  if (secActual === 'sec-4-bono' && (S.sinBono || (S.bono && S.bono.es_virtual && S.bonos && S.bonos.every(b=>b.es_virtual)))) {
+    S.empaque = {nombre: S.sinBono ? 'Sin empaque' : 'Virtual', precio:0, es_virtual:!S.sinBono};
     S.flujoIdx++;
     if (S.flujo[S.flujoIdx] === 'sec-5-empaque') S.flujoIdx++;
   } else {
@@ -855,7 +857,7 @@ function validar(secId) {
     return true;
   }
   if (secId === 'sec-4-bono') {
-    if (!S.bono) { alert('Selecciona un bono.'); return false; }
+    if (!S.sinBono && (!S.bonos || !S.bonos.length)) { alert('Selecciona al menos un bono o elige "Sin Bono".'); return false; }
     return true;
   }
   if (secId === 'sec-5-empaque') {
@@ -950,25 +952,65 @@ function renderBonos() {
     $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando bonos...</p>';
     return;
   }
-  $('bonoGrid').innerHTML = lista.map((p,i) => `
-    <div class="prod-card${S.bono&&S.bono.id===p.id?' sel':''}" onclick="selBono(${i})">
+  // Opción "Sin Bono"
+  const sinBonoSel = S.sinBono;
+  let html = `<div class="prod-card${sinBonoSel?' sel':''}" onclick="selSinBono()" style="border-style:dashed">
+    <div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:2rem">🛍</div>
+    <div class="prod-info">
+      <div class="prod-nombre">Sin Bono</div>
+      <div class="prod-precio" style="color:var(--ink-lt)">Solo productos</div>
+    </div>
+  </div>`;
+  html += lista.map((p,i) => `
+    <div class="prod-card${S.bonos&&S.bonos.some(b=>b.id===p.id)?' sel':''}" onclick="selBono(${i})">
       <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
       <div class="prod-info">
         <div class="prod-nombre">${p.nombre}${p.es_virtual?' 🌐':''}</div>
         <div class="prod-precio">${fmt(p.precio)}</div>
       </div>
     </div>`).join('');
+  $('bonoGrid').innerHTML = html;
+}
+
+function selSinBono() {
+  S.sinBono = !S.sinBono;
+  if (S.sinBono) {
+    S.bonos = [];
+    S.bono = null;
+    $('bono-sel-resumen').style.display = 'block';
+    $('bono-sel-nombre').textContent = 'Sin bono — solo productos';
+    $('bono-sel-precio').textContent = '$ 0';
+  } else {
+    $('bono-sel-resumen').style.display = 'none';
+  }
+  renderBonos();
+  actualizarTotal();
 }
 
 function selBono(idx) {
   const lista = S.tipoPedido === 'pesame' ? CATALOGO.bonos_pesame : CATALOGO.bonos_toda;
-  S.bono = lista[idx];
+  const p = lista[idx];
+  if (!S.bonos) S.bonos = [];
+  S.sinBono = false;
+  const existeIdx = S.bonos.findIndex(b => b.id === p.id);
+  if (existeIdx >= 0) {
+    S.bonos.splice(existeIdx, 1);
+  } else {
+    S.bonos.push(p);
+  }
+  // Mantener S.bono como referencia al primero (para compatibilidad con virtual)
+  S.bono = S.bonos.length > 0 ? S.bonos[0] : null;
   renderBonos();
-  $('bono-sel-nombre').textContent = S.bono.nombre;
-  $('bono-sel-precio').textContent = fmt(S.bono.precio);
-  $('bono-sel-resumen').style.display = 'block';
-  // Si es virtual, ocultar aviso de dirección
-  if ($('aviso-virtual')) $('aviso-virtual').style.display = S.bono.es_virtual ? 'block' : 'none';
+  if (S.bonos.length > 0) {
+    $('bono-sel-nombre').textContent = S.bonos.map(b=>b.nombre).join(', ');
+    $('bono-sel-precio').textContent = fmt(S.bonos.reduce((s,b)=>s+b.precio,0));
+    $('bono-sel-resumen').style.display = 'block';
+  } else {
+    $('bono-sel-resumen').style.display = 'none';
+  }
+  // Si alguno es virtual
+  const tieneVirtual = S.bonos.some(b => b.es_virtual);
+  if ($('aviso-virtual')) $('aviso-virtual').style.display = tieneVirtual ? 'block' : 'none';
   actualizarTotal();
 }
 
@@ -1111,7 +1153,8 @@ function selEnvio(label, precio) {
 function getTotal() {
   if (S.tipoPedido === 'donacion') return Math.max(0, S.valorDonacion||0);
   let t = 0;
-  if (S.bono) t += S.bono.precio;
+  if (S.bonos && S.bonos.length) t += S.bonos.reduce((s,b)=>s+b.precio,0);
+  else if (S.bono) t += S.bono.precio;
   if (S.empaque && S.empaque.precio) t += S.empaque.precio;
   t += S.acompanantes.reduce((s,a)=>s+a.precio,0);
   t += S.productosElegidos.reduce((s,p)=>s+p.precio,0);
@@ -1206,7 +1249,7 @@ async function confirmarPedido() {
     const c = S.comprador;
     const docNum = (c.cedula || c.nit || '').replace(/\D/g,'');
 
-    // 1. Buscar o crear tercero
+    // 1. Buscar o crear tercero (y actualizar si existe)
     let terceroId = null;
     if (docNum) {
       const tRes = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${docNum}&select=id&limit=1`, {
@@ -1215,6 +1258,33 @@ async function confirmarPedido() {
       const tRows = await tRes.json();
       if (tRows.length > 0) {
         terceroId = tRows[0].id;
+        // PATCH: actualizar datos del tercero existente
+        const camposActualizar = {
+          direccion: c.direccion || undefined,
+          departamento: c.departamento || undefined,
+          ciudad: c.ciudad || undefined,
+          telefono1: c.celular || undefined,
+          updated_at: new Date().toISOString()
+        };
+        if (c.tipo === 'Personal') {
+          camposActualizar.nombres = c.nombres || undefined;
+          camposActualizar.apellidos = c.apellidos || undefined;
+          camposActualizar.nombrecompleto = ((c.nombres||'') + ' ' + (c.apellidos||'')).trim();
+          camposActualizar.correo_principal = c.correo || undefined;
+          camposActualizar.correoelectronica = c.correoFactura || undefined;
+        } else {
+          camposActualizar.razonsocial = c.razonSocial || undefined;
+          camposActualizar.nitempresa = c.nit || undefined;
+          camposActualizar.contactoempresa = c.contacto || undefined;
+          camposActualizar.correoelectronica = c.correoFactura || undefined;
+        }
+        // Eliminar campos undefined
+        Object.keys(camposActualizar).forEach(k => camposActualizar[k] === undefined && delete camposActualizar[k]);
+        await fetch(`${SUPABASE_URL}/rest/v1/terceros?id=eq.${terceroId}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify(camposActualizar)
+        });
       } else {
         const tNew = await fetch(`${SUPABASE_URL}/rest/v1/terceros`, {
           method: 'POST',
@@ -1271,7 +1341,11 @@ async function confirmarPedido() {
     // 3. Insertar detalle
     if (pedidoId) {
       const lineas = [];
-      if (S.bono) lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Bono',subcategoria:S.tipoPedido,producto:S.bono.nombre,cantidad:1,precio_unitario:S.bono.precio,subtotal_linea:S.bono.precio});
+      if (S.bonos && S.bonos.length) {
+        S.bonos.forEach(b => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Bono',subcategoria:S.tipoPedido,producto:b.nombre,cantidad:1,precio_unitario:b.precio,subtotal_linea:b.precio}));
+      } else if (S.bono) {
+        lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Bono',subcategoria:S.tipoPedido,producto:S.bono.nombre,cantidad:1,precio_unitario:S.bono.precio,subtotal_linea:S.bono.precio});
+      }
       if (S.empaque && S.empaque.precio) lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Empaque',subcategoria:'Empaque',producto:S.empaque.nombre,cantidad:1,precio_unitario:S.empaque.precio,subtotal_linea:S.empaque.precio});
       S.acompanantes.forEach(a => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Acompañante',subcategoria:a.subcategoria||'',producto:a.nombre,cantidad:1,precio_unitario:a.precio,subtotal_linea:a.precio}));
       S.productosElegidos.forEach(p => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Producto',subcategoria:p.subcategoria||'',producto:p.nombre,cantidad:1,precio_unitario:p.precio,subtotal_linea:p.precio}));
