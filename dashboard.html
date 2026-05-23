@@ -602,7 +602,8 @@ function irA(pagina) {
 async function cargarInicio() {
   $('sub-inicio').textContent = `Hoy es ${new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
   try {
-    const hoy = new Date().toISOString().split('T')[0];
+    const ahora = new Date();
+    const hoy = new Date(ahora.getTime() - (5 * 60 * 60 * 1000)).toISOString().split('T')[0];
 
     const fetchCount = async (url) => {
       let todos = [], offset = 0;
