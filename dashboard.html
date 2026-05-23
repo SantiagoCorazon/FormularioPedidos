@@ -603,26 +603,32 @@ async function cargarInicio() {
   $('sub-inicio').textContent = `Hoy es ${new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
   try {
     const hoy = new Date().toISOString().split('T')[0];
-    const hdrCount = { ...hdrs(), 'Prefer': 'count=exact', 'Range-Unit': 'items', 'Range': '0-0' };
 
-    const [rPed, rTerc, rPend, rHoy] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=id`, hdrCount),
-      fetch(`${SUPABASE_URL}/rest/v1/terceros?select=id`, hdrCount),
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.Pendiente&select=id`, hdrCount),
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?fecha=eq.${hoy}&select=id`, hdrCount),
-    ]);
-
-    const getCount = r => {
-      const cr = r.headers.get('content-range');
-      if (cr) { const m = cr.match(/\/([0-9]+)/); if (m) return parseInt(m[1]); }
-      return '—';
+    const fetchCount = async (url) => {
+      let todos = [], offset = 0;
+      while(true) {
+        const r = await fetch(url + '&limit=1000&offset=' + offset, { headers: hdrs() });
+        const d = await r.json();
+        if (!Array.isArray(d)) break;
+        todos = todos.concat(d);
+        if (d.length < 1000) break;
+        offset += 1000;
+      }
+      return todos.length;
     };
 
+    const [cPed, cTerc, cPend, cHoy] = await Promise.all([
+      fetchCount(`${SUPABASE_URL}/rest/v1/pedidos?select=id`),
+      fetchCount(`${SUPABASE_URL}/rest/v1/terceros?select=id`),
+      fetchCount(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.Pendiente&select=id`),
+      fetchCount(`${SUPABASE_URL}/rest/v1/pedidos?fecha=eq.${hoy}&select=id`),
+    ]);
+
     $('metricsGrid').innerHTML = `
-      <div class="metric-card"><div class="metric-label">Total Pedidos</div><div class="metric-value">${getCount(rPed).toLocaleString?.() ?? getCount(rPed)}</div><div class="metric-sub">Registrados en el sistema</div></div>
-      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${getCount(rPend)}</div><div class="metric-sub">Por procesar</div></div>
-      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${getCount(rHoy)}</div><div class="metric-sub">${hoy}</div></div>
-      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${(getCount(rTerc)).toLocaleString?.() ?? getCount(rTerc)}</div><div class="metric-sub">En el maestro</div></div>
+      <div class="metric-card"><div class="metric-label">Total Pedidos</div><div class="metric-value">${cPed.toLocaleString()}</div><div class="metric-sub">Registrados en el sistema</div></div>
+      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${cPend}</div><div class="metric-sub">Por procesar</div></div>
+      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${cHoy}</div><div class="metric-sub">${hoy}</div></div>
+      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${cTerc.toLocaleString()}</div><div class="metric-sub">En el maestro</div></div>
     `;
 
     // Últimos 10 pedidos
