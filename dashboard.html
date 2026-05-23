@@ -603,7 +603,7 @@ async function cargarInicio() {
   $('sub-inicio').textContent = `Hoy es ${new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
   try {
     const hoy = new Date().toISOString().split('T')[0];
-    const hdrCount = { ...hdrsAdmin(), 'Prefer': 'count=exact', 'Range-Unit': 'items', 'Range': '0-0' };
+    const hdrCount = { ...hdrs(), 'Prefer': 'count=exact', 'Range-Unit': 'items', 'Range': '0-0' };
 
     const [rPed, rTerc, rPend, rHoy] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=id`, hdrCount),
@@ -626,7 +626,7 @@ async function cargarInicio() {
     `;
 
     // Últimos 10 pedidos
-    const rRec = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=10`, { headers: hdrsAdmin() });
+    const rRec = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=10`, { headers: hdrs() });
     const recientes = await rRec.json();
     $('tablaRecientes').innerHTML = `
       <thead><tr><th>N° Pedido</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Canal</th><th>Estado</th></tr></thead>
@@ -649,7 +649,7 @@ async function cargarPedidos() {
   let offset = 0;
   const limit = 1000;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=${limit}&offset=${offset}`, { headers: hdrsAdmin() });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
     const data = await r.json();
     todosLosPedidos = todosLosPedidos.concat(data);
     if (data.length < limit) break;
@@ -709,7 +709,7 @@ async function actualizarEstado() {
   if (!nuevoEstado || !pedidoActual) return;
   await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoActual.id}`, {
     method: 'PATCH',
-    headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' },
+    headers: { ...hdrs(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ estado: nuevoEstado })
   });
   toast('Estado actualizado', 'success');
@@ -725,7 +725,7 @@ async function cargarTerceros() {
   let offset = 0;
   const limit = 1000;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=${limit}&offset=${offset}`, { headers: hdrsAdmin() });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
     const data = await r.json();
     todosLosTerceros = todosLosTerceros.concat(data);
     if (data.length < limit) break;
@@ -761,7 +761,7 @@ function renderTerceros(lista) {
 // CATÁLOGO
 // ============================================================
 async function cargarCatalogo() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrsAdmin() });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrs() });
   todoElCatalogo = await r.json();
   renderCatalogo(todoElCatalogo);
 }
@@ -843,12 +843,12 @@ async function guardarProducto() {
   if (!datos.nombre) { alert('El nombre es obligatorio.'); return; }
   if (id) {
     await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
-      method: 'PATCH', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+      method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
     });
     toast('Producto actualizado', 'success');
   } else {
     await fetch(`${SUPABASE_URL}/rest/v1/catalogo`, {
-      method: 'POST', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(datos)
+      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(datos)
     });
     toast('Producto creado', 'success');
   }
@@ -858,7 +858,7 @@ async function guardarProducto() {
 
 async function toggleActivo(id, activo) {
   await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
-    method: 'PATCH', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
   });
   toast(activo ? 'Producto activado' : 'Producto desactivado', 'success');
 }
@@ -866,7 +866,7 @@ async function toggleActivo(id, activo) {
 async function eliminarProducto(id) {
   if (!confirm('¿Segura que quieres eliminar este producto?')) return;
   await fetch(`${SUPABASE_URL}/rest/v1/catalogo?id=eq.${id}`, {
-    method: 'DELETE', headers: hdrsAdmin()
+    method: 'DELETE', headers: hdrs()
   });
   toast('Producto eliminado', 'success');
   cargarCatalogo();
@@ -876,7 +876,7 @@ async function eliminarProducto(id) {
 // CAMPAÑAS
 // ============================================================
 async function cargarCampanas() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?order=nombre.asc`, { headers: hdrsAdmin() });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?order=nombre.asc`, { headers: hdrs() });
   const campanas = await r.json();
   $('bodyCampanas').innerHTML = campanas.length ? campanas.map(c => `<tr>
     <td><strong>${c.nombre||'—'}</strong></td>
@@ -929,12 +929,12 @@ async function guardarCampana() {
   if (!datos.nombre) { alert('El nombre es obligatorio.'); return; }
   if (id) {
     await fetch(`${SUPABASE_URL}/rest/v1/campanas?id=eq.${id}`, {
-      method: 'PATCH', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+      method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
     });
     toast('Campaña actualizada', 'success');
   } else {
     await fetch(`${SUPABASE_URL}/rest/v1/campanas`, {
-      method: 'POST', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' }, body: JSON.stringify({...datos, activo:true})
+      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({...datos, activo:true})
     });
     toast('Campaña creada', 'success');
   }
@@ -944,7 +944,7 @@ async function guardarCampana() {
 
 async function toggleCampana(id, activo) {
   await fetch(`${SUPABASE_URL}/rest/v1/campanas?id=eq.${id}`, {
-    method: 'PATCH', headers: { ...hdrsAdmin(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ activo })
   });
   toast(activo ? 'Campaña activada' : 'Campaña desactivada', 'success');
 }
@@ -1049,9 +1049,9 @@ async function exportarExcel() {
 
     // Consultar datos
     const [rPed, rTerc, rDet] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc`, { headers: hdrsAdmin() }),
-      fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc`, { headers: hdrsAdmin() }),
-      fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc`, { headers: hdrsAdmin() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc`, { headers: hdrs() }),
     ]);
     const [pedidos, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
 
@@ -1117,7 +1117,7 @@ async function exportarExcel() {
 function hdrs() {
   return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` };
 }
-function hdrsAdmin() {
+function hdrs() {
   return { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
 }
 
