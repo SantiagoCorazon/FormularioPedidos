@@ -546,6 +546,11 @@ function resetBtn() {
   $('btnLogin').disabled = false;
 }
 
+// Resetear botón si la página pierde foco (previene el circulito eterno)
+window.addEventListener('focus', () => {
+  if ($('btnLogin') && $('btnLogin').disabled) resetBtn();
+});
+
 function logout() {
   sessionStorage.removeItem('dashboard_user');
   usuarioActual = null;
@@ -554,6 +559,9 @@ function logout() {
   $('loginError').style.display = 'none';
   $('loginEmail').value = '';
   $('loginPass').value = '';
+  // Siempre resetear el botón de login
+  $('btnLogin').innerHTML = 'Ingresar';
+  $('btnLogin').disabled = false;
 }
 
 // ============================================================
@@ -592,23 +600,27 @@ function irA(pagina) {
 async function cargarInicio() {
   $('sub-inicio').textContent = `Hoy es ${new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
   try {
-    const [rPed, rTerc, rPend] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=id`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/terceros?select=id`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.Pendiente&select=id`, { headers: hdrs() }),
-    ]);
-    const [pedidos, terceros, pendientes] = await Promise.all([rPed.json(), rTerc.json(), rPend.json()]);
-
-    // Pedidos hoy
     const hoy = new Date().toISOString().split('T')[0];
-    const rHoy = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?fecha=eq.${hoy}&select=id`, { headers: hdrs() });
-    const hoyData = await rHoy.json();
+    const hdrCount = { ...hdrs(), 'Prefer': 'count=exact', 'Range-Unit': 'items', 'Range': '0-0' };
+
+    const [rPed, rTerc, rPend, rHoy] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?select=id`, hdrCount),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?select=id`, hdrCount),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?estado=eq.Pendiente&select=id`, hdrCount),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?fecha=eq.${hoy}&select=id`, hdrCount),
+    ]);
+
+    const getCount = r => {
+      const cr = r.headers.get('content-range');
+      if (cr) { const m = cr.match(/\/([0-9]+)/); if (m) return parseInt(m[1]); }
+      return '—';
+    };
 
     $('metricsGrid').innerHTML = `
-      <div class="metric-card"><div class="metric-label">Total Pedidos</div><div class="metric-value">${pedidos.length.toLocaleString()}</div><div class="metric-sub">Registrados en el sistema</div></div>
-      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${pendientes.length}</div><div class="metric-sub">Por procesar</div></div>
-      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${hoyData.length}</div><div class="metric-sub">${hoy}</div></div>
-      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${terceros.length.toLocaleString()}</div><div class="metric-sub">En el maestro</div></div>
+      <div class="metric-card"><div class="metric-label">Total Pedidos</div><div class="metric-value">${getCount(rPed).toLocaleString?.() ?? getCount(rPed)}</div><div class="metric-sub">Registrados en el sistema</div></div>
+      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${getCount(rPend)}</div><div class="metric-sub">Por procesar</div></div>
+      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${getCount(rHoy)}</div><div class="metric-sub">${hoy}</div></div>
+      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${(getCount(rTerc)).toLocaleString?.() ?? getCount(rTerc)}</div><div class="metric-sub">En el maestro</div></div>
     `;
 
     // Últimos 10 pedidos
@@ -631,8 +643,16 @@ async function cargarInicio() {
 // PEDIDOS
 // ============================================================
 async function cargarPedidos() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc`, { headers: hdrs() });
-  todosLosPedidos = await r.json();
+  todosLosPedidos = [];
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
+    const data = await r.json();
+    todosLosPedidos = todosLosPedidos.concat(data);
+    if (data.length < limit) break;
+    offset += limit;
+  }
   renderPedidos(todosLosPedidos);
 }
 
@@ -699,8 +719,16 @@ async function actualizarEstado() {
 // TERCEROS
 // ============================================================
 async function cargarTerceros() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=500`, { headers: hdrs() });
-  todosLosTerceros = await r.json();
+  todosLosTerceros = [];
+  let offset = 0;
+  const limit = 1000;
+  while (true) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
+    const data = await r.json();
+    todosLosTerceros = todosLosTerceros.concat(data);
+    if (data.length < limit) break;
+    offset += limit;
+  }
   renderTerceros(todosLosTerceros);
 }
 
