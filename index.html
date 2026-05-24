@@ -195,7 +195,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 <div class="section active" id="sec-0">
   <div class="card" style="text-align:center">
     <div class="section-title" style="margin-bottom:6px">¡Bienvenido! ¿Qué quieres <em>hacer hoy</em>?</div>
-    <div class="section-sub">Selecciona el tipo de pedido para comenzar</div>
+    <div class="section-sub">Selecciona el tipo de pedido para comenzar, luego baja para elegir desde dónde compras y presiona <strong>Continuar</strong> ↓</div>
     <div class="tipo-pedido-grid" style="max-width:700px;margin:0 auto 20px">
       <div class="tipo-pedido-card" onclick="selTipoPedido('pesame')">
         <div class="tipo-pedido-icon">🕊</div>
@@ -247,15 +247,30 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-1">Paso 1</div>
     <div class="section-title">¿Quién <em>compra</em>?</div>
-    <div class="section-sub">Ingresa tu cédula o NIT — si ya tienes pedidos con nosotros, cargamos tus datos automáticamente.</div>
+    <div class="section-sub">Ingresa tu documento — si ya estás registrado, tus datos se cargarán automáticamente. Por favor actualiza cualquier información que haya cambiado.</div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
       <button onclick="selTipoCliente('Personal')" id="btn-personal" class="btn btn-primary" style="flex:1;font-size:.8rem">👤 Personal</button>
       <button onclick="selTipoCliente('Empresa')" id="btn-empresa" class="btn btn-secondary" style="flex:1;font-size:.8rem">🏢 Empresa</button>
     </div>
-    <div class="buscar-row">
-      <div class="field"><label>Cédula / NIT <span class="req">*</span></label>
-        <input type="text" id="docInput" placeholder="Ej: 43512345"></div>
-      <button class="btn-buscar" onclick="buscarTercero()"><span id="searchTxt">Buscar</span></button>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="field">
+        <label>Tipo de documento <span class="req">*</span></label>
+        <select id="tipoDocInput">
+          <option value="CC">CC — Cédula de Ciudadanía</option>
+          <option value="CE">CE — Cédula de Extranjería</option>
+          <option value="PA">PA — Pasaporte</option>
+          <option value="TI">TI — Tarjeta de Identidad</option>
+          <option value="NIT">NIT — Persona Jurídica</option>
+          <option value="PP">PP — Permiso de Protección Temporal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Número de documento <span class="req">*</span></label>
+        <input type="text" id="docInput" placeholder="Ej: 43512345">
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <button class="btn-buscar" onclick="buscarTercero()" style="width:100%"><span id="searchTxt">🔍 Buscar mis datos</span></button>
     </div>
     <div class="status" id="searchStatus"><span id="statusIcon"></span><span id="statusMsg"></span></div>
     <div id="campos-personal">
@@ -291,8 +306,8 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-2">Paso 2</div>
     <div class="section-title">¿Quién <em>recibe</em>?</div>
-    <div class="section-sub">Datos de la persona y lugar de entrega.</div>
-    <div class="virtual-alert" id="aviso-virtual">🌐 <strong>Envío Virtual</strong> — llega por email o WhatsApp. No necesitas dirección física.</div>
+    <div class="section-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega. Si el destinatario eres tú mismo, marca la casilla de abajo.</div>
+    <div class="virtual-alert" id="aviso-virtual">🌐 <strong>Bono Virtual</strong> — Este bono se envía por email o WhatsApp al destinatario. No requiere dirección física de entrega. Solo necesitas el correo o número de WhatsApp.</div>
     <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;cursor:pointer;background:var(--white)">
       <input type="checkbox" id="mismoComprador" onchange="toggleMismo(this)" style="width:auto;accent-color:var(--pink)">
       <span style="font-size:.85rem;color:var(--ink-mid)">El destinatario soy yo mismo</span>
@@ -316,7 +331,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-3">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Pésame</em></div>
-    <div class="section-sub">Cuéntanos los detalles para personalizar el bono.</div>
+    <div class="section-sub">Completa los datos para personalizar el bono de pésame. El nombre del fallecido y el destinatario se escriben a mano en caligrafía en la tarjeta.</div>
     <div class="grid-2">
       <div class="field"><label>Nombre del fallecido <span class="req">*</span></label><input type="text" id="p_fallecido" placeholder="Nombre completo"></div>
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="p_dirigido" placeholder="Familia García, la señora Ana..."></div>
@@ -357,7 +372,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Toda Ocasión</em></div>
-    <div class="section-sub">Cuéntanos los detalles para personalizar el bono.</div>
+    <div class="section-sub">Completa los datos para personalizar el bono. El nombre del destinatario se escribe a mano en caligrafía en la tarjeta.</div>
     <div class="grid-2">
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="t_dirigido" placeholder="María, el equipo de ventas..."></div>
 
@@ -432,7 +447,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-4b">Paso 4</div>
     <div class="section-title">Elige el <em>tipo de bono</em></div>
-    <div class="section-sub" id="sec4b-sub">Selecciona el bono base para tu pedido.</div>
+    <div class="section-sub" id="sec4b-sub">Elige el tipo de bono. El <strong>Virtual</strong> se envía por email o WhatsApp. El <strong>Plegable</strong> es físico y puedes elegir el empaque en el siguiente paso.</div>
     <div class="prod-grid" id="bonoGrid"></div>
     <div class="sel-resumen" id="bono-sel-resumen">✓ Seleccionado: <strong id="bono-sel-nombre"></strong> — <span id="bono-sel-precio"></span></div>
   </div>
@@ -443,7 +458,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-5e">Paso 5</div>
     <div class="section-title">Elige el <em>empaque</em></div>
-    <div class="section-sub">¿Cómo quieres que llegue el bono?</div>
+    <div class="section-sub">Elige cómo quieres presentar el bono. El sobre no tiene costo adicional. La bolsa y la caja tienen un valor extra que se suma al total.</div>
     <div class="prod-grid" id="empaqueGrid"></div>
     <div class="sel-resumen" id="emp-sel-resumen">✓ Seleccionado: <strong id="emp-sel-nombre"></strong> — <span id="emp-sel-precio"></span></div>
   </div>
@@ -454,7 +469,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-prod">Paso 4</div>
     <div class="section-title">Elige tus <em>productos</em></div>
-    <div class="section-sub">Puedes elegir uno o varios artículos.</div>
+    <div class="section-sub">Elige uno o varios artículos. Usa los botones + y − para ajustar la cantidad de cada producto.</div>
     <div class="cat-tabs" id="prodTabs"></div>
     <div class="prod-grid" id="prodGrid"></div>
     <div class="sel-resumen" id="prod-sel-resumen" style="display:block;margin-top:8px">
@@ -468,7 +483,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-ac">Paso 5</div>
     <div class="section-title">¿Quieres un <em>acompañante</em>? <span style="font-size:.75rem;color:var(--ink-lt);font-weight:400">(opcional)</span></div>
-    <div class="section-sub">Complementa el bono con una vela, libro u otro detalle.</div>
+    <div class="section-sub">Complementa el bono con un detalle especial. Puedes elegir uno o varios. Este paso es opcional — si no quieres acompañante presiona <strong>Saltar este paso</strong>.</div>
     <div class="cat-tabs" id="acompTabs"></div>
     <div class="prod-grid" id="acompGrid"></div>
     <div class="sel-resumen" id="acomp-sel-resumen">✓ Seleccionados: <strong id="acomp-sel-nombres"></strong> — <span id="acomp-sel-total"></span></div>
@@ -480,7 +495,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-env">Paso 6</div>
     <div class="section-title">Método de <em>envío</em></div>
-    <div class="section-sub">Selecciona la opción según la zona del destinatario.</div>
+    <div class="section-sub">Selecciona el método de envío según la zona del destinatario. Los tiempos indicados son días hábiles.</div>
     <div id="envioOpts"></div>
   </div>
 </div>
@@ -697,6 +712,8 @@ function selTipoCliente(tipo) {
   $('btn-empresa').className = tipo === 'Empresa' ? 'btn btn-primary' : 'btn btn-secondary';
   $('btn-personal').style.flex = '1';$('btn-personal').style.fontSize = '.8rem';
   $('btn-empresa').style.flex = '1';$('btn-empresa').style.fontSize = '.8rem';
+  // Auto-seleccionar NIT para empresas
+  if ($('tipoDocInput')) $('tipoDocInput').value = tipo === 'Empresa' ? 'NIT' : 'CC';
 }
 
 function irDesdeInicio() {
@@ -789,7 +806,7 @@ function validar(secId) {
       if (!$('c_correo_contacto').value.trim()) { alert('Ingresa el correo de contacto.'); return false; }
       if (!$('c_correo_factura').value.trim()) { alert('Ingresa el correo para factura.'); return false; }
       if (!$('c_ciudad').value.trim()) { alert('Ingresa la ciudad.'); return false; }
-      S.comprador = {tipo:'Personal', cedula:$('docInput').value.trim(),
+      S.comprador = {tipo:'Personal', tipodoc:$('tipoDocInput').value, cedula:$('docInput').value.trim(),
         nombres:$('c_nombres').value.trim(), apellidos:$('c_apellidos').value.trim(),
         celular:$('c_celular').value.trim(), correo:$('c_correo_contacto').value.trim(),
         correoFactura:$('c_correo_factura').value.trim(), ciudad:$('c_ciudad').value.trim(),
@@ -894,10 +911,11 @@ function validar(secId) {
 // ============================================================
 async function buscarTercero() {
   const doc = $('docInput').value.trim();
-  if (!doc) { alert('Ingresa un número de cédula o NIT.'); return; }
+  const tipodoc = $('tipoDocInput').value;
+  if (!doc) { alert('Ingresa el número de documento.'); return; }
   $('searchTxt').textContent = '...';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${encodeURIComponent(doc)}&limit=1`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${encodeURIComponent(doc)}&tipodoc=eq.${tipodoc}&limit=1`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const rows = await r.json();
@@ -1323,7 +1341,7 @@ async function confirmarPedido() {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
                      'Content-Type': 'application/json', 'Prefer': 'return=representation' },
           body: JSON.stringify({
-            tipodoc: c.tipo === 'Empresa' ? 'NIT' : 'CC', numerodoc: docNum,
+            tipodoc: c.tipodoc || (c.tipo === 'Empresa' ? 'NIT' : 'CC'), numerodoc: docNum,
             tipocliente: c.tipo || 'Personal', nombres: c.nombres || '', apellidos: c.apellidos || '',
             nombrecompleto: c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'') + ' ' + (c.apellidos||'')).trim(),
             razonsocial: c.razonSocial || '', nitempresa: c.nit || '',
