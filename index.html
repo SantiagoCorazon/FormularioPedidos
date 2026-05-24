@@ -432,6 +432,11 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="section-title">Tu <em>Donación</em></div>
     <div class="section-sub">Gracias por tu generosidad. Tu donación ayuda a niños con cardiopatías.</div>
     <div class="donacion-info">❤ <strong>Donación</strong> — No se requiere tarjeta ni envío físico. Irás directo al resumen.</div>
+    <div class="field"><label>¿A qué campaña va tu donación? <span class="req">*</span></label>
+      <select id="p_campana">
+        <option value="">— Cargando campañas... —</option>
+      </select>
+    </div>
     <div class="field"><label>Valor de la donación <span class="req">*</span></label>
       <input type="number" id="p_valor_donacion" placeholder="Ej: 50000" min="0" oninput="actualizarTotal()">
     </div>
@@ -469,7 +474,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-prod">Paso 4</div>
     <div class="section-title">Elige tus <em>productos</em></div>
-    <div class="section-sub">Elige uno o varios artículos. Usa los botones + y − para ajustar la cantidad de cada producto.</div>
+    <div class="section-sub">Elige uno o varios artículos. Al seleccionar un producto puedes ingresar la cantidad directamente.</div>
     <div class="cat-tabs" id="prodTabs"></div>
     <div class="prod-grid" id="prodGrid"></div>
     <div class="sel-resumen" id="prod-sel-resumen" style="display:block;margin-top:8px">
@@ -1110,18 +1115,20 @@ function renderProductos(cat) {
     <button class="cat-tab${c===catActiva?' active':''}" onclick="renderProductos('${c}')">${c}</button>`).join('');
   const filtrados = catActiva ? lista.filter(p => p.subcategoria === catActiva) : lista;
   $('prodGrid').innerHTML = filtrados.map((p,i) => {
-    const selIdx = lista.indexOf(p);
     const sel = S.productosElegidos.some(x => x.id === p.id);
     const qty = S.productosElegidos.find(x=>x.id===p.id)?.qty || 1;
-    return `<div class="prod-card${sel?' sel':''}" onclick="selProducto(${selIdx})" style="position:relative">
+    return `<div class="prod-card${sel?' sel':''}" onclick="selProductoPorId(${p.id})" style="position:relative">
       <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
       <div class="prod-info">
         <div class="prod-nombre">${p.nombre}</div>
         <div class="prod-precio">${fmt(p.precio)}</div>
-        ${sel?`<div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-          <button onclick="event.stopPropagation();cambiarQty(${selIdx},-1)" style="width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pink);background:var(--white);color:var(--pink);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-          <span style="font-weight:600;color:var(--ink)">${qty}</span>
-          <button onclick="event.stopPropagation();cambiarQty(${selIdx},1)" style="width:24px;height:24px;border-radius:50%;border:1.5px solid var(--pink);background:var(--pink);color:white;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+        ${sel?`<div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+          <label style="font-size:.7rem;color:var(--ink-lt);text-transform:uppercase;letter-spacing:.05em">Cant.</label>
+          <input type="number" value="${qty}" min="1" max="9999"
+            onclick="event.stopPropagation()"
+            onchange="event.stopPropagation();editarQtyPorId(${p.id}, this.value)"
+            oninput="event.stopPropagation()"
+            style="width:60px;padding:4px 8px;border:1.5px solid var(--pink);border-radius:6px;font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--ink);text-align:center">
         </div>`:''}
       </div>
     </div>`;
@@ -1132,9 +1139,17 @@ function renderProductos(cat) {
 function selProducto(idx) {
   const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
   const p = lista[idx];
-  const existeIdx = S.productosElegidos.findIndex(x => x.id === p.id);
+  if (!p) return;
+  selProductoPorId(p.id);
+}
+
+function selProductoPorId(id) {
+  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
+  const p = lista.find(x => x.id === id);
+  if (!p) return;
+  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
   if (existeIdx >= 0) S.productosElegidos.splice(existeIdx, 1);
-  else S.productosElegidos.push(p);
+  else S.productosElegidos.push({...p, qty: 1});
   const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
   renderProductos(catActiva);
   actualizarTotal();
@@ -1143,14 +1158,28 @@ function selProducto(idx) {
 function cambiarQty(idx, delta) {
   const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
   const p = lista[idx];
-  const existeIdx = S.productosElegidos.findIndex(x => x.id === p.id);
+  if (p) cambiarQtyPorId(p.id, delta);
+}
+
+function cambiarQtyPorId(id, delta) {
+  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
   if (existeIdx >= 0) {
-    S.productosElegidos[existeIdx].qty = Math.max(1, (S.productosElegidos[existeIdx].qty || 1) + delta);
-    if (S.productosElegidos[existeIdx].qty === 0) S.productosElegidos.splice(existeIdx, 1);
+    const nuevaQty = Math.max(1, (S.productosElegidos[existeIdx].qty || 1) + delta);
+    S.productosElegidos[existeIdx].qty = nuevaQty;
   }
   const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
   renderProductos(catActiva);
   actualizarTotal();
+}
+
+function editarQtyPorId(id, valor) {
+  const qty = Math.max(1, parseInt(valor) || 1);
+  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
+  if (existeIdx >= 0) {
+    S.productosElegidos[existeIdx].qty = qty;
+  }
+  actualizarTotal();
+  actualizarResumenProductos();
 }
 
 function actualizarResumenProductos() {
