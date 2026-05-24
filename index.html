@@ -381,15 +381,15 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="sub-title">Color de tarjeta preimpresa</div>
     <div class="tarjeta-grid">
       <div class="tarjeta-card" onclick="selTarjeta(this,'Esmeralda','toda')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/PRODUCTOS_6_b7a25f1e-c521-4475-9d10-6e1c3291bb41.jpg?v=1761756282&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-esmeralda.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Esmeralda</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Marfil','toda')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/Colores_3ac797da-8652-4908-8eac-c40f7de081bc.jpg?v=1750802807&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-marfil.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Marfil</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Salmón','toda')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/PRODUCTOS_11_1a1fc7f6-3766-4348-874d-172ea3cf9c69.jpg?v=1761756445&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-salmon.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Salmón</div></div>
       </div>
     </div>
@@ -1332,28 +1332,29 @@ async function confirmarPedido() {
       const tRows = await tRes.json();
       if (tRows.length > 0) {
         terceroId = tRows[0].id;
-        // PATCH: actualizar datos del tercero existente
-        const camposActualizar = {
-          direccion: c.direccion || undefined,
-          departamento: c.departamento || undefined,
-          ciudad: c.ciudad || undefined,
-          telefono1: c.celular || undefined,
-          updated_at: new Date().toISOString()
-        };
+        // PATCH: actualizar tercero — solo campos que el usuario llenó
+        const camposActualizar = { updated_at: new Date().toISOString() };
+        const setIfVal = (key, val) => { if (val && val.trim()) camposActualizar[key] = val.trim(); };
+
+        setIfVal('direccion',    c.direccion);
+        setIfVal('departamento', c.departamento);
+        setIfVal('ciudad',       c.ciudad);
+        setIfVal('telefono1',    c.celular || c.telefono);
+
         if (c.tipo === 'Personal') {
-          camposActualizar.nombres = c.nombres || undefined;
-          camposActualizar.apellidos = c.apellidos || undefined;
-          camposActualizar.nombrecompleto = ((c.nombres||'') + ' ' + (c.apellidos||'')).trim();
-          camposActualizar.correo_principal = c.correo || undefined;
-          camposActualizar.correoelectronica = c.correoFactura || undefined;
+          setIfVal('nombres',          c.nombres);
+          setIfVal('apellidos',        c.apellidos);
+          setIfVal('correo_principal', c.correo);
+          setIfVal('correoelectronica',c.correoFactura);
+          if (c.nombres && c.apellidos)
+            camposActualizar.nombrecompleto = (c.nombres + ' ' + c.apellidos).trim();
         } else {
-          camposActualizar.razonsocial = c.razonSocial || undefined;
-          camposActualizar.nitempresa = c.nit || undefined;
-          camposActualizar.contactoempresa = c.contacto || undefined;
-          camposActualizar.correoelectronica = c.correoFactura || undefined;
+          setIfVal('razonsocial',      c.razonSocial);
+          setIfVal('nitempresa',       c.nit);
+          setIfVal('contactoempresa',  c.contacto);
+          setIfVal('correoelectronica',c.correoFactura);
         }
-        // Eliminar campos undefined
-        Object.keys(camposActualizar).forEach(k => camposActualizar[k] === undefined && delete camposActualizar[k]);
+
         await fetch(`${SUPABASE_URL}/rest/v1/terceros?id=eq.${terceroId}`, {
           method: 'PATCH',
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
