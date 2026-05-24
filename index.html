@@ -341,19 +341,19 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="sub-title">Color de tarjeta preimpresa</div>
     <div class="tarjeta-grid">
       <div class="tarjeta-card" onclick="selTarjeta(this,'Rosa Profundo - Un abrazo de corazón','pesame')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/Rosa_Profundo_0089d0c1-5d87-49fe-b2be-e84d4b844f9a.jpg?v=1750346705&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-rosa-profundo.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Un abrazo de corazón</div><div class="tarjeta-color">Rosa Profundo</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Amarillo Trigo - Todo el afecto en un abrazo','pesame')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/Amarillo_Trigo_e10c9faf-0144-4b4c-9ce3-76ffbb606cb9.jpg?v=1750345085&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-amarillo-trigo.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Todo el afecto en un abrazo</div><div class="tarjeta-color">Amarillo Trigo</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Verde Oliva - Y luego del invierno llegará la primavera','pesame')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/Verde_Oliva_5d8b73d2-691e-4a3c-85bf-87a388fe6938.jpg?v=1750367633&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-verde-oliva.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Y luego del invierno...</div><div class="tarjeta-color">Verde Oliva</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Azul Índigo - Sentidas condolencias','pesame')">
-        <img src="https://santiagocorazon.org/cdn/shop/files/AzulIndigo.jpg?v=1750285393&width=400" onerror="this.style.display='none'">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-azul-indigo.jpg" onerror="this.style.display='none'">
         <div class="tarjeta-info"><div class="tarjeta-frase">Sentidas condolencias</div><div class="tarjeta-color">Azul Índigo</div></div>
       </div>
     </div>
@@ -1054,7 +1054,17 @@ function renderEmpaques() {
     $('empaqueGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando empaques...</p>';
     return;
   }
-  $('empaqueGrid').innerHTML = lista.map((p,i) => `
+  // Opción virtual al inicio
+  const virSel = S.empaque && S.empaque.es_virtual;
+  let html = `<div class="prod-card${virSel?' sel':''}" onclick="selEmpaqueVirtual()" style="border-style:dashed">
+    <div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🌐</div>
+    <div class="prod-info">
+      <div class="prod-nombre">Virtual</div>
+      <div class="prod-precio" style="color:#2e7d32">− ${fmt(4000)}</div>
+      <div style="font-size:.7rem;color:var(--ink-lt);margin-top:2px">Se envía por email o WhatsApp</div>
+    </div>
+  </div>`;
+  html += lista.map((p,i) => `
     <div class="prod-card${S.empaque&&S.empaque.id===p.id?' sel':''}" onclick="selEmpaque(${i})">
       <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
       <div class="prod-info">
@@ -1062,6 +1072,20 @@ function renderEmpaques() {
         <div class="prod-precio">${p.precio===0?'Sin costo adicional':p.precio>0?'+ '+fmt(p.precio):'- '+fmt(Math.abs(p.precio))}</div>
       </div>
     </div>`).join('');
+  $('empaqueGrid').innerHTML = html;
+}
+
+function selEmpaqueVirtual() {
+  S.empaque = {id: 'virtual', nombre: 'Virtual', precio: -4000, es_virtual: true};
+  S.esVirtual = true;
+  if ($('aviso-virtual')) $('aviso-virtual').style.display = 'block';
+  if ($('field-dir')) $('field-dir').style.display = 'none';
+  if ($('field-ref')) $('field-ref').style.display = 'none';
+  $('emp-sel-nombre').textContent = 'Virtual';
+  $('emp-sel-precio').textContent = '− ' + fmt(4000);
+  $('emp-sel-resumen').style.display = 'block';
+  renderEmpaques();
+  actualizarTotal();
 }
 
 function selEmpaque(idx) {
