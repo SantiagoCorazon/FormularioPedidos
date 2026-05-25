@@ -1453,7 +1453,8 @@ async function confirmarPedido() {
         total_pedido: getTotal(),
         metodo_pago: S.metodoPago || '', atendido_por: S.atendidoPor || '',
         estado: 'Pendiente',
-        campana_id: S.campana_id ? parseInt(S.campana_id) : null
+        campana_id: S.campana_id ? parseInt(S.campana_id) : null,
+        comprobante_pago: payload.comprobante_url || null
       })
     });
     const pedidoData = await pedidoRes.json();
@@ -1479,6 +1480,38 @@ async function confirmarPedido() {
         });
       }
     }
+    // Subir comprobante a Supabase Storage
+    const fi = $('comprobanteFile');
+    if (fi && fi.files && fi.files[0]) {
+      try {
+        const file = fi.files[0];
+        const comprimido = await comprimirImagen(file, 200);
+        const ext = file.name.split('.').pop() || 'jpg';
+        const nombreArchivo = orderNum + '_comprobante.' + ext;
+        const uploadRes = await fetch(
+          'https://sbhbcgxmxnxyfuzggegj.supabase.co/storage/v1/object/comprobantes/' + nombreArchivo,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': file.type || 'image/jpeg',
+              'x-upsert': 'true'
+            },
+            body: comprimido
+          }
+        );
+        if (uploadRes.ok) {
+          const urlComprobante = 'https://sbhbcgxmxnxyfuzggegj.supabase.co/storage/v1/object/public/comprobantes/' + nombreArchivo;
+          await fetch(`${SUPABASE_URL}/rest/v1/pedidos?nro_pedido=eq.${orderNum}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comprobante_pago: urlComprobante })
+          });
+        }
+      } catch(eComp) { console.warn('Error subiendo comprobante:', eComp); }
+    }
+
   } catch(e) { console.warn('Error guardando:', e); }
 
   $('loadingOverlay').classList.remove('show');
@@ -1541,6 +1574,52 @@ function generarPDF() {
 }
 
 function nuevoPedido() { location.reload(); }
+
+// ============================================================
+// COMPRIMIR IMAGEN (máximo maxKB kilobytes)
+// ============================================================
+function comprimirImagen(file, maxKB) {
+  return new Promise((resolve) => {
+    // Si no es imagen o ya es pequeño, devolver tal cual
+    if (!file.type.startsWith('image/') || file.size <= maxKB * 1024) {
+      resolve(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        // Reducir dimensiones si es muy grande
+        const maxDim = 1200;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        // Comprimir con calidad variable hasta alcanzar el tamaño
+        let calidad = 0.8;
+        const intentar = () => {
+          canvas.toBlob((blob) => {
+            if (blob.size <= maxKB * 1024 || calidad <= 0.3) {
+              resolve(blob);
+            } else {
+              calidad -= 0.1;
+              intentar();
+            }
+          }, 'image/jpeg', calidad);
+        };
+        intentar();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 // UTILS
 function cc(el, cntId) {

@@ -635,7 +635,9 @@ async function cargarInicio() {
       <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Pendientes</div><div class="metric-value" style="color:#e65100">${cPend}</div><div class="metric-sub">Por procesar</div></div>
       <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Pedidos Hoy</div><div class="metric-value" style="color:#1565c0">${cHoy}</div><div class="metric-sub">${hoy}</div></div>
       <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Clientes</div><div class="metric-value" style="color:#2e7d32">${cTerc.toLocaleString()}</div><div class="metric-sub">En el maestro</div></div>
+      <div class="metric-card" id="storageCard" style="border-color:#9c27b0"><div class="metric-label">Storage comprobantes</div><div class="metric-value" style="color:#9c27b0" id="storageVal">...</div><div class="metric-sub" id="storageSub">Verificando...</div></div>
     `;
+    verificarStorage();
 
     // Últimos 10 pedidos
     const rRec = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=10`, { headers: hdrs() });
@@ -1221,6 +1223,40 @@ async function exportarExcel() {
 // ============================================================
 function hdrs() {
   return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` };
+}
+
+async function verificarStorage() {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/bucket/comprobantes`, {
+      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` }
+    });
+    // Listar archivos para estimar uso
+    const rFiles = await fetch(`${SUPABASE_URL}/storage/v1/object/list/comprobantes?limit=1000`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix: '', limit: 1000 })
+    });
+    const files = await rFiles.json();
+    if (Array.isArray(files)) {
+      const totalBytes = files.reduce((s, f) => s + (f.metadata?.size || 0), 0);
+      const totalMB = (totalBytes / (1024*1024)).toFixed(1);
+      const pct = Math.round((totalBytes / (1024*1024*1024)) * 100); // % de 1GB
+      const storageEl = $('storageVal');
+      const subEl = $('storageSub');
+      const cardEl = $('storageCard');
+      if (storageEl) storageEl.textContent = totalMB + ' MB';
+      if (subEl) subEl.innerHTML = `${files.length} archivos — ${pct}% de 1 GB usado<br><div style="background:#e0e0e0;border-radius:4px;height:6px;margin-top:6px"><div style="background:${pct>80?'#c0392b':pct>50?'#e65100':'#9c27b0'};height:6px;border-radius:4px;width:${Math.min(pct,100)}%"></div></div>`;
+      if (cardEl && pct > 80) {
+        cardEl.style.borderColor = '#c0392b';
+        cardEl.style.background = '#fde8e8';
+        if (storageEl) storageEl.style.color = '#c0392b';
+        toast('⚠️ Storage al ' + pct + '% — considera actualizar el plan de Supabase', 'error');
+      }
+    }
+  } catch(e) {
+    const storageEl = $('storageVal');
+    if (storageEl) storageEl.textContent = '—';
+  }
 }
 function hdrs() {
   return { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
