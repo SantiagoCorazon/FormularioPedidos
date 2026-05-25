@@ -1454,7 +1454,7 @@ async function confirmarPedido() {
         metodo_pago: S.metodoPago || '', atendido_por: S.atendidoPor || '',
         estado: 'Pendiente',
         campana_id: S.campana_id ? parseInt(S.campana_id) : null,
-        comprobante_pago: payload.comprobante_url || null
+        comprobante_pago: null
       })
     });
     const pedidoData = await pedidoRes.json();
