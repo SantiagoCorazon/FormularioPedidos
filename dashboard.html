@@ -701,18 +701,109 @@ async function verPedido(id) {
   const detalle = await rDet.json();
   $('cambiarEstado').value = p.estado || '';
   $('notasEnvio').value = p.observaciones || '';
+  const blk = (titulo, contenido) => contenido ? `
+    <div style="margin-bottom:12px">
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:4px">${titulo}</div>
+      <div style="font-size:.83rem;color:#5A3A48;line-height:1.7">${contenido}</div>
+    </div>` : '';
+
   $('detallePedidoContent').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div><strong>N° Pedido:</strong> ${p.nro_pedido}<br><strong>Fecha:</strong> ${p.fecha} ${p.hora||''}<br><strong>Canal:</strong> ${p.canal||'—'}<br><strong>Estado:</strong> ${p.estado||'—'}</div>
-      <div><strong>Cliente:</strong> ${p.nombre_razon_social||'—'}<br><strong>Tel:</strong> ${p.telefono_comprador||'—'}<br><strong>Ciudad:</strong> ${p.ciudad_comprador||'—'}<br><strong>Correo:</strong> ${p.correo_comprador||'—'}</div>
-      <div><strong>Destinatario:</strong> ${p.nombres_destinatario||''} ${p.apellidos_destinatario||''}<br><strong>Tel:</strong> ${p.telefono_destinatario||'—'}<br><strong>Ciudad entrega:</strong> ${p.ciudad_entrega||'—'}<br><strong>Dirección:</strong> ${p.direccion_entrega||'—'}</div>
-      <div><strong>Ocasión:</strong> ${p.ocasion||'—'}<br><strong>Para:</strong> ${p.protagonista||'—'}<br><strong>Pago:</strong> ${p.metodo_pago||'—'}<br><strong>Total:</strong> <strong style="color:var(--pink)">${fmt(p.total_pedido)}</strong></div>
+    <!-- CABECERA -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#FDF8FB;border-radius:8px;padding:12px;margin-bottom:16px;font-size:.82rem">
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">N° Pedido</span><strong style="color:#E8176B;font-size:1rem">${p.nro_pedido||'—'}</strong></div>
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Fecha</span>${p.fecha||'—'} ${p.hora||''}</div>
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Estado</span><span style="background:#FDE8F2;color:#E8176B;padding:2px 10px;border-radius:10px;font-weight:600;font-size:.75rem">${p.estado||'—'}</span></div>
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Canal</span>${p.canal||'—'}</div>
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Atendido por</span>${p.atendido_por||'—'}</div>
+      <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Tipo cliente</span>${p.tipo_cliente||'—'}</div>
     </div>
-    ${p.mensaje?`<div style="background:var(--pink-lt);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-style:italic">"${p.mensaje}"${p.firma_mensaje?' — '+p.firma_mensaje:''}</div>`:''}
-    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-      <thead><tr style="background:var(--cream)"><th style="padding:8px;text-align:left;border-bottom:1px solid var(--border)">Producto</th><th style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">Precio</th></tr></thead>
-      <tbody>${detalle.map(d=>`<tr><td style="padding:8px;border-bottom:1px solid var(--border)">${d.categoria||''} — ${d.producto||''} (x${d.cantidad||1})</td><td style="padding:8px;text-align:right;border-bottom:1px solid var(--border)">${fmt(d.subtotal_linea)}</td></tr>`).join('')}</tbody>
-      <tfoot><tr><td style="padding:8px;font-weight:700">TOTAL</td><td style="padding:8px;text-align:right;font-weight:700;color:var(--pink)">${fmt(p.total_pedido)}</td></tr></tfoot>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+      <!-- COMPRADOR -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">📦 Comprador / Pagador</div>
+        ${blk('Nombre', p.nombre_razon_social)}
+        ${blk('Documento', p.id_nit_comprador)}
+        ${blk('Teléfono', p.telefono_comprador)}
+        ${blk('Correo contacto', p.correo_comprador)}
+        ${blk('Correo factura', p.correo_factura)}
+        ${blk('Ciudad', p.ciudad_comprador)}
+        ${blk('Dirección', p.direccion_comprador)}
+      </div>
+
+      <!-- DESTINATARIO -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">🚚 Destinatario y Entrega</div>
+        ${blk('Nombre', (p.nombres_destinatario||'') + ' ' + (p.apellidos_destinatario||''))}
+        ${blk('Teléfono', p.telefono_destinatario)}
+        ${blk('Ciudad', p.ciudad_entrega)}
+        ${blk('Dirección', p.direccion_entrega)}
+        ${blk('Referencia', p.referencia_entrega)}
+        ${blk('Envío', p.envio_descripcion)}
+        ${blk('Costo envío', p.costo_envio > 0 ? fmt(p.costo_envio) : 'GRATIS')}
+      </div>
+
+      <!-- DETALLES DEL BONO -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">✨ Detalles del Pedido</div>
+        ${blk('Tipo / Ocasión', p.ocasion)}
+        ${blk('Fallecido', p.detalle_protagonista)}
+        ${blk('Para quién', p.protagonista)}
+        ${blk('De parte de', p.firma_mensaje)}
+      </div>
+
+      <!-- PAGO -->
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">💳 Pago</div>
+        ${blk('Método', p.metodo_pago)}
+        ${blk('Subtotal productos', fmt(p.subtotal_productos))}
+        ${blk('Costo envío', fmt(p.costo_envio))}
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-weight:700;color:#E8176B;font-size:1rem">TOTAL: ${fmt(p.total_pedido)}</div>
+        <div style="margin-top:10px">
+          ${p.comprobante_pago
+            ? `<a href="${p.comprobante_pago}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;background:#e8f5e9;color:#2e7d32;border-radius:6px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid #a5d6a7">📎 Ver comprobante de pago</a>`
+            : '<span style="font-size:.75rem;color:#9A7A88">Sin comprobante adjunto</span>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- MENSAJE TARJETA -->
+    ${p.mensaje ? `<div style="background:#FDE8F2;border-left:3px solid #E8176B;padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px">
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:6px">✉ Mensaje para la tarjeta</div>
+      <div style="font-style:italic;color:#5A3A48">"${p.mensaje}"</div>
+      ${p.firma_mensaje ? `<div style="font-size:.8rem;color:#9A7A88;margin-top:4px">— ${p.firma_mensaje}</div>` : ''}
+    </div>` : ''}
+
+    <!-- NOTAS -->
+    ${p.observaciones ? `<div style="background:#FDF8FB;border-left:3px solid var(--border);padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:16px">
+      <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#9A7A88;font-weight:700;margin-bottom:6px">📝 Notas del pedido</div>
+      <div style="color:#5A3A48;font-size:.83rem">${p.observaciones}</div>
+    </div>` : ''}
+
+    <!-- PRODUCTOS -->
+    <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:8px">🛍 Productos del pedido</div>
+    <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:4px">
+      <thead><tr style="background:#FDF8FB">
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;color:#5A3A48">Categoría</th>
+        <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;color:#5A3A48">Producto</th>
+        <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;color:#5A3A48">Cant.</th>
+        <th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;color:#5A3A48">Precio unit.</th>
+        <th style="padding:8px 10px;text-align:right;border-bottom:2px solid var(--border);font-size:.7rem;text-transform:uppercase;color:#5A3A48">Subtotal</th>
+      </tr></thead>
+      <tbody>
+        ${detalle.map(d=>`<tr>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);color:#9A7A88;font-size:.78rem">${d.categoria||'—'}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border)">${d.producto||'—'}${d.subcategoria?' <span style="font-size:.72rem;color:#9A7A88">/ '+d.subcategoria+'</span>':''}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:center">${d.cantidad||1}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right">${fmt(d.precio_unitario)}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font-weight:600">${fmt(d.subtotal_linea)}</td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot>
+        <tr><td colspan="4" style="padding:10px;font-weight:700;text-align:right;font-size:.85rem">TOTAL DEL PEDIDO</td>
+        <td style="padding:10px;text-align:right;font-weight:700;color:#E8176B;font-size:1rem">${fmt(p.total_pedido)}</td></tr>
+      </tfoot>
     </table>`;
   abrirModal('modalPedido');
 }
@@ -1138,37 +1229,54 @@ function hdrs() {
 function imprimirPedido() {
   if (!pedidoActual) return;
   const p = pedidoActual;
-  const contenido = $('detallePedidoContent').innerHTML;
+  const notasEnvio = $('notasEnvio').value || '';
   const ventana = window.open('', '_blank');
-  ventana.document.write(`
-    <!DOCTYPE html><html><head>
-    <meta charset="UTF-8">
-    <title>PEDIDO_${p.nro_pedido}</title>
-    <style>
-      body{font-family:Helvetica,Arial,sans-serif;color:#1A0A10;padding:30px;font-size:12px}
-      h2{color:#E8176B;margin-bottom:4px}
-      table{width:100%;border-collapse:collapse;font-size:11px}
-      th{background:#FDF8FB;padding:7px;text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #F0D8E4;color:#5A3A48}
-      td{padding:8px 7px;border-bottom:1px solid #F0D8E4}
-      strong{color:#1A0A10}
-      .header{display:flex;justify-content:space-between;border-bottom:2px solid #F0D8E4;padding-bottom:12px;margin-bottom:16px}
-      .badge{background:#FDE8F2;color:#E8176B;padding:3px 12px;border-radius:10px;font-weight:700;font-size:13px}
-      .notas{background:#FDF8FB;border-left:3px solid #E8176B;padding:10px;margin:12px 0;font-size:11px}
-    </style>
-    </head><body>
-    <div class="header">
-      <div><h2>Santiago Corazón — Fundación Infantil</h2><div style="font-size:10px;color:#9A7A88">Orden de Despacho</div></div>
-      <div style="text-align:right"><div class="badge">${p.nro_pedido}</div><div style="font-size:10px;color:#9A7A88;margin-top:4px">${p.fecha} ${p.hora||''}</div></div>
-    </div>
-    ${contenido}
-    ${$('notasEnvio').value ? '<div class="notas"><strong>Notas de envío:</strong> ' + $('notasEnvio').value + '</div>' : ''}
-    <div style="margin-top:24px;font-size:10px;color:#9A7A88;text-align:center;border-top:1px solid #F0D8E4;padding-top:12px">
-      www.santiagocorazon.org | 311 724 9887
-    </div>
-    </body></html>`);
+  const estilos = `
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Helvetica,Arial,sans-serif;color:#1A0A10;padding:24px;font-size:11px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #E8176B;padding-bottom:12px;margin-bottom:16px}
+    .badge{background:#FDE8F2;color:#E8176B;padding:4px 14px;border-radius:10px;font-weight:700;font-size:14px;display:inline-block}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .blk{border:1px solid #F0D8E4;border-radius:6px;padding:10px}
+    .blk-title{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #F0D8E4}
+    .row{margin-bottom:3px}
+    .lbl{font-size:8px;color:#9A7A88;text-transform:uppercase;display:block}
+    .val{font-size:10px;color:#1A0A10}
+    table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px}
+    th{background:#FDF8FB;padding:6px 8px;text-align:left;font-size:8px;text-transform:uppercase;border-bottom:1px solid #F0D8E4;color:#5A3A48}
+    td{padding:6px 8px;border-bottom:1px solid #F0D8E4}
+    .msg{background:#FDE8F2;border-left:3px solid #E8176B;padding:8px 12px;margin-bottom:10px;font-style:italic;font-size:10px}
+    .notas{background:#FDF8FB;border-left:3px solid #F0D8E4;padding:8px 12px;margin-bottom:10px;font-size:10px}
+    .footer{margin-top:20px;padding-top:10px;border-top:1px solid #F0D8E4;font-size:9px;color:#9A7A88;text-align:center}
+    .firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}
+    .firma-line{border-top:1px solid #ccc;padding-top:6px;text-align:center;font-size:9px;color:#9A7A88}
+  `;
+  ventana.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PEDIDO_' + p.nro_pedido + '</title><style>' + estilos + '</style></head><body>');
+  ventana.document.write('<div class="header"><div><div style="font-size:16px;font-weight:700;color:#E8176B">❤ Santiago Corazón</div><div style="font-size:9px;color:#9A7A88">Fundación Infantil — Orden de Despacho</div></div><div style="text-align:right"><div class="badge">' + p.nro_pedido + '</div><div style="font-size:9px;color:#9A7A88;margin-top:4px">' + (p.fecha||'') + ' ' + (p.hora||'') + ' | Canal: ' + (p.canal||'—') + ' | Atendido: ' + (p.atendido_por||'—') + '</div><div style="font-size:9px;margin-top:2px"><strong>Estado:</strong> ' + (p.estado||'—') + '</div></div></div>');
+  ventana.document.write('<div class="grid2">');
+  ventana.document.write('<div class="blk"><div class="blk-title">Comprador / Pagador</div><div class="row"><span class="lbl">Nombre</span><span class="val"><strong>' + (p.nombre_razon_social||'—') + '</strong></span></div><div class="row"><span class="lbl">Documento</span><span class="val">' + (p.id_nit_comprador||'—') + '</span></div><div class="row"><span class="lbl">Teléfono</span><span class="val">' + (p.telefono_comprador||'—') + '</span></div><div class="row"><span class="lbl">Correo</span><span class="val">' + (p.correo_comprador||'—') + '</span></div><div class="row"><span class="lbl">Correo factura</span><span class="val">' + (p.correo_factura||'—') + '</span></div><div class="row"><span class="lbl">Ciudad</span><span class="val">' + (p.ciudad_comprador||'—') + ' ' + (p.departamento||'') + '</span></div><div class="row"><span class="lbl">Dirección</span><span class="val">' + (p.direccion_comprador||'—') + '</span></div></div>');
+  ventana.document.write('<div class="blk"><div class="blk-title">Destinatario y Entrega</div><div class="row"><span class="lbl">Nombre</span><span class="val"><strong>' + (p.nombres_destinatario||'') + ' ' + (p.apellidos_destinatario||'') + '</strong></span></div><div class="row"><span class="lbl">Teléfono</span><span class="val">' + (p.telefono_destinatario||'—') + '</span></div><div class="row"><span class="lbl">Ciudad</span><span class="val">' + (p.ciudad_entrega||'—') + '</span></div><div class="row"><span class="lbl">Dirección</span><span class="val">' + (p.direccion_entrega||'—') + '</span></div><div class="row"><span class="lbl">Referencia</span><span class="val">' + (p.referencia_entrega||'—') + '</span></div><div class="row"><span class="lbl">Método envío</span><span class="val">' + (p.envio_descripcion||'—') + '</span></div><div class="row"><span class="lbl">Costo envío</span><span class="val">' + (p.costo_envio > 0 ? '$ ' + Number(p.costo_envio).toLocaleString('es-CO') : 'GRATIS') + '</span></div></div>');
+  ventana.document.write('<div class="blk"><div class="blk-title">Detalles del Bono</div><div class="row"><span class="lbl">Ocasión</span><span class="val">' + (p.ocasion||'—') + '</span></div>' + (p.detalle_protagonista ? '<div class="row"><span class="lbl">Fallecido</span><span class="val">' + p.detalle_protagonista + '</span></div>' : '') + '<div class="row"><span class="lbl">Para quién</span><span class="val">' + (p.protagonista||'—') + '</span></div><div class="row"><span class="lbl">De parte de</span><span class="val">' + (p.firma_mensaje||'—') + '</span></div></div>');
+  ventana.document.write('<div class="blk"><div class="blk-title">Pago</div><div class="row"><span class="lbl">Método</span><span class="val">' + (p.metodo_pago||'—') + '</span></div><div class="row"><span class="lbl">Subtotal productos</span><span class="val">$ ' + Number(p.subtotal_productos||0).toLocaleString('es-CO') + '</span></div><div class="row"><span class="lbl">Costo envío</span><span class="val">$ ' + Number(p.costo_envio||0).toLocaleString('es-CO') + '</span></div><div style="margin-top:8px;padding-top:6px;border-top:1px solid #F0D8E4;font-weight:700;color:#E8176B;font-size:13px">TOTAL: $ ' + Number(p.total_pedido||0).toLocaleString('es-CO') + '</div></div>');
+  ventana.document.write('</div>');
+  if (p.mensaje) ventana.document.write('<div class="msg">✉ <strong>Mensaje para tarjeta:</strong> "' + p.mensaje + '"' + (p.firma_mensaje ? ' — ' + p.firma_mensaje : '') + '</div>');
+  if (p.observaciones) ventana.document.write('<div class="notas">📝 <strong>Notas del pedido:</strong> ' + p.observaciones + '</div>');
+  if (notasEnvio) ventana.document.write('<div class="notas" style="border-color:#E8176B">🚚 <strong>Notas de envío:</strong> ' + notasEnvio + '</div>');
+  ventana.document.write('<div class="blk-title" style="margin-bottom:8px">🛍 Productos</div>');
+  ventana.document.write('<table><thead><tr><th>Categoría</th><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio unit.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody id="tbodyPrint"></tbody><tfoot><tr><td colspan="4" style="padding:8px;font-weight:700;text-align:right;color:#E8176B">TOTAL DEL PEDIDO</td><td style="padding:8px;text-align:right;font-weight:700;color:#E8176B;font-size:12px">$ ' + Number(p.total_pedido||0).toLocaleString('es-CO') + '</td></tr></tfoot></table>');
+  ventana.document.write('<div class="firma-grid"><div class="firma-line">Firma del cliente</div><div class="firma-line">Firma y sello Fundación</div></div>');
+  ventana.document.write('<div class="footer">www.santiagocorazon.org &nbsp;|&nbsp; 311 724 9887 &nbsp;|&nbsp; Centro Comercial Oviedo, Local 9954, Medellín</div>');
+  ventana.document.write('</body></html>');
   ventana.document.close();
-  setTimeout(() => ventana.print(), 500);
+  fetch(SUPABASE_URL + '/rest/v1/pedido_detalle?pedido_id=eq.' + p.id, { headers: hdrs() })
+    .then(r => r.json())
+    .then(detalle => {
+      const tbody = ventana.document.getElementById('tbodyPrint');
+      if (tbody) tbody.innerHTML = detalle.map(d => '<tr><td style="color:#9A7A88">' + (d.categoria||'—') + '</td><td>' + (d.producto||'—') + (d.subcategoria?' / '+d.subcategoria:'') + '</td><td style="text-align:center">' + (d.cantidad||1) + '</td><td style="text-align:right">$ ' + Number(d.precio_unitario||0).toLocaleString('es-CO') + '</td><td style="text-align:right;font-weight:600">$ ' + Number(d.subtotal_linea||0).toLocaleString('es-CO') + '</td></tr>').join('');
+      setTimeout(() => ventana.print(), 600);
+    });
 }
+
 
 function badgeClass(estado) {
   const mapa = { 'Pendiente':'pendiente','En preparación':'preparacion','Listo para recoger':'preparacion','Despachado':'despachado','Entregado':'entregado','Cancelado':'cancelado' };
