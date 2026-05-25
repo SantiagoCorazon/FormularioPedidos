@@ -358,12 +358,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
+    <div class="field"><label>¿De parte de quién?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
     <div class="sub-title">📝 Notas adicionales a tu pedido</div>
     <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
       <textarea id="p_mensaje_pesame" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
       <div class="char-count"><span id="cnt_mp">0</span>/170</div>
     </div>
-    <div class="field"><label>¿De parte de quién?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
   </div>
 </div>
 
@@ -394,12 +394,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
+    <div class="field"><label>¿De parte de quién?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
     <div class="sub-title">📝 Notas adicionales a tu pedido</div>
     <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
       <textarea id="t_mensaje" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
       <div class="char-count"><span id="cnt_mt">0</span>/170</div>
     </div>
-    <div class="field"><label>¿De parte de quién?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
   </div>
 </div>
 
@@ -447,25 +447,28 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 4: BONO BASE (pesame y toda ocasion) -->
+<!-- SEC 4: BONO + EMPAQUE en una sola pantalla -->
 <div class="section" id="sec-4-bono">
   <div class="card">
     <div class="step-label" id="sl-4b">Paso 4</div>
     <div class="section-title">Elige el <em>tipo de bono</em></div>
-    <div class="section-sub" id="sec4b-sub">Elige el tipo de bono. El <strong>Virtual</strong> se envía por email o WhatsApp. El <strong>Plegable</strong> es físico y puedes elegir el empaque en el siguiente paso.</div>
+    <div class="section-sub" id="sec4b-sub">El <strong>Virtual</strong> se envía por email o WhatsApp (-$4.000). El <strong>Plegable</strong> es físico — elige también el empaque abajo.</div>
     <div class="prod-grid" id="bonoGrid"></div>
     <div class="sel-resumen" id="bono-sel-resumen">✓ Seleccionado: <strong id="bono-sel-nombre"></strong> — <span id="bono-sel-precio"></span></div>
   </div>
-</div>
-
-<!-- SEC 5: EMPAQUE (solo si eligió bono plegable) -->
-<div class="section" id="sec-5-empaque">
-  <div class="card">
-    <div class="step-label" id="sl-5e">Paso 5</div>
+  <!-- Empaque aparece debajo cuando elige bono plegable -->
+  <div class="card" id="card-empaque" style="display:none;margin-top:16px">
     <div class="section-title">Elige el <em>empaque</em></div>
-    <div class="section-sub">Elige cómo quieres presentar el bono. El sobre no tiene costo adicional. La bolsa y la caja tienen un valor extra que se suma al total.</div>
+    <div class="section-sub">El sobre no tiene costo adicional. La bolsa y la caja tienen un valor extra.</div>
     <div class="prod-grid" id="empaqueGrid"></div>
     <div class="sel-resumen" id="emp-sel-resumen">✓ Seleccionado: <strong id="emp-sel-nombre"></strong> — <span id="emp-sel-precio"></span></div>
+  </div>
+</div>
+
+<!-- SEC 5: EMPAQUE — ya no se usa como pantalla separada -->
+<div class="section" id="sec-5-empaque" style="display:none!important">
+  <div class="card">
+    <div class="prod-grid" id="empaqueGridOld"></div>
   </div>
 </div>
 
@@ -547,7 +550,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="order-badge" id="successNum"></div>
   <p style="color:var(--ink-mid);font-size:.88rem;margin-top:8px">Gracias por tu pedido 💜 Nuestro equipo te contactará por WhatsApp para confirmar.</p>
   <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
-    <button class="btn btn-secondary" onclick="window.print()">🖨 Imprimir</button>
+    <button class="btn btn-secondary" onclick="generarPDF()">📄 Descargar comprobante</button>
     <button class="btn btn-primary" onclick="nuevoPedido()">+ Nuevo Pedido</button>
   </div>
 </div>
@@ -657,16 +660,16 @@ const S = {
 // FLUJOS por tipo de pedido
 // ============================================================
 const FLUJOS = {
-  pesame:      ['sec-1','sec-2','sec-3-pesame','sec-4-bono','sec-5-empaque','sec-acompanante','sec-envio','sec-orden'],
-  toda_ocasion:['sec-1','sec-2','sec-3-toda','sec-4-bono','sec-5-empaque','sec-acompanante','sec-envio','sec-orden'],
+  pesame:      ['sec-1','sec-2','sec-3-pesame','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
+  toda_ocasion:['sec-1','sec-2','sec-3-toda','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
   producto:    ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
   empresarial: ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
   donacion:    ['sec-1','sec-3-donacion','sec-orden'],
 };
 
 const PASOS_LABELS = {
-  pesame:      ['Comprador','Destinatario','Info Bono','Bono','Empaque','Acompañante','Envío','Orden'],
-  toda_ocasion:['Comprador','Destinatario','Info Bono','Bono','Empaque','Acompañante','Envío','Orden'],
+  pesame:      ['Comprador','Destinatario','Info Bono','Bono y Empaque','Acompañante','Envío','Orden'],
+  toda_ocasion:['Comprador','Destinatario','Info Bono','Bono y Empaque','Acompañante','Envío','Orden'],
   producto:    ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
   empresarial: ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
   donacion:    ['Comprador','Donación','Orden'],
@@ -776,14 +779,11 @@ function irSiguiente(skip=false) {
   const secActual = S.flujo[S.flujoIdx];
   if (secActual === 'sec-orden') { confirmarPedido(); return; }
   if (!skip && !validar(secActual)) return;
-  // Si eligió sin bono o bono virtual, saltar empaque
-  if (secActual === 'sec-4-bono' && (S.sinBono || (S.bono && S.bono.es_virtual && S.bonos && S.bonos.every(b=>b.es_virtual)))) {
-    S.empaque = {nombre: S.sinBono ? 'Sin empaque' : 'Virtual', precio:0, es_virtual:!S.sinBono};
-    S.flujoIdx++;
-    if (S.flujo[S.flujoIdx] === 'sec-5-empaque') S.flujoIdx++;
-  } else {
-    S.flujoIdx++;
+  // Avanzar normalmente — empaque ya está en la misma pantalla que bono
+  if (secActual === 'sec-4-bono' && S.sinBono) {
+    S.empaque = {nombre: 'Sin empaque', precio: 0, es_virtual: false};
   }
+  S.flujoIdx++;
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
 
@@ -893,6 +893,8 @@ function validar(secId) {
   }
   if (secId === 'sec-4-bono') {
     if (!S.sinBono && (!S.bonos || !S.bonos.length)) { alert('Selecciona al menos un bono o elige "Sin Bono".'); return false; }
+    const tienePlegable = S.bonos && S.bonos.some(b => !b.es_virtual);
+    if (tienePlegable && !S.empaque) { alert('Selecciona el tipo de empaque para el bono.'); return false; }
     return true;
   }
   if (secId === 'sec-5-empaque') {
@@ -1044,9 +1046,23 @@ function selBono(idx) {
   } else {
     $('bono-sel-resumen').style.display = 'none';
   }
-  // Si alguno es virtual
+  // Si alguno es virtual, ocultar empaque
   const tieneVirtual = S.bonos.some(b => b.es_virtual);
+  const todoVirtual = S.bonos.length > 0 && S.bonos.every(b => b.es_virtual);
   if ($('aviso-virtual')) $('aviso-virtual').style.display = tieneVirtual ? 'block' : 'none';
+  // Mostrar/ocultar sección de empaque
+  const cardEmpaque = $('card-empaque');
+  if (cardEmpaque) {
+    if (S.bonos.length > 0 && !todoVirtual) {
+      cardEmpaque.style.display = 'block';
+      renderEmpaques();
+    } else {
+      cardEmpaque.style.display = 'none';
+      if (todoVirtual) {
+        S.empaque = {id:'virtual', nombre:'Virtual', precio:-4000, es_virtual:true};
+      }
+    }
+  }
   actualizarTotal();
 }
 
@@ -1475,6 +1491,53 @@ function mostrarExito() {
   $('progressWrap').style.display='none';
   $('successSection').classList.add('show');
   $('successNum').textContent = orderNum;
+  // Generar PDF automáticamente
+  setTimeout(() => generarPDF(), 1000);
+}
+
+function generarPDF() {
+  try {
+    const ordenEl = $('ordenPrint');
+    if (!ordenEl) return;
+    const contenido = ordenEl.innerHTML;
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+      <!DOCTYPE html><html><head>
+      <meta charset="UTF-8">
+      <title>PEDIDO_${orderNum}</title>
+      <style>
+        body{font-family:'Helvetica',Arial,sans-serif;color:#1A0A10;padding:30px;font-size:12px}
+        h1{color:#E8176B;font-size:18px;margin-bottom:4px}
+        .header{display:flex;justify-content:space-between;border-bottom:2px solid #F0D8E4;padding-bottom:12px;margin-bottom:16px}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+        .block h4{font-size:9px;text-transform:uppercase;color:#E8176B;margin-bottom:6px;letter-spacing:.08em}
+        .block p{line-height:1.7;color:#5A3A48}
+        table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
+        th{background:#FDF8FB;padding:7px 10px;text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #F0D8E4;color:#5A3A48}
+        td{padding:8px 10px;border-bottom:1px solid #F0D8E4}
+        .total{text-align:right;font-weight:700;color:#E8176B;font-size:14px}
+        .badge{display:inline-block;background:#FDE8F2;color:#E8176B;padding:2px 10px;border-radius:10px;font-weight:600}
+        .msg{background:#FDE8F2;border-left:3px solid #E8176B;padding:10px 14px;font-style:italic;margin:12px 0}
+      </style>
+      </head><body>
+      <div class="header">
+        <div><h1>Santiago Corazón</h1><div style="font-size:10px;color:#9A7A88">Fundación Infantil</div></div>
+        <div style="text-align:right"><div class="badge">PEDIDO_${orderNum}</div><div style="font-size:10px;color:#9A7A88;margin-top:4px">${new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'})}</div></div>
+      </div>
+      ${contenido}
+      <div style="margin-top:30px;padding-top:16px;border-top:1px solid #F0D8E4;font-size:10px;color:#9A7A88;text-align:center">
+        Este documento es tu comprobante de pedido. Nuestro equipo te contactará por WhatsApp para confirmar.<br>
+        www.santiagocorazon.org | 311 724 9887
+      </div>
+      </body></html>`);
+    ventana.document.close();
+    setTimeout(() => {
+      ventana.document.title = `PEDIDO_${orderNum}`;
+      ventana.print();
+    }, 500);
+  } catch(e) {
+    console.warn('Error generando PDF:', e);
+  }
 }
 
 function nuevoPedido() { location.reload(); }

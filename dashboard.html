@@ -435,8 +435,13 @@ tr:hover td{background:var(--pink-lt)}
   <div class="modal" style="max-width:700px">
     <div class="modal-title">Detalle del Pedido</div>
     <div id="detallePedidoContent" style="font-size:.85rem;color:var(--ink-mid);line-height:1.8"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">📝 Notas de envío / entrega</label>
+      <textarea id="notasEnvio" placeholder="Agregar instrucciones para el domiciliario, observaciones de entrega..." style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;resize:vertical;min-height:70px;outline:none"></textarea>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalPedido')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="imprimirPedido()" style="background:#f3e5f5;color:#6a1b9a;border-color:#ce93d8">🖨 Imprimir</button>
       <select id="cambiarEstado" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem;outline:none">
         <option value="">Cambiar estado...</option>
         <option>Pendiente</option>
@@ -446,7 +451,7 @@ tr:hover td{background:var(--pink-lt)}
         <option>Entregado</option>
         <option>Cancelado</option>
       </select>
-      <button class="btn btn-primary" onclick="actualizarEstado()">Actualizar estado</button>
+      <button class="btn btn-primary" onclick="actualizarEstado()">Guardar</button>
     </div>
   </div>
 </div>
@@ -695,6 +700,7 @@ async function verPedido(id) {
   const rDet = await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?pedido_id=eq.${id}`, { headers: hdrs() });
   const detalle = await rDet.json();
   $('cambiarEstado').value = p.estado || '';
+  $('notasEnvio').value = p.observaciones || '';
   $('detallePedidoContent').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div><strong>N° Pedido:</strong> ${p.nro_pedido}<br><strong>Fecha:</strong> ${p.fecha} ${p.hora||''}<br><strong>Canal:</strong> ${p.canal||'—'}<br><strong>Estado:</strong> ${p.estado||'—'}</div>
@@ -714,12 +720,13 @@ async function verPedido(id) {
 async function actualizarEstado() {
   const nuevoEstado = $('cambiarEstado').value;
   if (!nuevoEstado || !pedidoActual) return;
+  const notasEnvio = $('notasEnvio').value.trim();
   await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoActual.id}`, {
     method: 'PATCH',
     headers: { ...hdrs(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ estado: nuevoEstado })
+    body: JSON.stringify({ estado: nuevoEstado, observaciones: notasEnvio })
   });
-  toast('Estado actualizado', 'success');
+  toast('Pedido actualizado', 'success');
   cerrarModal('modalPedido');
   cargarPedidos();
 }
@@ -1126,6 +1133,41 @@ function hdrs() {
 }
 function hdrs() {
   return { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
+}
+
+function imprimirPedido() {
+  if (!pedidoActual) return;
+  const p = pedidoActual;
+  const contenido = $('detallePedidoContent').innerHTML;
+  const ventana = window.open('', '_blank');
+  ventana.document.write(`
+    <!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>PEDIDO_${p.nro_pedido}</title>
+    <style>
+      body{font-family:Helvetica,Arial,sans-serif;color:#1A0A10;padding:30px;font-size:12px}
+      h2{color:#E8176B;margin-bottom:4px}
+      table{width:100%;border-collapse:collapse;font-size:11px}
+      th{background:#FDF8FB;padding:7px;text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #F0D8E4;color:#5A3A48}
+      td{padding:8px 7px;border-bottom:1px solid #F0D8E4}
+      strong{color:#1A0A10}
+      .header{display:flex;justify-content:space-between;border-bottom:2px solid #F0D8E4;padding-bottom:12px;margin-bottom:16px}
+      .badge{background:#FDE8F2;color:#E8176B;padding:3px 12px;border-radius:10px;font-weight:700;font-size:13px}
+      .notas{background:#FDF8FB;border-left:3px solid #E8176B;padding:10px;margin:12px 0;font-size:11px}
+    </style>
+    </head><body>
+    <div class="header">
+      <div><h2>Santiago Corazón — Fundación Infantil</h2><div style="font-size:10px;color:#9A7A88">Orden de Despacho</div></div>
+      <div style="text-align:right"><div class="badge">${p.nro_pedido}</div><div style="font-size:10px;color:#9A7A88;margin-top:4px">${p.fecha} ${p.hora||''}</div></div>
+    </div>
+    ${contenido}
+    ${$('notasEnvio').value ? '<div class="notas"><strong>Notas de envío:</strong> ' + $('notasEnvio').value + '</div>' : ''}
+    <div style="margin-top:24px;font-size:10px;color:#9A7A88;text-align:center;border-top:1px solid #F0D8E4;padding-top:12px">
+      www.santiagocorazon.org | 311 724 9887
+    </div>
+    </body></html>`);
+  ventana.document.close();
+  setTimeout(() => ventana.print(), 500);
 }
 
 function badgeClass(estado) {
