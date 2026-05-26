@@ -2472,20 +2472,42 @@ async function importarShopify() {
   if (btnImportar) { btnImportar.disabled = true; btnImportar.textContent = 'Importando...'; }
 
   let insertados = 0, omitidos = 0, errores = 0;
-  const LOTE = 20; // lotes pequeños para no sobrecargar
 
-  for (let i = 0; i < shopifyPedidosProcesados.length; i += LOTE) {
-    const lote = shopifyPedidosProcesados.slice(i, i + LOTE);
+  // ── Traer TODOS los nro_pedido de Shopify existentes de una sola vez ──
+  const badge = document.getElementById('shopify-resumen-badge');
+  if (badge) badge.textContent = 'Verificando pedidos existentes...';
+  let existentes = new Set();
+  try {
+    const chk = await fetch(
+      `${SUPABASE_URL}/rest/v1/pedidos?canal=eq.Shopify&select=nro_pedido&limit=10000`,
+      { headers: hdrs() }
+    );
+    const chkData = await chk.json();
+    if (Array.isArray(chkData)) chkData.forEach(p => existentes.add(p.nro_pedido));
+  } catch(e) { console.warn('No se pudo verificar existentes:', e); }
+
+  const nuevos = shopifyPedidosProcesados.filter(p => !existentes.has(p.nro_pedido));
+  omitidos = shopifyPedidosProcesados.length - nuevos.length;
+
+  if (badge) badge.textContent = `${nuevos.length} nuevos · ${omitidos} ya existían`;
+
+  if (nuevos.length === 0) {
+    document.getElementById('shopify-preview-card').style.display = 'none';
+    document.getElementById('shopify-upload-card').style.display = 'none';
+    const res = document.getElementById('shopify-resultado');
+    res.style.display = 'block';
+    document.getElementById('shopify-resultado-txt').innerHTML =
+      `Todos los pedidos del archivo ya estaban en el Dashboard. <strong>${omitidos} omitidos</strong>.`;
+    return;
+  }
+
+  const LOTE = 10;
+  for (let i = 0; i < nuevos.length; i += LOTE) {
+    const lote = nuevos.slice(i, i + LOTE);
+    if (badge) badge.textContent = `Importando ${Math.min(i+LOTE, nuevos.length)} de ${nuevos.length}...`;
 
     for (const p of lote) {
       try {
-        // Verificar si este número de pedido de Shopify ya existe
-        const check = await fetch(
-          `${SUPABASE_URL}/rest/v1/pedidos?nro_pedido=eq.${encodeURIComponent(p.nro_pedido)}&canal=eq.Shopify&select=id&limit=1`,
-          { headers: hdrs() }
-        );
-        const existe = await check.json();
-        if (existe.length > 0) { omitidos++; continue; } // ya estaba, lo saltamos
 
         // Es nuevo — insertar pedido
         // Solo enviamos campos que la tabla acepta (limpiamos campos desconocidos)
