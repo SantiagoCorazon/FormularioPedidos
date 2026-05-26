@@ -224,8 +224,8 @@ tr:hover td{background:var(--pink-lt)}
       <div class="page-sub">Todos los pedidos registrados en el sistema</div>
       <div class="card">
         <div class="card-header">
-          <div class="search-bar" style="margin:0;flex:1">
-            <input class="search-input" id="searchPedidos" placeholder="Buscar por N° pedido, nombre, ciudad..." oninput="filtrarPedidos()">
+          <div class="search-bar" style="margin:0;flex:1;flex-wrap:wrap;gap:8px">
+            <input class="search-input" id="searchPedidos" placeholder="Buscar por N° pedido, nombre, ciudad..." oninput="filtrarPedidos()" style="min-width:200px;flex:1">
             <select id="filtrEstado" onchange="filtrarPedidos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todos los estados</option>
               <option>Pendiente</option>
@@ -234,13 +234,25 @@ tr:hover td{background:var(--pink-lt)}
               <option>Entregado</option>
               <option>Cancelado</option>
             </select>
+            <select id="filtrCanal" onchange="filtrarPedidos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+              <option value="">Todos los canales</option>
+              <option value="Shopify">Shopify</option>
+              <option value="Web">Web</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Tienda">Tienda</option>
+              <option value="Teléfono">Teléfono</option>
+            </select>
           </div>
         </div>
         <div class="card-body">
           <div class="table-wrap"><table id="tablaPedidos">
             <thead><tr>
-              <th>N° Pedido</th><th>Fecha</th><th>Cliente</th>
-              <th>Ciudad</th><th>Total</th><th>Canal</th><th>Estado</th><th>Acciones</th>
+              <th onclick="ordenarPedidos('nro_pedido')" style="cursor:pointer;user-select:none">N° Pedido <span id="ord-nro_pedido"></span></th>
+              <th onclick="ordenarPedidos('fecha')" style="cursor:pointer;user-select:none">Fecha <span id="ord-fecha">↓</span></th>
+              <th>Cliente</th>
+              <th>Ciudad</th><th>Total</th>
+              <th onclick="ordenarPedidos('canal')" style="cursor:pointer;user-select:none">Canal <span id="ord-canal"></span></th>
+              <th>Estado</th><th>Acciones</th>
             </tr></thead>
             <tbody id="bodyPedidos"><tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
@@ -1236,27 +1248,101 @@ async function cargarPedidos() {
   renderPedidos(todosLosPedidos);
 }
 
-function filtrarPedidos() {
-  const q = $('searchPedidos').value.toLowerCase();
-  const est = $('filtrEstado').value;
-  const filtrados = todosLosPedidos.filter(p =>
-    (!q || (p.nro_pedido||'').toLowerCase().includes(q) || (p.nombre_razon_social||'').toLowerCase().includes(q) || (p.ciudad_comprador||'').toLowerCase().includes(q)) &&
-    (!est || p.estado === est)
-  );
-  renderPedidos(filtrados);
+// ── Estado de ordenamiento de pedidos ──
+let pedidosOrdenCol = 'fecha';
+let pedidosOrdenDir = 'desc'; // 'asc' o 'desc'
+let pedidosPagActual = 1;
+const PEDIDOS_POR_PAG = 25;
+
+function ordenarPedidos(col) {
+  if (pedidosOrdenCol === col) {
+    pedidosOrdenDir = pedidosOrdenDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    pedidosOrdenCol = col;
+    pedidosOrdenDir = col === 'fecha' ? 'desc' : 'asc';
+  }
+  pedidosPagActual = 1;
+  // Actualizar indicadores visuales
+  ['nro_pedido','fecha','canal'].forEach(c => {
+    const el = document.getElementById('ord-' + c);
+    if (el) el.textContent = c === pedidosOrdenCol ? (pedidosOrdenDir === 'asc' ? '↑' : '↓') : '';
+  });
+  filtrarPedidos();
 }
 
-function renderPedidos(lista) {
-  $('bodyPedidos').innerHTML = lista.length ? lista.map(p => `<tr>
+function filtrarPedidos() {
+  const q   = ($('searchPedidos')||{value:''}).value.toLowerCase();
+  const est = ($('filtrEstado') ||{value:''}).value;
+  const can = ($('filtrCanal')  ||{value:''}).value;
+
+  let filtrados = todosLosPedidos.filter(p =>
+    (!q   || (p.nro_pedido||'').toLowerCase().includes(q)
+           || (p.nombre_razon_social||'').toLowerCase().includes(q)
+           || (p.ciudad_comprador||'').toLowerCase().includes(q)) &&
+    (!est || p.estado === est) &&
+    (!can || (p.canal||'') === can)
+  );
+
+  // Ordenar
+  filtrados.sort((a, b) => {
+    let va = a[pedidosOrdenCol] || '';
+    let vb = b[pedidosOrdenCol] || '';
+    // Para nro_pedido extraer número si es #12345
+    if (pedidosOrdenCol === 'nro_pedido') {
+      va = parseInt(va.replace(/[^0-9]/g,'')) || 0;
+      vb = parseInt(vb.replace(/[^0-9]/g,'')) || 0;
+    }
+    if (va < vb) return pedidosOrdenDir === 'asc' ? -1 : 1;
+    if (va > vb) return pedidosOrdenDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+
+  renderPedidos(filtrados, true);
+}
+
+function renderPedidos(lista, resetPag) {
+  if (resetPag) pedidosPagActual = 1;
+  const total   = lista.length;
+  const paginas = Math.ceil(total / PEDIDOS_POR_PAG) || 1;
+  if (pedidosPagActual > paginas) pedidosPagActual = paginas;
+
+  const inicio = (pedidosPagActual - 1) * PEDIDOS_POR_PAG;
+  const fin    = inicio + PEDIDOS_POR_PAG;
+  const pagina = lista.slice(inicio, fin);
+
+  $('bodyPedidos').innerHTML = pagina.length ? pagina.map(p => `<tr>
     <td><strong>${p.nro_pedido||'—'}</strong></td>
     <td>${p.fecha||'—'}</td>
     <td>${p.nombre_razon_social||'—'}</td>
     <td>${p.ciudad_comprador||'—'}</td>
     <td>${fmt(p.total_pedido)}</td>
-    <td>${p.canal||'—'}</td>
+    <td><span style="font-size:.75rem;background:${(p.canal||'')==='Shopify'?'#fff3e0':((p.canal||'')==='Web'?'#e3f2fd':'#f3e5f5')};padding:2px 8px;border-radius:10px">${p.canal||'—'}</span></td>
     <td><span class="badge badge-${badgeClass(p.estado)}">${p.estado||'—'}</span></td>
     <td><button class="btn btn-secondary btn-sm" onclick="verPedido(${p.id})">Ver</button></td>
   </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron pedidos</td></tr>';
+
+  // Paginación
+  let pagHTML = '';
+  if (paginas > 1) {
+    pagHTML += `<span style="font-size:.78rem;color:var(--ink-lt);margin-right:8px">${total} pedidos · pág. ${pedidosPagActual}/${paginas}</span>`;
+    if (pedidosPagActual > 1) pagHTML += `<button class="btn btn-secondary btn-sm" onclick="irPagPedidos(${pedidosPagActual-1},lista_pedidos_actual)">← Ant</button> `;
+    // Números de página (máx 5 visibles)
+    const desde = Math.max(1, pedidosPagActual - 2);
+    const hasta = Math.min(paginas, desde + 4);
+    for (let i = desde; i <= hasta; i++) {
+      pagHTML += `<button class="btn btn-sm ${i===pedidosPagActual?'btn-primary':'btn-secondary'}" onclick="irPagPedidos(${i})">${i}</button> `;
+    }
+    if (pedidosPagActual < paginas) pagHTML += `<button class="btn btn-secondary btn-sm" onclick="irPagPedidos(${pedidosPagActual+1})">Sig →</button>`;
+  }
+  $('pagPedidos').innerHTML = pagHTML;
+
+  // Guardar lista actual para que los botones de paginación accedan a ella
+  window._listaPedidosActual = lista;
+}
+
+function irPagPedidos(n) {
+  pedidosPagActual = n;
+  renderPedidos(window._listaPedidosActual || todosLosPedidos, false);
 }
 
 async function verPedido(id) {
