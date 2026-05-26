@@ -280,12 +280,15 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-body">
           <div class="search-bar">
             <input class="search-input" id="searchCatalogo" placeholder="Buscar producto..." oninput="filtrarCatalogo()">
-            <select id="filtrTipo" onchange="filtrarCatalogo()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+            <select id="filtrTipo" onchange="filtrarCatalogo();actualizarFiltrSub()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todos los tipos</option>
               <option value="bono_base">Bonos Base</option>
               <option value="empaque">Empaques</option>
               <option value="acompanante">Acompañantes</option>
               <option value="empresarial">Empresarial</option>
+            </select>
+            <select id="filtrSub" onchange="filtrarCatalogo()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+              <option value="">Todas las subcategorías</option>
             </select>
           </div>
           <div class="table-wrap"><table>
@@ -311,7 +314,7 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-body">
           <div class="table-wrap"><table>
             <thead><tr>
-              <th>Nombre</th><th>Descripción</th><th>Meta</th>
+              <th>Nombre</th><th>Descripción</th><th>Tipo</th><th>Meta</th>
               <th>Inicio</th><th>Fin</th><th>Activa</th><th>Acciones</th>
             </tr></thead>
             <tbody id="bodyCampanas"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
@@ -366,7 +369,14 @@ tr:hover td{background:var(--pink-lt)}
       <div class="form-field"><label>Subcategoría</label><input type="text" id="prod_sub" placeholder="Ej: Plantas, Velas, Línea de Corazón"></div>
       <div class="form-field"><label>Precio (COP) <span style="color:var(--pink)">*</span></label><input type="number" id="prod_precio" placeholder="82000" min="0"></div>
       <div class="form-field"><label>Orden</label><input type="number" id="prod_orden" placeholder="1" min="1"></div>
-      <div class="form-field col-full"><label>URL de imagen</label><input type="text" id="prod_img" placeholder="https://..."></div>
+      <div class="form-field col-full">
+        <label>URL de imagen <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(pega el link de Google Drive, Shopify o cualquier URL pública)</span></label>
+        <input type="text" id="prod_img" placeholder="https://drive.google.com/... o https://..." oninput="previewImgProd()">
+        <div id="prod_img_preview" style="margin-top:8px;display:none">
+          <img id="prod_img_thumb" style="height:100px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border)" onerror="this.parentElement.style.display='none'">
+        </div>
+        <div style="font-size:.72rem;color:var(--ink-lt);margin-top:4px">💡 Para Google Drive: abre la imagen → clic derecho → "Copiar dirección de imagen"</div>
+      </div>
       <div class="form-field col-full">
         <label style="display:flex;align-items:center;gap:10px;text-transform:none;font-size:.85rem">
           <input type="checkbox" id="prod_virtual" style="width:auto;accent-color:var(--pink)">
@@ -386,21 +396,60 @@ tr:hover td{background:var(--pink-lt)}
 
 <!-- Modal Campaña -->
 <div class="modal-overlay" id="modalCampana">
-  <div class="modal">
+  <div class="modal" style="max-width:680px">
     <div class="modal-title" id="modalCampTitle">Nueva Campaña</div>
     <div class="modal-sub">Las campañas activas aparecen en el formulario de donación</div>
     <input type="hidden" id="camp_id">
     <div class="form-grid">
       <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="camp_nombre" placeholder="Nombre de la campaña"></div>
       <div class="form-field col-full"><label>Descripción</label><textarea id="camp_desc" placeholder="Describe el objetivo de la campaña..."></textarea></div>
+      <div class="form-field"><label>Tipo de recaudo <span style="color:var(--pink)">*</span></label>
+        <select id="camp_tipo_recaudo" onchange="toggleProductosCampana()">
+          <option value="dinero">💰 Solo dinero</option>
+          <option value="productos">🛍 Solo productos</option>
+          <option value="ambos">💰🛍 Dinero y productos</option>
+        </select>
+      </div>
       <div class="form-field"><label>Meta (COP)</label><input type="number" id="camp_meta" placeholder="1000000" min="0"></div>
       <div class="form-field"><label>URL de imagen</label><input type="text" id="camp_img" placeholder="https://..."></div>
       <div class="form-field"><label>Fecha inicio</label><input type="date" id="camp_inicio"></div>
       <div class="form-field"><label>Fecha fin</label><input type="date" id="camp_fin"></div>
     </div>
+
+    <!-- Productos de la campaña -->
+    <div id="secProductosCampana" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+      <div style="font-size:.85rem;font-weight:600;color:var(--ink);margin-bottom:12px">🛍 Productos de esta campaña</div>
+      
+      <!-- Asociar producto existente -->
+      <div style="background:var(--cream);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-size:.75rem;font-weight:600;color:var(--ink-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Asociar producto del catálogo</div>
+        <div style="display:flex;gap:8px">
+          <select id="camp_prod_existente" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem;outline:none">
+            <option value="">Selecciona un producto del catálogo...</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="asociarProductoExistente()">+ Asociar</button>
+        </div>
+      </div>
+
+      <!-- Crear producto nuevo para la campaña -->
+      <div style="background:var(--cream);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-size:.75rem;font-weight:600;color:var(--ink-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Crear producto exclusivo de campaña</div>
+        <div class="form-grid" style="gap:8px">
+          <div class="form-field"><label>Nombre</label><input type="text" id="cp_nombre" placeholder="Kit dental"></div>
+          <div class="form-field"><label>Precio (COP)</label><input type="number" id="cp_precio" placeholder="15000" min="0"></div>
+          <div class="form-field col-full"><label>Descripción</label><input type="text" id="cp_desc" placeholder="Descripción del producto"></div>
+          <div class="form-field col-full"><label>URL imagen</label><input type="text" id="cp_img" placeholder="https://..."></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="agregarProductoCampana()">+ Agregar producto</button>
+      </div>
+
+      <!-- Lista de productos asociados -->
+      <div id="listaProdCampana" style="font-size:.83rem"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalCampana')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarCampana()">Guardar</button>
+      <button class="btn btn-primary" onclick="guardarCampana()">Guardar campaña</button>
     </div>
   </div>
 </div>
@@ -876,11 +925,24 @@ async function cargarCatalogo() {
 function filtrarCatalogo() {
   const q = $('searchCatalogo').value.toLowerCase();
   const tipo = $('filtrTipo').value;
+  const sub = $('filtrSub').value;
   const filtrados = todoElCatalogo.filter(p =>
     (!q || (p.nombre||'').toLowerCase().includes(q)) &&
-    (!tipo || p.tipo === tipo)
+    (!tipo || p.tipo === tipo) &&
+    (!sub || (p.subcategoria||'') === sub)
   );
   renderCatalogo(filtrados);
+}
+
+function actualizarFiltrSub() {
+  const tipo = $('filtrTipo').value;
+  const subs = [...new Set(todoElCatalogo
+    .filter(p => !tipo || p.tipo === tipo)
+    .map(p => p.subcategoria||'')
+    .filter(Boolean)
+  )].sort();
+  $('filtrSub').innerHTML = '<option value="">Todas las subcategorías</option>' +
+    subs.map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
 function renderCatalogo(lista) {
@@ -898,6 +960,18 @@ function renderCatalogo(lista) {
       <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarProducto(${p.id})">🗑</button>
     </td>
   </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron productos</td></tr>';
+}
+
+function previewImgProd() {
+  const url = $('prod_img').value.trim();
+  const preview = $('prod_img_preview');
+  const thumb = $('prod_img_thumb');
+  if (url && preview && thumb) {
+    thumb.src = url;
+    preview.style.display = 'block';
+  } else if (preview) {
+    preview.style.display = 'none';
+  }
 }
 
 function abrirModalProducto() {
@@ -988,6 +1062,7 @@ async function cargarCampanas() {
   $('bodyCampanas').innerHTML = campanas.length ? campanas.map(c => `<tr>
     <td><strong>${c.nombre||'—'}</strong></td>
     <td>${c.descripcion||'—'}</td>
+    <td><span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">${c.tipo_recaudo==='dinero'?'💰 Dinero':c.tipo_recaudo==='productos'?'🛍 Productos':'💰🛍 Ambos'}</span></td>
     <td>${c.meta ? fmt(c.meta) : '—'}</td>
     <td>${c.fecha_inicio||'—'}</td>
     <td>${c.fecha_fin||'—'}</td>
@@ -995,6 +1070,15 @@ async function cargarCampanas() {
     <td><button class="btn btn-secondary btn-sm" onclick="editarCampana(${c.id})">✏️ Editar</button></td>
   </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No hay campañas</td></tr>';
   window._campanas = campanas;
+}
+
+// Productos temporales mientras se edita la campaña
+let prodsCampanaTemp = [];
+
+function toggleProductosCampana() {
+  const tipo = $('camp_tipo_recaudo').value;
+  const sec = $('secProductosCampana');
+  if (sec) sec.style.display = (tipo === 'productos' || tipo === 'ambos') ? 'block' : 'none';
 }
 
 function abrirModalCampana() {
@@ -1005,11 +1089,91 @@ function abrirModalCampana() {
   $('camp_img').value = '';
   $('camp_inicio').value = '';
   $('camp_fin').value = '';
+  $('camp_tipo_recaudo').value = 'dinero';
+  prodsCampanaTemp = [];
+  renderProdsCampana();
+  toggleProductosCampana();
+  // Cargar catálogo para el selector
+  cargarSelectorCatalogo();
   $('modalCampTitle').textContent = 'Nueva Campaña';
   abrirModal('modalCampana');
 }
 
-function editarCampana(id) {
+function cargarSelectorCatalogo() {
+  const sel = $('camp_prod_existente');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecciona un producto del catálogo...</option>' +
+    todoElCatalogo.filter(p => p.activo).map(p =>
+      `<option value="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-img="${p.imagen_url||''}">${p.nombre} — ${fmt(p.precio)}</option>`
+    ).join('');
+}
+
+function asociarProductoExistente() {
+  const sel = $('camp_prod_existente');
+  if (!sel.value) return;
+  const opt = sel.options[sel.selectedIndex];
+  const prod = {
+    catalogo_id: parseInt(sel.value),
+    nombre: opt.dataset.nombre,
+    precio: parseFloat(opt.dataset.precio) || 0,
+    imagen_url: opt.dataset.img || '',
+    descripcion: '',
+    activo: true, orden: prodsCampanaTemp.length + 1
+  };
+  if (prodsCampanaTemp.some(p => p.catalogo_id === prod.catalogo_id)) {
+    toast('Este producto ya está en la campaña', 'error');
+    return;
+  }
+  prodsCampanaTemp.push(prod);
+  renderProdsCampana();
+  sel.value = '';
+}
+
+function agregarProductoCampana() {
+  const nombre = $('cp_nombre').value.trim();
+  if (!nombre) { alert('Ingresa el nombre del producto.'); return; }
+  prodsCampanaTemp.push({
+    catalogo_id: null,
+    nombre,
+    precio: parseFloat($('cp_precio').value) || 0,
+    descripcion: $('cp_desc').value.trim(),
+    imagen_url: $('cp_img').value.trim(),
+    activo: true, orden: prodsCampanaTemp.length + 1
+  });
+  $('cp_nombre').value = '';
+  $('cp_precio').value = '';
+  $('cp_desc').value = '';
+  $('cp_img').value = '';
+  renderProdsCampana();
+  toast('Producto agregado', 'success');
+}
+
+function quitarProdCampana(idx) {
+  prodsCampanaTemp.splice(idx, 1);
+  renderProdsCampana();
+}
+
+function renderProdsCampana() {
+  const lista = $('listaProdCampana');
+  if (!lista) return;
+  if (!prodsCampanaTemp.length) {
+    lista.innerHTML = '<div style="color:var(--ink-lt);font-size:.8rem;padding:8px">No hay productos agregados aún.</div>';
+    return;
+  }
+  lista.innerHTML = prodsCampanaTemp.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--white)">
+      ${p.imagen_url ? `<img src="${p.imagen_url}" style="width:40px;height:40px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">` : '<div style="width:40px;height:40px;background:var(--cream);border-radius:6px"></div>'}
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:.83rem">${p.nombre}</div>
+        <div style="font-size:.75rem;color:var(--ink-lt)">${fmt(p.precio)} ${p.catalogo_id ? '— Del catálogo' : '— Exclusivo campaña'}</div>
+      </div>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="quitarProdCampana(${i})">✕</button>
+    </div>`).join('');
+}
+
+function abrirModalCampana() {
+
+async function editarCampana(id) {
   const c = window._campanas?.find(x => x.id === id);
   if (!c) return;
   $('camp_id').value = c.id;
@@ -1019,6 +1183,13 @@ function editarCampana(id) {
   $('camp_img').value = c.imagen_url||'';
   $('camp_inicio').value = c.fecha_inicio||'';
   $('camp_fin').value = c.fecha_fin||'';
+  $('camp_tipo_recaudo').value = c.tipo_recaudo || 'dinero';
+  // Cargar productos existentes de esta campaña
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/campana_productos?campana_id=eq.${id}&activo=eq.true&order=orden.asc`, { headers: hdrs() });
+  prodsCampanaTemp = await r.json();
+  renderProdsCampana();
+  toggleProductosCampana();
+  cargarSelectorCatalogo();
   $('modalCampTitle').textContent = 'Editar Campaña';
   abrirModal('modalCampana');
 }
@@ -1026,25 +1197,47 @@ function editarCampana(id) {
 async function guardarCampana() {
   const id = $('camp_id').value;
   const datos = {
-    nombre:       $('camp_nombre').value.trim(),
-    descripcion:  $('camp_desc').value.trim(),
-    meta:         parseFloat($('camp_meta').value)||null,
-    imagen_url:   $('camp_img').value.trim()||null,
-    fecha_inicio: $('camp_inicio').value||null,
-    fecha_fin:    $('camp_fin').value||null,
+    nombre:         $('camp_nombre').value.trim(),
+    descripcion:    $('camp_desc').value.trim(),
+    tipo_recaudo:   $('camp_tipo_recaudo').value || 'dinero',
+    meta:           parseFloat($('camp_meta').value)||null,
+    imagen_url:     $('camp_img').value.trim()||null,
+    fecha_inicio:   $('camp_inicio').value||null,
+    fecha_fin:      $('camp_fin').value||null,
   };
   if (!datos.nombre) { alert('El nombre es obligatorio.'); return; }
+
+  let campanaId = id ? parseInt(id) : null;
   if (id) {
     await fetch(`${SUPABASE_URL}/rest/v1/campanas?id=eq.${id}`, {
       method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
     });
-    toast('Campaña actualizada', 'success');
   } else {
-    await fetch(`${SUPABASE_URL}/rest/v1/campanas`, {
-      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({...datos, activo:true})
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas`, {
+      method: 'POST', headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer':'return=representation' },
+      body: JSON.stringify({...datos, activo:true})
     });
-    toast('Campaña creada', 'success');
+    const nueva = await r.json();
+    campanaId = nueva[0]?.id;
   }
+
+  // Guardar productos si hay
+  if (campanaId && prodsCampanaTemp.length) {
+    if (id) {
+      await fetch(`${SUPABASE_URL}/rest/v1/campana_productos?campana_id=eq.${campanaId}`, {
+        method: 'DELETE', headers: hdrs()
+      });
+    }
+    for (const p of prodsCampanaTemp) {
+      await fetch(`${SUPABASE_URL}/rest/v1/campana_productos`, {
+        method: 'POST',
+        headers: { ...hdrs(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...p, campana_id: campanaId })
+      });
+    }
+  }
+
+  toast(id ? 'Campaña actualizada' : 'Campaña creada', 'success');
   cerrarModal('modalCampana');
   cargarCampanas();
 }

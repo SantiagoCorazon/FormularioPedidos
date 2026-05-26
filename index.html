@@ -433,13 +433,22 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="section-sub">Gracias por tu generosidad. Tu donación ayuda a niños con cardiopatías.</div>
     <div class="donacion-info">❤ <strong>Donación</strong> — No se requiere tarjeta ni envío físico. Irás directo al resumen.</div>
     <div class="field"><label>¿A qué campaña va tu donación? <span class="req">*</span></label>
-      <select id="p_campana">
+      <select id="p_campana" onchange="onCampanaChange()">
         <option value="">— Cargando campañas... —</option>
       </select>
     </div>
-    <div class="field"><label>Valor de la donación <span class="req">*</span></label>
+    <!-- Sección dinero -->
+    <div id="sec-donacion-dinero" class="field">
+      <label>Valor de la donación <span class="req">*</span></label>
       <input type="number" id="p_valor_donacion" placeholder="Ej: 50000" min="0" oninput="actualizarTotal()">
     </div>
+
+    <!-- Sección productos de campaña -->
+    <div id="sec-donacion-productos" style="display:none">
+      <div style="font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:10px">Elige los productos que deseas donar:</div>
+      <div class="prod-grid" id="grid-donacion-productos"></div>
+    </div>
+
     <div class="field"><label>Notas (opcional)</label>
       <textarea id="p_notas_donacion" placeholder="¿Hay algo que quieras indicarnos?" maxlength="170" oninput="cc(this,'cnt_nd')"></textarea>
       <div class="char-count"><span id="cnt_nd">0</span>/170</div>
@@ -614,16 +623,72 @@ async function cargarCampanas() {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?activo=eq.true&order=nombre.asc`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    const campanas = await r.json();
+    window._campanas = await r.json();
     const select = $('p_campana');
     if (select) {
       select.innerHTML = '<option value="">— Selecciona una campaña —</option>' +
-        campanas.map(c => `<option value="${c.id}">${c.nombre}${c.descripcion?' — '+c.descripcion:''}</option>`).join('');
+        window._campanas.map(c => `<option value="${c.id}" data-tipo="${c.tipo_recaudo||'dinero'}">${c.nombre}${c.descripcion?' — '+c.descripcion:''}</option>`).join('');
     }
-    console.log('✅ Campañas cargadas:', campanas.length);
+    console.log('✅ Campañas cargadas:', window._campanas.length);
   } catch(e) {
     console.error('Error cargando campañas:', e);
   }
+}
+
+async function onCampanaChange() {
+  const sel = $('p_campana');
+  if (!sel || !sel.value) return;
+  const opt = sel.options[sel.selectedIndex];
+  const tipo = opt.dataset.tipo || 'dinero';
+  const campanaId = sel.value;
+  S.campana_id = campanaId;
+  S.campana = opt.text;
+  S.campana_tipo = tipo;
+
+  // Mostrar/ocultar secciones según tipo
+  const secDinero = $('sec-donacion-dinero');
+  const secProductos = $('sec-donacion-productos');
+  if (secDinero) secDinero.style.display = (tipo === 'dinero' || tipo === 'ambos') ? 'block' : 'none';
+  if (secProductos) secProductos.style.display = (tipo === 'productos' || tipo === 'ambos') ? 'block' : 'none';
+
+  // Si tiene productos, cargarlos
+  if (tipo === 'productos' || tipo === 'ambos') {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/campana_productos?campana_id=eq.${campanaId}&activo=eq.true&order=orden.asc`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const prods = await r.json();
+      const grid = $('grid-donacion-productos');
+      if (grid) {
+        S.productosDonacion = [];
+        grid.innerHTML = prods.length ? prods.map(p => `
+          <div class="prod-card" id="dprod-${p.id}" onclick="selProdDonacion(${p.id}, '${p.nombre}', ${p.precio})">
+            ${p.imagen_url ? `<img src="${p.imagen_url}" onerror="this.style.display='none'">` : ''}
+            <div class="prod-info">
+              <div class="prod-nombre">${p.nombre}</div>
+              ${p.descripcion ? `<div style="font-size:.72rem;color:var(--ink-lt)">${p.descripcion}</div>` : ''}
+              <div class="prod-precio">${fmt(p.precio)}</div>
+            </div>
+          </div>`).join('')
+          : '<p style="color:var(--ink-lt);font-size:.83rem">No hay productos configurados para esta campaña.</p>';
+      }
+    } catch(e) { console.warn('Error cargando productos campaña:', e); }
+  }
+  actualizarTotal();
+}
+
+function selProdDonacion(id, nombre, precio) {
+  if (!S.productosDonacion) S.productosDonacion = [];
+  const idx = S.productosDonacion.findIndex(p => p.id === id);
+  const card = $('dprod-' + id);
+  if (idx >= 0) {
+    S.productosDonacion.splice(idx, 1);
+    if (card) card.classList.remove('sel');
+  } else {
+    S.productosDonacion.push({ id, nombre, precio, qty: 1 });
+    if (card) card.classList.add('sel');
+  }
+  actualizarTotal();
 }
 
 // ============================================================
@@ -880,8 +945,10 @@ function validar(secId) {
   }
   if (secId === 'sec-3-donacion') {
     if (!$('p_campana').value) { alert('Selecciona la campaña a la que va tu donación.'); return false; }
+    const tipo = S.campana_tipo || 'dinero';
     const val = parseInt($('p_valor_donacion').value) || 0;
-    if (val <= 0) { alert('Ingresa el valor de la donación.'); return false; }
+    if ((tipo === 'dinero' || tipo === 'ambos') && val <= 0) { alert('Ingresa el valor de la donación en dinero.'); return false; }
+    if ((tipo === 'productos' || tipo === 'ambos') && (!S.productosDonacion || !S.productosDonacion.length)) { alert('Selecciona al menos un producto para donar.'); return false; }
     S.valorDonacion = val;
     S.campana_id = $('p_campana').value;
     S.campana = $('p_campana').options[$('p_campana').selectedIndex].text;
@@ -1270,7 +1337,11 @@ function selEnvio(label, precio) {
 // TOTAL
 // ============================================================
 function getTotal() {
-  if (S.tipoPedido === 'donacion') return Math.max(0, S.valorDonacion||0);
+  if (S.tipoPedido === 'donacion') {
+    let t = S.valorDonacion || 0;
+    if (S.productosDonacion) t += S.productosDonacion.reduce((s,p)=>s+(p.precio*(p.qty||1)),0);
+    return Math.max(0, t);
+  }
   let t = 0;
   if (S.bonos && S.bonos.length) t += S.bonos.reduce((s,b)=>s+b.precio,0);
   else if (S.bono) t += S.bono.precio;
