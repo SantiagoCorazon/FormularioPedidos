@@ -400,6 +400,7 @@ tr:hover td{background:var(--pink-lt)}
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-usuarios')">👤 Usuarios</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-excel')">📥 Excel</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-formulario')">📝 Formulario</button>
+        <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-shopify')">🛒 Shopify</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-faq')">❓ Preguntas</button>
       </div>
 
@@ -805,6 +806,19 @@ tr:hover td{background:var(--pink-lt)}
         </div>
       </div>
 
+
+              <div id="m-shopify" class="manual-section" style="display:none">
+                <h3>🛒 Importar pedidos de Shopify</h3>
+                <p>Este módulo permite traer al Dashboard los pedidos que los clientes hicieron directamente en la tienda web de Shopify, para que queden junto con los demás pedidos y puedan exportarse a Access.</p>
+                <div class="step"><div class="step-num">1</div><div class="step-content">En Shopify, ve a <strong>Orders → Export → Export orders</strong> y descarga el archivo en formato <strong>CSV</strong>.</div></div>
+                <div class="step"><div class="step-num">2</div><div class="step-content">En el menú lateral del Dashboard, haz clic en <strong>🛒 Importar Shopify</strong>.</div></div>
+                <div class="step"><div class="step-num">3</div><div class="step-content">Arrastra el archivo CSV a la zona indicada, o haz clic en ella para buscarlo en tu computador.</div></div>
+                <div class="step"><div class="step-num">4</div><div class="step-content">El sistema mostrará una <strong>previsualización</strong> de los pedidos encontrados. Revisa que se vean correctos.</div></div>
+                <div class="step"><div class="step-num">5</div><div class="step-content">Haz clic en <strong>⬆ Importar al Dashboard</strong>. El sistema importa solo los pedidos nuevos — si ya habías subido ese archivo antes, los duplicados se omiten automáticamente.</div></div>
+                <div class="step"><div class="step-num">6</div><div class="step-content">Al terminar verás un resumen: cuántos se importaron y cuántos ya estaban. Los pedidos de Shopify quedan identificados con una etiqueta naranja <strong>Shopify</strong> en la sección Pedidos.</div></div>
+                <div class="step"><div class="step-num">7</div><div class="step-content">Para exportar a Access, usa <strong>📥 Exportar a Excel</strong> como siempre — los pedidos de Shopify ya están incluidos junto con los demás.</div></div>
+                <p style="margin-top:16px;padding:12px 16px;background:#fff3e0;border-radius:8px;font-size:.83rem;color:#e65100"><strong>💡 Tip:</strong> Puedes filtrar solo los pedidos de Shopify en la sección Pedidos usando el selector de canal.</p>
+              </div>
     </div><!-- /page-manual -->
 
 
@@ -1316,7 +1330,7 @@ function renderPedidos(lista, resetPag) {
     <td>${p.nombre_razon_social||'—'}</td>
     <td>${p.ciudad_comprador||'—'}</td>
     <td>${fmt(p.total_pedido)}</td>
-    <td><span style="font-size:.75rem;background:${(p.canal||'')==='Shopify'?'#fff3e0':((p.canal||'')==='Web'?'#e3f2fd':'#f3e5f5')};padding:2px 8px;border-radius:10px">${p.canal||'—'}</span></td>
+    <td><span style="font-size:.75rem;font-weight:600;background:${(()=>{const c=(p.canal||'').toLowerCase();return c.includes('shopify')?'#fff3e0':c==='web'||c.includes('sitio')?'#e3f2fd':c.includes('whatsapp')?'#e8f5e9':c.includes('tienda')?'#fce4ec':'#f3e5f5';})()};color:${(()=>{const c=(p.canal||'').toLowerCase();return c.includes('shopify')?'#e65100':c==='web'||c.includes('sitio')?'#1565c0':c.includes('whatsapp')?'#2e7d32':c.includes('tienda')?'#880e4f':'#4a148c';})()};padding:2px 10px;border-radius:10px">${p.canal||'—'}</span></td>
     <td><span class="badge badge-${badgeClass(p.estado)}">${p.estado||'—'}</span></td>
     <td><button class="btn btn-secondary btn-sm" onclick="verPedido(${p.id})">Ver</button></td>
   </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron pedidos</td></tr>';
@@ -1963,9 +1977,9 @@ async function exportarExcel() {
 
     // Consultar datos
     const [rPed, rTerc, rDet] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc&limit=10000`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc&limit=10000`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc&limit=50000`, { headers: hdrs() }),
     ]);
     const [pedidos, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
 
