@@ -1171,8 +1171,6 @@ function renderProdsCampana() {
     </div>`).join('');
 }
 
-function abrirModalCampana() {
-
 async function editarCampana(id) {
   const c = window._campanas?.find(x => x.id === id);
   if (!c) return;
@@ -1451,9 +1449,7 @@ async function verificarStorage() {
     if (storageEl) storageEl.textContent = '—';
   }
 }
-function hdrs() {
-  return { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
-}
+
 
 function imprimirPedido() {
   if (!pedidoActual) return;
