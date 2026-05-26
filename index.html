@@ -195,8 +195,9 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 <!-- SEC 0: TIPO DE PEDIDO -->
 <div class="section active" id="sec-0">
   <div class="card" style="text-align:center">
-    <div class="section-title" style="margin-bottom:6px">¡Bienvenido! ¿Qué quieres <em>hacer hoy</em>?</div>
-    <div class="section-sub">Selecciona el tipo de pedido para comenzar, luego baja para elegir desde dónde compras y presiona <strong>Continuar</strong> ↓</div>
+    <div class="section-title" style="margin-bottom:6px">¡Bienvenido! 🤍</div>
+    <div style="font-size:.97rem;color:var(--ink-mid);margin-bottom:8px;font-weight:400;line-height:1.6">Gracias por apoyar a nuestros niños a través de nuestros productos.</div>
+    <div class="section-sub">¿Qué buscas hoy? Para comenzar, selecciona el tipo de pedido que deseas, luego baja para elegir desde dónde compras y presiona <strong>Continuar</strong> ↓</div>
     <div class="tipo-pedido-grid" style="max-width:700px;margin:0 auto 20px">
       <div class="tipo-pedido-card" onclick="selTipoPedido('pesame')">
         <div class="tipo-pedido-icon">🕊</div>
@@ -250,7 +251,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     <div class="section-title">¿Quién <em>compra</em>?</div>
     <div class="section-sub">Ingresa tu documento — si ya estás registrado, tus datos se cargarán automáticamente. Por favor actualiza cualquier información que haya cambiado.</div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
-      <button onclick="selTipoCliente('Personal')" id="btn-personal" class="btn btn-primary" style="flex:1;font-size:.8rem">👤 Personal</button>
+      <button onclick="selTipoCliente('Personal')" id="btn-personal" class="btn btn-primary" style="flex:1;font-size:.8rem">👤 Persona</button>
       <button onclick="selTipoCliente('Empresa')" id="btn-empresa" class="btn btn-secondary" style="flex:1;font-size:.8rem">🏢 Empresa</button>
     </div>
     <div class="grid-2" style="margin-bottom:14px">
@@ -332,14 +333,15 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-3">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Pésame</em></div>
-    <div class="section-sub">Completa los datos para personalizar el bono de pésame. El nombre del fallecido y el destinatario se escriben a mano en caligrafía en la tarjeta.</div>
+    <div class="section-sub">Completa los datos para personalizar el bono de pésame. El nombre del fallecido y el del destinatario los escribiremos a mano en caligrafía en el bono.</div>
     <div class="grid-2">
       <div class="field"><label>Nombre del fallecido <span class="req">*</span></label><input type="text" id="p_fallecido" placeholder="Nombre completo"></div>
-      <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="p_dirigido" placeholder="Familia García, la señora Ana..."></div>
+      <div class="field"><label>Para quién va dirigido el bono <span class="req">*</span></label><input type="text" id="p_dirigido" placeholder="Familia García, la señora Ana..."></div>
 
     </div>
     <hr class="div">
     <div class="sub-title">Color de tarjeta preimpresa</div>
+    <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Cada color lleva una frase preimpresa diferente.</div>
     <div class="tarjeta-grid">
       <div class="tarjeta-card" onclick="selTarjeta(this,'Rosa Profundo - Un abrazo de corazón','pesame')">
         <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-rosa-profundo.jpg" onerror="this.style.display='none'">
@@ -351,7 +353,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Verde Oliva - Y luego del invierno llegará la primavera','pesame')">
         <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-verde-oliva.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Y luego del invierno...</div><div class="tarjeta-color">Verde Oliva</div></div>
+        <div class="tarjeta-info"><div class="tarjeta-frase">Y luego del invierno llegará la primavera</div><div class="tarjeta-color">Verde Oliva</div></div>
       </div>
       <div class="tarjeta-card" onclick="selTarjeta(this,'Azul Índigo - Sentidas condolencias','pesame')">
         <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-azul-indigo.jpg" onerror="this.style.display='none'">
@@ -359,7 +361,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
-    <div class="field"><label>¿De parte de quién?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
+    <div class="field"><label>¿Quién(es) envía(n) el bono?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
     <div class="sub-title">📝 Notas adicionales a tu pedido</div>
     <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
       <textarea id="p_mensaje_pesame" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
@@ -380,6 +382,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
     </div>
     <hr class="div">
     <div class="sub-title">Color de tarjeta preimpresa</div>
+    <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Cada color lleva una frase preimpresa diferente.</div>
     <div class="tarjeta-grid">
       <div class="tarjeta-card" onclick="selTarjeta(this,'Esmeralda','toda')">
         <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-esmeralda.jpg" onerror="this.style.display='none'">
@@ -395,7 +398,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
     </div>
     <hr class="div">
-    <div class="field"><label>¿De parte de quién?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
+    <div class="field"><label>¿Quién(es) envía(n) el bono?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
     <div class="sub-title">📝 Notas adicionales a tu pedido</div>
     <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
       <textarea id="t_mensaje" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
@@ -462,14 +465,14 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-4b">Paso 4</div>
     <div class="section-title">Elige el <em>tipo de bono</em></div>
-    <div class="section-sub" id="sec4b-sub">El <strong>Virtual</strong> se envía por email o WhatsApp (-$4.000). El <strong>Plegable</strong> es físico — elige también el empaque abajo.</div>
+    <div class="section-sub" id="sec4b-sub">El bono <strong>Virtual</strong> ($78.000) se envía por email o WhatsApp. El bono <strong>Plegable</strong> es físico — más abajo encontrarás dónde elegir su empaque y si deseas, con qué acompañarlo.</div>
     <div class="prod-grid" id="bonoGrid"></div>
     <div class="sel-resumen" id="bono-sel-resumen">✓ Seleccionado: <strong id="bono-sel-nombre"></strong> — <span id="bono-sel-precio"></span></div>
   </div>
   <!-- Empaque aparece debajo cuando elige bono plegable -->
   <div class="card" id="card-empaque" style="display:none;margin-top:16px">
     <div class="section-title">Elige el <em>empaque</em></div>
-    <div class="section-sub">El sobre no tiene costo adicional. La bolsa y la caja tienen un valor extra.</div>
+    <div class="section-sub">Elige cómo quieres presentar tu bono: Plegable Con Moño (sin costo adicional), Bolsa Tela De Organza o Caja. El Virtual se envía por email o WhatsApp.</div>
     <div class="prod-grid" id="empaqueGrid"></div>
     <div class="sel-resumen" id="emp-sel-resumen">✓ Seleccionado: <strong id="emp-sel-nombre"></strong> — <span id="emp-sel-precio"></span></div>
   </div>
@@ -513,7 +516,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   <div class="card">
     <div class="step-label" id="sl-env">Paso 6</div>
     <div class="section-title">Método de <em>envío</em></div>
-    <div class="section-sub">Selecciona el método de envío según la zona del destinatario. Los tiempos indicados son días hábiles.</div>
+    <div class="section-sub">Selecciona el método de envío según la zona del destinatario. Los tiempos indicados son días hábiles. Nuestra tienda está abierta de lunes a jueves de 8:00 a.m. a 6:00 p.m. y los viernes de 8:00 a.m. a 5:00 p.m. Los pedidos recibidos fuera de estas horas se gestionan una vez abramos.</div>
     <div id="envioOpts"></div>
   </div>
 </div>
@@ -568,7 +571,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 </div><!-- /container -->
 
 <div class="total-bar" id="totalBar">
-  <div><div class="total-label">Total del pedido</div><div class="total-amount" id="totalAmount">$ 0</div></div>
+  <div><div class="total-label">Total a pagar</div><div class="total-amount" id="totalAmount">$ 0</div></div>
   <div class="btn-row">
     <button class="btn btn-secondary" id="btnAtras" onclick="irAtras()" style="display:none">← Atrás</button>
     <button class="btn-skip" id="btnSkip" style="display:none" onclick="irSiguiente(true)">Saltar este paso</button>
@@ -745,7 +748,7 @@ const ENVIOS = [
   {l:'Medellín, Envigado, Sabaneta, Itagüi — Bonos (1 a 3 días hábiles)',p:0},
   {l:'Envío nacional — Solo bono (caja, organza, sobre) sin acompañante (3 a 5 días hábiles)',p:15000},
   {l:'Medellín y Área Metropolitana — Con acompañante (1 a 3 días hábiles)',p:17500},
-  {l:'5 Corregimientos de Medellín, Alto Palmas, Caldas, La Estrella (1 a 3 días hábiles)',p:24000},
+  {l:'5 Corregimientos de Medellín (San Cristóbal, San Antonio de Prado, Palmitas, Alta Vista, Santa Elena), Alto Palmas, Caldas y La Estrella (1 a 3 días hábiles)',p:24000},
   {l:'Abrazadores, velas, kits con bono o solos — Envío nacional (3 a 5 días hábiles)',p:25000},
   {l:'Guarne, Girardota, El Retiro (1 a 3 días hábiles)',p:36000},
   {l:'Rionegro, La Ceja, Barbosa (1 a 3 días hábiles)',p:54000},
