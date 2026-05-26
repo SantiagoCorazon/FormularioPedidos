@@ -191,7 +191,7 @@ tr:hover td{background:var(--pink-lt)}
       <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
       <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
       <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
-      <div class="nav-item" onclick="exportarExcel()"><span class="nav-icon">📥</span> Exportar a Excel</div>
+      <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
       <div class="nav-item" onclick="irA('manual')"><span class="nav-icon">📖</span> Manual de uso</div>
     </nav>
     <div class="sidebar-footer">
@@ -1253,7 +1253,7 @@ async function cargarPedidos() {
   let offset = 0;
   const limit = 1000;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=created_at.desc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc,id.desc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
     const data = await r.json();
     todosLosPedidos = todosLosPedidos.concat(data);
     if (data.length < limit) break;
@@ -1962,7 +1962,28 @@ async function resetPassword(id) {
 // ============================================================
 // EXPORTAR A EXCEL (directo desde el navegador)
 // ============================================================
-async function exportarExcel() {
+function abrirModalExportar() {
+  // Pre-rellenar "hasta" con hoy
+  const hoy = new Date().toISOString().slice(0,10);
+  $('exp-hasta').value = hoy;
+  $('exp-desde').value = '';
+  $('exp-canal').value = '';
+  const m = $('modal-exportar');
+  m.style.display = 'flex';
+}
+function cerrarModalExportar() {
+  $('modal-exportar').style.display = 'none';
+}
+
+async function exportarExcelConFiltro() {
+  const desde = $('exp-desde').value;
+  const hasta = $('exp-hasta').value;
+  const canal = $('exp-canal').value;
+  cerrarModalExportar();
+  await exportarExcel(desde, hasta, canal);
+}
+
+async function exportarExcel(desde, hasta, canal) {
   toast('Generando Excel...', '');
   try {
     // Cargar SheetJS dinámicamente
@@ -1975,13 +1996,30 @@ async function exportarExcel() {
       });
     }
 
+    // Construir filtros de fecha y canal para la URL
+    let filtrosPed = 'order=fecha.desc&limit=10000';
+    if (desde) filtrosPed += `&fecha=gte.${desde}`;
+    if (hasta) filtrosPed += `&fecha=lte.${hasta}`;
+    if (canal) filtrosPed += `&canal=eq.${encodeURIComponent(canal)}`;
+
+    // Etiqueta de rango para el nombre del archivo
+    const etiqueta = desde || hasta
+      ? `_${desde||'inicio'}_a_${hasta||'hoy'}`
+      : '_completo';
+
     // Consultar datos
     const [rPed, rTerc, rDet] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc&limit=10000`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/pedidos?${filtrosPed}`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc&limit=10000`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc&limit=50000`, { headers: hdrs() }),
     ]);
     const [pedidos, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
+
+    if (!pedidos.length) { toast('No hay pedidos en ese rango de fechas', 'error'); return; }
+
+    // Filtrar detalle para que solo incluya los pedidos exportados
+    const idsPedidos = new Set(pedidos.map(p => p.id));
+    const detalleFiltrado = detalle.filter(d => idsPedidos.has(d.pedido_id));
 
     const wb = XLSX.utils.book_new();
 
@@ -2017,7 +2055,7 @@ async function exportarExcel() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pedidosExport), 'pedidos');
 
     // Hoja DETALLE
-    const detalleExport = detalle.map(d => ({
+    const detalleExport = detalleFiltrado.map(d => ({
       id: d.id, pedido_id: d.pedido_id, nro_pedido: d.nro_pedido||'', fecha: d.fecha||'',
       categoria: d.categoria||'', subcategoria: d.subcategoria||'', producto: d.producto||'',
       cantidad: d.cantidad||1, precio_unitario: d.precio_unitario||0, subtotal_linea: d.subtotal_linea||0
@@ -2025,13 +2063,13 @@ async function exportarExcel() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detalleExport), 'pedido_detalle');
 
     // Hoja ACOMPAÑANTES (separada)
-    const acompExport = detalle.filter(d => (d.categoria||'').toLowerCase().includes('acomp') || (d.categoria||'').toLowerCase().includes('plant'))
+    const acompExport = detalleFiltrado.filter(d => (d.categoria||'').toLowerCase().includes('acomp') || (d.categoria||'').toLowerCase().includes('plant'))
       .map(d => ({ pedido_id: d.pedido_id, nro_pedido: d.nro_pedido||'', acompanante: d.producto||'', categoria: d.subcategoria||'', cantidad: d.cantidad||1, precio: d.precio_unitario||0 }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(acompExport), 'pedido_acompanantes');
 
     // Descargar
     const fecha = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    XLSX.writeFile(wb, `SantiagoCorazon_Access_${fecha}.xlsx`);
+    XLSX.writeFile(wb, `SantiagoCorazon_Access_${fecha}${etiqueta||''}.xlsx`);
     toast('✅ Excel descargado correctamente', 'success');
   } catch(e) {
     console.error(e);
@@ -2487,5 +2525,40 @@ function resetShopify() {
 }
 
 </script>
+
+<!-- MODAL EXPORTAR EXCEL -->
+<div id="modal-exportar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:6px">📥 Exportar a Excel para Access</div>
+    <div style="font-size:.83rem;color:var(--ink-lt);margin-bottom:20px">Elige el rango de fechas que quieres exportar, o deja los campos vacíos para exportar todo.</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Fecha desde</label>
+        <input type="date" id="exp-desde" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Fecha hasta</label>
+        <input type="date" id="exp-hasta" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Canal (opcional)</label>
+        <select id="exp-canal" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
+          <option value="">Todos los canales</option>
+          <option value="Shopify">Shopify</option>
+          <option value="Web">Web</option>
+          <option value="WhatsApp">WhatsApp</option>
+          <option value="Tienda">Tienda</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:8px;padding:10px 12px;background:var(--cream);border-radius:8px;font-size:.75rem;color:var(--ink-lt)">
+      💡 Si dejas las fechas vacías, se exporta todo el historial.
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-primary" style="flex:1" onclick="exportarExcelConFiltro()">Descargar Excel</button>
+      <button class="btn btn-secondary" onclick="cerrarModalExportar()">Cancelar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
