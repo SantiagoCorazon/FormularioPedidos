@@ -1253,21 +1253,18 @@ async function cargarPedidos() {
   let offset = 0;
   const limit = 500;
   while (true) {
-    const hdrsRange = { ...hdrs(), 'Range-Unit': 'items', 'Prefer': 'count=exact' };
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc,id.desc&limit=${limit}&offset=${offset}`,
-      { headers: hdrsRange }
+      { headers: hdrs() }
     );
     const data = await r.json();
-    // Si Supabase devuelve error, parar
     if (!Array.isArray(data)) { console.error('cargarPedidos error:', data); break; }
     todosLosPedidos = todosLosPedidos.concat(data);
-    console.log(`cargarPedidos: lote offset=${offset} trajo ${data.length} — total acumulado: ${todosLosPedidos.length}`);
+    console.log(`Lote offset=${offset}: ${data.length} pedidos — total: ${todosLosPedidos.length}`);
     if (data.length < limit) break;
     offset += limit;
   }
-  console.log(`cargarPedidos: TOTAL FINAL = ${todosLosPedidos.length} pedidos`);
-  // Mostrar total en el badge de paginación aunque sea 1 página
+  console.log(`TOTAL FINAL: ${todosLosPedidos.length} pedidos`);
   renderPedidos(todosLosPedidos, true);
 }
 
