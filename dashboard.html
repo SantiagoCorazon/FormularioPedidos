@@ -2373,42 +2373,53 @@ function transformarShopify(filas) {
       const shippingVal = parseFloat(String(f['Shipping'] || '0').replace(/[^0-9.]/g, '')) || 0;
       const totalVal    = parseFloat(String(f['Total']    || '0').replace(/[^0-9.]/g, '')) || 0;
 
+      // Separar nombre y apellido del destinatario
+      const shFull = String(f['Shipping Name'] || '').trim();
+      const shParts = shFull.split(' ');
+      const shNombre = shParts[0] || '';
+      const shApellido = shParts.slice(1).join(' ') || '';
+
       mapa[nro] = {
-        nro_pedido:            nro,
-        fecha:                 fechaStr,
-        canal:                 'Shopify',
+        // Columnas EXACTAS de la tabla pedidos en Supabase
+        nro_pedido:             nro,
+        fecha:                  fechaStr || null,
+        hora:                   null,
+        canal:                  'Shopify',
+        tipo_cliente:           'Personal',
         // Comprador
-        nombre_razon_social:   String(f['Billing Name']  || '').trim(),
-        telefono_comprador:    String(f['Billing Phone'] || f['Phone'] || '').trim(),
-        correo_comprador:      String(f['Email']         || '').trim(),
-        ciudad_comprador:      String(f['Billing City']  || '').trim(),
-        direccion_comprador:   String(f['Billing Street'] || f['Billing Address1'] || '').trim(),
-        departamento:          String(f['Billing Province Name'] || '').trim(),
-        correo_factura:        String(f['Email'] || '').trim(),
+        id_nit_comprador:       '',
+        nombre_razon_social:    String(f['Billing Name']  || '').trim(),
+        telefono_comprador:     String(f['Billing Phone'] || f['Phone'] || '').trim(),
+        correo_comprador:       String(f['Email']         || '').trim(),
+        ciudad_comprador:       String(f['Billing City']  || '').trim(),
+        direccion_comprador:    String(f['Billing Street'] || f['Billing Address1'] || '').trim(),
+        departamento:           String(f['Billing Province Name'] || '').trim(),
+        correo_factura:         String(f['Email'] || '').trim(),
         // Destinatario
-        nombres_destinatario:  String(f['Shipping Name'] || '').trim(),
-        apellidos_destinatario:'',
-        telefono_destinatario: String(f['Shipping Phone'] || '').trim(),
-        ciudad_entrega:        String(f['Shipping City']  || '').trim(),
-        direccion_entrega:     String(f['Shipping Address1'] || '').trim(),
-        referencia_entrega:    String(f['Shipping Address2'] || '').trim(),
-        // Envío y pago
-        envio_descripcion:     String(f['Shipping Method'] || '').trim().slice(0, 200),
-        costo_envio:           shippingVal,
-        total_pedido:          totalVal,
-        subtotal_productos:    totalVal - shippingVal,
-        metodo_pago:           metodo,
-        estado:                estado,
-        observaciones:         String(f['Notes'] || '').trim(),
-        // Tipo
-        tipo_cliente:          'Personal',
-        ocasion:               '',
-        protagonista:          '',
-        detalle_protagonista:  '',
-        mensaje:               '',
-        firma_mensaje:         '',
-        atendido_por:          'Shopify',
-        lineas:                [],
+        nombres_destinatario:   shNombre,
+        apellidos_destinatario: shApellido,
+        telefono_destinatario:  String(f['Shipping Phone'] || '').trim(),
+        ciudad_entrega:         String(f['Shipping City']  || '').trim(),
+        direccion_entrega:      String(f['Shipping Address1'] || '').trim(),
+        referencia_entrega:     String(f['Shipping Address2'] || '').trim(),
+        // Bono (Shopify no tiene estos datos)
+        ocasion:                '',
+        protagonista:           '',
+        detalle_protagonista:   '',
+        mensaje:                '',
+        firma_mensaje:          '',
+        // Logística
+        envio_descripcion:      String(f['Shipping Method'] || '').trim().slice(0, 200),
+        costo_envio:            shippingVal || 0,
+        total_pedido:           totalVal || 0,
+        subtotal_productos:     Math.max(0, totalVal - shippingVal),
+        metodo_pago:            metodo,
+        comprobante_pago:       '',
+        atendido_por:           'Shopify',
+        estado:                 estado,
+        observaciones:          String(f['Notes'] || '').trim(),
+        // lineas: campo local, no va a Supabase
+        lineas:                 [],
       };
     }
 
@@ -2477,23 +2488,64 @@ async function importarShopify() {
         if (existe.length > 0) { omitidos++; continue; } // ya estaba, lo saltamos
 
         // Es nuevo — insertar pedido
-        const { lineas, ...pedidoSinLineas } = p;
+        // Solo enviamos campos que la tabla acepta (limpiamos campos desconocidos)
+        const { lineas, ...pedidoRaw } = p;
+        // Columnas EXACTAS de la tabla pedidos en Supabase
+        const camposPermitidos = [
+          'nro_pedido','fecha','hora','canal','tipo_cliente',
+          'id_nit_comprador','nombre_razon_social',
+          'telefono_comprador','correo_comprador','ciudad_comprador',
+          'direccion_comprador','departamento','correo_factura',
+          'nombres_destinatario','apellidos_destinatario',
+          'telefono_destinatario','ciudad_entrega','direccion_entrega',
+          'referencia_entrega','ocasion','protagonista',
+          'detalle_protagonista','mensaje','firma_mensaje',
+          'observaciones','envio_descripcion','costo_envio',
+          'subtotal_productos','total_pedido','metodo_pago',
+          'comprobante_pago','atendido_por','estado'
+          // tercero_id, campana_id, id, created_at, updated_at: los maneja Supabase solo
+        ];
+        const pedidoLimpio = {};
+        camposPermitidos.forEach(k => {
+          if (pedidoRaw[k] !== undefined && pedidoRaw[k] !== null && pedidoRaw[k] !== '')
+            pedidoLimpio[k] = pedidoRaw[k];
+        });
+
         const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
           method: 'POST',
           headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-          body: JSON.stringify(pedidoSinLineas)
+          body: JSON.stringify(pedidoLimpio)
         });
+
+        // Verificar si Supabase realmente lo aceptó
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          console.error(`❌ Pedido ${p.nro_pedido} rechazado (${res.status}):`, JSON.stringify(errBody));
+          errores++;
+          continue;
+        }
+
         const nuevo = await res.json();
         const pedidoId = nuevo[0]?.id;
 
+        if (!pedidoId) {
+          console.error(`❌ Pedido ${p.nro_pedido}: se insertó pero no devolvió ID`);
+          errores++;
+          continue;
+        }
+
         // Insertar líneas de detalle
-        if (pedidoId && lineas.length) {
+        if (lineas.length) {
           for (const linea of lineas) {
-            await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
+            const resLinea = await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
               method: 'POST',
               headers: { ...hdrs(), 'Content-Type': 'application/json' },
               body: JSON.stringify({ ...linea, pedido_id: pedidoId, nro_pedido: p.nro_pedido, fecha: p.fecha })
             });
+            if (!resLinea.ok) {
+              const e = await resLinea.json().catch(()=>({}));
+              console.warn(`⚠ Detalle pedido ${p.nro_pedido} falló:`, JSON.stringify(e));
+            }
           }
         }
         insertados++;
