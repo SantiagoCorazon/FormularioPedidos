@@ -2506,12 +2506,15 @@ async function importarShopify() {
     return;
   }
 
-  // 3. Preparar pedidos limpios (sin lineas, solo campos de Supabase)
+  // 3. Preparar pedidos limpios — TODOS con los mismos campos (null si falta)
+  // Supabase exige "All object keys must match" en inserts bulk
   const pedidosLimpios = nuevos.map(p => {
     const { lineas, ...raw } = p;
     const limpio = {};
     camposPermitidos.forEach(k => {
-      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') limpio[k] = raw[k];
+      // Siempre incluir el campo, null si está vacío
+      const v = raw[k];
+      limpio[k] = (v !== undefined && v !== null && v !== '') ? v : null;
     });
     return { limpio, lineas };
   });
