@@ -1251,15 +1251,24 @@ async function cargarInicio() {
 async function cargarPedidos() {
   todosLosPedidos = [];
   let offset = 0;
-  const limit = 1000;
+  const limit = 500;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc,id.desc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
+    const hdrsRange = { ...hdrs(), 'Range-Unit': 'items', 'Prefer': 'count=exact' };
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/pedidos?order=fecha.desc,id.desc&limit=${limit}&offset=${offset}`,
+      { headers: hdrsRange }
+    );
     const data = await r.json();
+    // Si Supabase devuelve error, parar
+    if (!Array.isArray(data)) { console.error('cargarPedidos error:', data); break; }
     todosLosPedidos = todosLosPedidos.concat(data);
+    console.log(`cargarPedidos: lote offset=${offset} trajo ${data.length} — total acumulado: ${todosLosPedidos.length}`);
     if (data.length < limit) break;
     offset += limit;
   }
-  renderPedidos(todosLosPedidos);
+  console.log(`cargarPedidos: TOTAL FINAL = ${todosLosPedidos.length} pedidos`);
+  // Mostrar total en el badge de paginación aunque sea 1 página
+  renderPedidos(todosLosPedidos, true);
 }
 
 // ── Estado de ordenamiento de pedidos ──
@@ -1337,9 +1346,10 @@ function renderPedidos(lista, resetPag) {
 
   // Paginación
   let pagHTML = '';
+  // Siempre mostrar el total de pedidos
+  pagHTML += `<span style="font-size:.78rem;color:var(--ink-lt);margin-right:8px">${total} pedido${total!==1?'s':''} encontrado${total!==1?'s':''} · pág. ${pedidosPagActual}/${paginas}</span>`;
   if (paginas > 1) {
-    pagHTML += `<span style="font-size:.78rem;color:var(--ink-lt);margin-right:8px">${total} pedidos · pág. ${pedidosPagActual}/${paginas}</span>`;
-    if (pedidosPagActual > 1) pagHTML += `<button class="btn btn-secondary btn-sm" onclick="irPagPedidos(${pedidosPagActual-1},lista_pedidos_actual)">← Ant</button> `;
+    if (pedidosPagActual > 1) pagHTML += `<button class="btn btn-secondary btn-sm" onclick="irPagPedidos(${pedidosPagActual-1})">← Ant</button> `;
     // Números de página (máx 5 visibles)
     const desde = Math.max(1, pedidosPagActual - 2);
     const hasta = Math.min(paginas, desde + 4);
@@ -1347,7 +1357,7 @@ function renderPedidos(lista, resetPag) {
       pagHTML += `<button class="btn btn-sm ${i===pedidosPagActual?'btn-primary':'btn-secondary'}" onclick="irPagPedidos(${i})">${i}</button> `;
     }
     if (pedidosPagActual < paginas) pagHTML += `<button class="btn btn-secondary btn-sm" onclick="irPagPedidos(${pedidosPagActual+1})">Sig →</button>`;
-  }
+  } // fin if paginas > 1
   $('pagPedidos').innerHTML = pagHTML;
 
   // Guardar lista actual para que los botones de paginación accedan a ella
