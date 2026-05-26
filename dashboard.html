@@ -2470,133 +2470,85 @@ async function importarShopify() {
 
   const btnImportar = document.querySelector('#shopify-preview-card .btn-primary');
   if (btnImportar) { btnImportar.disabled = true; btnImportar.textContent = 'Importando...'; }
-
-  let insertados = 0, omitidos = 0, errores = 0;
-
-  // ── Traer TODOS los nro_pedido de Shopify existentes de una sola vez ──
   const badge = document.getElementById('shopify-resumen-badge');
-  if (badge) badge.textContent = 'Verificando pedidos existentes...';
+
+  const camposPermitidos = [
+    'nro_pedido','fecha','canal','tipo_cliente','id_nit_comprador',
+    'nombre_razon_social','telefono_comprador','correo_comprador',
+    'ciudad_comprador','direccion_comprador','departamento','correo_factura',
+    'nombres_destinatario','apellidos_destinatario','telefono_destinatario',
+    'ciudad_entrega','direccion_entrega','referencia_entrega',
+    'ocasion','protagonista','detalle_protagonista','mensaje','firma_mensaje',
+    'observaciones','envio_descripcion','costo_envio','subtotal_productos',
+    'total_pedido','metodo_pago','comprobante_pago','atendido_por','estado'
+  ];
+
+  // 1. Traer nro_pedidos existentes de Shopify (1 sola consulta)
+  if (badge) badge.textContent = 'Verificando duplicados...';
   let existentes = new Set();
   try {
-    const chk = await fetch(
-      `${SUPABASE_URL}/rest/v1/pedidos?canal=eq.Shopify&select=nro_pedido&limit=10000`,
-      { headers: hdrs() }
-    );
-    const chkData = await chk.json();
-    if (Array.isArray(chkData)) chkData.forEach(p => existentes.add(p.nro_pedido));
-  } catch(e) { console.warn('No se pudo verificar existentes:', e); }
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?canal=eq.Shopify&select=nro_pedido&limit=10000`, { headers: hdrs() });
+    const d = await r.json();
+    if (Array.isArray(d)) d.forEach(x => existentes.add(x.nro_pedido));
+  } catch(e) {}
 
+  // 2. Filtrar solo los nuevos
   const nuevos = shopifyPedidosProcesados.filter(p => !existentes.has(p.nro_pedido));
-  omitidos = shopifyPedidosProcesados.length - nuevos.length;
-
-  if (badge) badge.textContent = `${nuevos.length} nuevos · ${omitidos} ya existían`;
+  const omitidos = shopifyPedidosProcesados.length - nuevos.length;
 
   if (nuevos.length === 0) {
     document.getElementById('shopify-preview-card').style.display = 'none';
     document.getElementById('shopify-upload-card').style.display = 'none';
-    const res = document.getElementById('shopify-resultado');
-    res.style.display = 'block';
+    const el = document.getElementById('shopify-resultado');
+    el.style.display = 'block';
     document.getElementById('shopify-resultado-txt').innerHTML =
-      `Todos los pedidos del archivo ya estaban en el Dashboard. <strong>${omitidos} omitidos</strong>.`;
+      `Todos los pedidos ya estaban en el Dashboard. <strong>${omitidos} omitidos</strong>.`;
     return;
   }
 
-  const LOTE = 10;
-  for (let i = 0; i < nuevos.length; i += LOTE) {
-    const lote = nuevos.slice(i, i + LOTE);
-    if (badge) badge.textContent = `Importando ${Math.min(i+LOTE, nuevos.length)} de ${nuevos.length}...`;
+  // 3. Preparar pedidos limpios (sin lineas, solo campos de Supabase)
+  const pedidosLimpios = nuevos.map(p => {
+    const { lineas, ...raw } = p;
+    const limpio = {};
+    camposPermitidos.forEach(k => {
+      if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') limpio[k] = raw[k];
+    });
+    return { limpio, lineas };
+  });
 
-    for (const p of lote) {
-      try {
+  // 4. Insertar en bulk — todos de una vez
+  if (badge) badge.textContent = `Insertando ${nuevos.length} pedidos...`;
+  let insertados = 0, errores = 0;
 
-        // Es nuevo — insertar pedido
-        // Solo enviamos campos que la tabla acepta (limpiamos campos desconocidos)
-        const { lineas, ...pedidoRaw } = p;
-        // Columnas EXACTAS de la tabla pedidos en Supabase
-        const camposPermitidos = [
-          'nro_pedido','fecha','hora','canal','tipo_cliente',
-          'id_nit_comprador','nombre_razon_social',
-          'telefono_comprador','correo_comprador','ciudad_comprador',
-          'direccion_comprador','departamento','correo_factura',
-          'nombres_destinatario','apellidos_destinatario',
-          'telefono_destinatario','ciudad_entrega','direccion_entrega',
-          'referencia_entrega','ocasion','protagonista',
-          'detalle_protagonista','mensaje','firma_mensaje',
-          'observaciones','envio_descripcion','costo_envio',
-          'subtotal_productos','total_pedido','metodo_pago',
-          'comprobante_pago','atendido_por','estado'
-          // tercero_id, campana_id, id, created_at, updated_at: los maneja Supabase solo
-        ];
-        const pedidoLimpio = {};
-        camposPermitidos.forEach(k => {
-          if (pedidoRaw[k] !== undefined && pedidoRaw[k] !== null && pedidoRaw[k] !== '')
-            pedidoLimpio[k] = pedidoRaw[k];
-        });
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
+      method: 'POST',
+      headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(pedidosLimpios.map(x => x.limpio))
+    });
 
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-          method: 'POST',
-          headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-          body: JSON.stringify(pedidoLimpio)
-        });
-
-        // Verificar si Supabase realmente lo aceptó
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          const errMsg = JSON.stringify(errBody);
-          console.error(`❌ Pedido ${p.nro_pedido} rechazado (${res.status}):`, errMsg);
-          // Mostrar el primer error en pantalla para diagnóstico
-          if (errores === 0) {
-            alert(`Error al importar pedido ${p.nro_pedido}:\n\nCódigo: ${res.status}\nMotivo: ${errMsg}\n\nCopia este texto y compártelo.`);
-          }
-          errores++;
-          continue;
-        }
-
-        const nuevo = await res.json();
-        const pedidoId = nuevo[0]?.id;
-
-        if (!pedidoId) {
-          console.error(`❌ Pedido ${p.nro_pedido}: se insertó pero no devolvió ID`);
-          errores++;
-          continue;
-        }
-
-        // Insertar líneas de detalle
-        if (lineas.length) {
-          for (const linea of lineas) {
-            const resLinea = await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
-              method: 'POST',
-              headers: { ...hdrs(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...linea, pedido_id: pedidoId, nro_pedido: p.nro_pedido, fecha: p.fecha })
-            });
-            if (!resLinea.ok) {
-              const e = await resLinea.json().catch(()=>({}));
-              console.warn(`⚠ Detalle pedido ${p.nro_pedido} falló:`, JSON.stringify(e));
-            }
-          }
-        }
-        insertados++;
-      } catch(e) {
-        console.error('Error importando pedido', p.nro_pedido, e);
-        errores++;
-      }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(`Error al insertar pedidos:\n${JSON.stringify(err)}`);
+      errores = nuevos.length;
+    } else {
+      const insertados_data = await res.json();
+      insertados = Array.isArray(insertados_data) ? insertados_data.length : nuevos.length;
     }
-
-    // Actualizar progreso en el badge
-    const badge = document.getElementById('shopify-resumen-badge');
-    if (badge) badge.textContent = `Importando... ${Math.min(i + LOTE, shopifyPedidosProcesados.length)} / ${shopifyPedidosProcesados.length}`;
+  } catch(e) {
+    alert(`Error de red: ${e.message}`);
+    errores = nuevos.length;
   }
 
-  // Mostrar resultado
+  // 5. Mostrar resultado
   document.getElementById('shopify-preview-card').style.display = 'none';
   document.getElementById('shopify-upload-card').style.display = 'none';
-  const res = document.getElementById('shopify-resultado');
-  res.style.display = 'block';
+  const el = document.getElementById('shopify-resultado');
+  el.style.display = 'block';
   document.getElementById('shopify-resultado-txt').innerHTML =
-    `<strong>${insertados}</strong> pedidos importados correctamente` +
-
-    (omitidos  ? ` · <strong>${omitidos}</strong> ya estaban (no se duplicaron)` : '') +
-    (errores   ? ` · <strong>${errores}</strong> con error` : '') +
+    `<strong>${insertados}</strong> pedidos importados` +
+    (omitidos ? ` · <strong>${omitidos}</strong> ya estaban` : '') +
+    (errores  ? ` · <strong>${errores}</strong> con error` : '') +
     `.<br>Ya están disponibles en <strong>Pedidos</strong> y en la exportación a Excel para Access.`;
   res.scrollIntoView({ behavior: 'smooth' });
 }
