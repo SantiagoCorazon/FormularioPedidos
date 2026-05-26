@@ -1371,9 +1371,24 @@ function renderTerceros(lista) {
 // CATÁLOGO
 // ============================================================
 async function cargarCatalogo() {
+  // Guardar filtros activos ANTES de recargar
+  const tipoActivo = $('filtrTipo') ? $('filtrTipo').value : '';
+  const subActiva  = $('filtrSub')  ? $('filtrSub').value  : '';
+  const busqueda   = $('searchCatalogo') ? $('searchCatalogo').value : '';
+
   const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrs() });
   todoElCatalogo = await r.json();
-  renderCatalogo(todoElCatalogo);
+
+  // Restaurar filtros
+  if ($('filtrTipo') && tipoActivo) {
+    $('filtrTipo').value = tipoActivo;
+    actualizarFiltrSub();
+  }
+  if ($('filtrSub') && subActiva) $('filtrSub').value = subActiva;
+  if ($('searchCatalogo') && busqueda) $('searchCatalogo').value = busqueda;
+
+  // Aplicar filtros (no mostrar todo si había un filtro activo)
+  filtrarCatalogo();
 }
 
 function filtrarCatalogo() {
