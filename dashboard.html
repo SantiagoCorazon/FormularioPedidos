@@ -2378,9 +2378,9 @@ function transformarShopify(filas) {
 
       // Estado financiero — solo tomar valores válidos
       const statusRaw = String(f['Financial Status'] || '').trim().toLowerCase();
-      const estadoValidos = ['paid', 'pending', 'refunded', 'voided', 'expired'];
-      const estadoMap = { paid: 'Pagado', pending: 'Pendiente', refunded: 'Reembolsado', voided: 'Anulado', expired: 'Expirado' };
-      const estado = estadoValidos.includes(statusRaw) ? (estadoMap[statusRaw] || 'Pendiente') : 'Pendiente';
+      // Mapear estados Shopify → valores permitidos en Supabase
+      const estadoMap = { paid: 'Entregado', pending: 'Pendiente', refunded: 'Cancelado', voided: 'Cancelado', expired: 'Cancelado' };
+      const estado = estadoMap[statusRaw] || 'Pendiente';
 
       // Método de pago — limpiar
       const pagoRaw = String(f['Payment Method'] || '').trim();
