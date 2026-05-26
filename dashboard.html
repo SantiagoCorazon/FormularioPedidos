@@ -835,10 +835,10 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-body">
           <div id="shopify-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)" onclick="document.getElementById('shopifyFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--pink)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="shopifyDrop(event)">
             <div style="font-size:2.5rem;margin-bottom:10px">📊</div>
-            <div style="font-size:.95rem;font-weight:600;color:var(--ink);margin-bottom:4px">Arrastra el archivo aquí o haz clic para seleccionar</div>
-            <div style="font-size:.78rem;color:var(--ink-lt)">Archivo .csv o .xlsx exportado desde Shopify (Reports → Orders → Export)</div>
+            <div style="font-size:.95rem;font-weight:600;color:var(--ink);margin-bottom:4px">Arrastra el CSV aquí o haz clic para seleccionar</div>
+            <div style="font-size:.78rem;color:var(--ink-lt)">Archivo .csv exportado desde Shopify (Reports → Orders → Export)</div>
           </div>
-          <input type="file" id="shopifyFile" accept=".csv,.txt,.xlsx,.xls" style="display:none" onchange="procesarShopify(this)">
+          <input type="file" id="shopifyFile" accept=".csv" style="display:none" onchange="procesarShopify(this)">
           <div id="shopify-file-info" style="display:none;margin-top:12px;padding:12px 16px;background:var(--pink-lt);border-radius:8px;font-size:.83rem;color:var(--ink-mid);display:flex;align-items:center;gap:10px">
             <span style="font-size:1.2rem">✅</span>
             <span id="shopify-file-nombre"></span>
@@ -2268,50 +2268,28 @@ function procesarShopify(input) {
 }
 
 function procesarArchivoShopify(file) {
-  const esExcel = file.name.match(/\.xlsx?$/i);
-  const esCSV   = file.name.match(/\.(csv|txt)$/i);
-  if (!esExcel && !esCSV) {
-    toast('El archivo debe ser .csv o .xlsx exportado desde Shopify', 'error');
+  if (!file.name.match(/\.csv$/i)) {
+    toast('El archivo debe ser .csv exportado desde Shopify', 'error');
     return;
   }
 
-  // Cargar SheetJS para leer ambos formatos
-  const cargarXLSX = window.XLSX
-    ? Promise.resolve()
-    : new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-
-  cargarXLSX.then(() => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-        const hoja = wb.SheetNames.find(n =>
-          n.toLowerCase().includes('pedido') || n.toLowerCase().includes('order')
-        ) || wb.SheetNames[0];
-        const filas = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { defval: '' });
-
-        if (!filas.length) { toast('El archivo está vacío', 'error'); return; }
-
-        shopifyPedidosProcesados = transformarShopify(filas);
-
-        const infoEl = document.getElementById('shopify-file-info');
-        infoEl.style.display = 'flex';
-        document.getElementById('shopify-file-nombre').textContent =
-          file.name + ' — ' + filas.length + ' filas leídas → ' + shopifyPedidosProcesados.length + ' pedidos';
-
-        mostrarPreviewShopify();
-      } catch(err) {
-        console.error(err);
-        toast('Error leyendo el archivo: ' + err.message, 'error');
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }).catch(() => toast('Error cargando librería de lectura', 'error'));
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const filas = parsearCSV(e.target.result);
+      if (!filas.length) { toast('El CSV está vacío', 'error'); return; }
+      shopifyPedidosProcesados = transformarShopify(filas);
+      const infoEl = document.getElementById('shopify-file-info');
+      infoEl.style.display = 'flex';
+      document.getElementById('shopify-file-nombre').textContent =
+        file.name + ' — ' + filas.length + ' filas leídas → ' + shopifyPedidosProcesados.length + ' pedidos';
+      mostrarPreviewShopify();
+    } catch(err) {
+      console.error(err);
+      toast('Error leyendo el CSV: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 
