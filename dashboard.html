@@ -190,6 +190,7 @@ tr:hover td{background:var(--pink-lt)}
       <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
       <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
       <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
+      <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
       <div class="nav-item" onclick="exportarExcel()"><span class="nav-icon">📥</span> Exportar a Excel</div>
       <div class="nav-item" onclick="irA('manual')"><span class="nav-icon">📖</span> Manual de uso</div>
     </nav>
@@ -794,6 +795,65 @@ tr:hover td{background:var(--pink-lt)}
 
     </div><!-- /page-manual -->
 
+
+    <!-- IMPORTAR SHOPIFY -->
+    <div class="page" id="page-shopify">
+      <div class="page-title">Importar pedidos de Shopify</div>
+      <div class="page-sub">Paula sube el Excel de Shopify — el sistema lo procesa y los pedidos quedan disponibles en la sección Pedidos y en la exportación a Access.</div>
+
+      <!-- ZONA DE CARGA -->
+      <div class="card" id="shopify-upload-card">
+        <div class="card-header">
+          <div class="card-title">📂 Paso 1 — Cargar el archivo Excel de Shopify</div>
+        </div>
+        <div class="card-body">
+          <div id="shopify-drop-zone" style="border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)" onclick="document.getElementById('shopifyFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--pink)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="shopifyDrop(event)">
+            <div style="font-size:2.5rem;margin-bottom:10px">📊</div>
+            <div style="font-size:.95rem;font-weight:600;color:var(--ink);margin-bottom:4px">Arrastra el Excel aquí o haz clic para seleccionar</div>
+            <div style="font-size:.78rem;color:var(--ink-lt)">Archivo .xlsx exportado desde Shopify — hoja "Pedidos Shopify"</div>
+          </div>
+          <input type="file" id="shopifyFile" accept=".xlsx,.xls" style="display:none" onchange="procesarShopify(this)">
+          <div id="shopify-file-info" style="display:none;margin-top:12px;padding:12px 16px;background:var(--pink-lt);border-radius:8px;font-size:.83rem;color:var(--ink-mid);display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.2rem">✅</span>
+            <span id="shopify-file-nombre"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVISUALIZACIÓN -->
+      <div class="card" id="shopify-preview-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title">👁 Paso 2 — Revisar antes de importar</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span id="shopify-resumen-badge" style="background:var(--pink-lt);color:var(--pink);padding:4px 14px;border-radius:20px;font-size:.78rem;font-weight:600"></span>
+            <button class="btn btn-primary" onclick="importarShopify()">⬆ Importar a Supabase</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:12px">Mostrando los primeros 20 pedidos. Todos los del archivo se importarán.</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>N° Shopify</th><th>Fecha</th><th>Cliente</th>
+                <th>Ciudad</th><th>Productos</th><th>Total</th><th>Pago</th><th>Estado</th>
+              </tr></thead>
+              <tbody id="shopify-preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="shopify-resultado" style="display:none;margin-top:16px;padding:20px 24px;border-radius:12px;background:#e8f5e9;border:1.5px solid #a5d6a7">
+        <div style="font-size:1rem;font-weight:700;color:#2e7d32;margin-bottom:4px">✅ Importación completada</div>
+        <div id="shopify-resultado-txt" style="font-size:.85rem;color:#1b5e20"></div>
+        <div style="margin-top:14px;display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="irA('pedidos')">Ver pedidos →</button>
+          <button class="btn btn-secondary" onclick="resetShopify()">Importar otro archivo</button>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -1102,6 +1162,7 @@ function irA(pagina) {
   if (pagina === 'campanas') cargarCampanas();
   if (pagina === 'usuarios') cargarUsuarios();
   if (pagina === 'manual') mostrarSeccionManual('m-inicio');
+  if (pagina === 'shopify') iniciarShopify();
 }
 
 // ============================================================
@@ -2037,6 +2098,269 @@ window.addEventListener('load', () => {
     iniciarApp();
   }
 });
+
+// ============================================================
+// IMPORTAR SHOPIFY
+// ============================================================
+let shopifyPedidosProcesados = [];
+
+function iniciarShopify() {
+  // nada que precargar — solo mostrar la página limpia
+}
+
+function shopifyDrop(e) {
+  e.preventDefault();
+  document.getElementById('shopify-drop-zone').style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  procesarArchivoShopify(file);
+}
+
+function procesarShopify(input) {
+  const file = input.files[0];
+  if (!file) return;
+  procesarArchivoShopify(file);
+}
+
+function procesarArchivoShopify(file) {
+  if (!file.name.match(/\.xlsx?$/i)) {
+    toast('El archivo debe ser .xlsx o .xls', 'error');
+    return;
+  }
+  // Cargar SheetJS si no está
+  const cargar = window.XLSX
+    ? Promise.resolve()
+    : new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+
+  cargar.then(() => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+
+        // Buscar la hoja correcta
+        const nombreHoja = wb.SheetNames.find(n =>
+          n.toLowerCase().includes('pedido') || n.toLowerCase().includes('order')
+        ) || wb.SheetNames[0];
+
+        const ws = wb.Sheets[nombreHoja];
+        const filas = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!filas.length) { toast('El archivo está vacío o no tiene la hoja esperada', 'error'); return; }
+
+        shopifyPedidosProcesados = transformarShopify(filas);
+
+        // Mostrar info del archivo
+        const infoEl = document.getElementById('shopify-file-info');
+        infoEl.style.display = 'flex';
+        document.getElementById('shopify-file-nombre').textContent =
+          file.name + ' — ' + filas.length + ' filas leídas → ' + shopifyPedidosProcesados.length + ' pedidos únicos';
+
+        mostrarPreviewShopify();
+      } catch(err) {
+        console.error(err);
+        toast('Error leyendo el archivo: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }).catch(() => toast('Error cargando librería de Excel', 'error'));
+}
+
+function transformarShopify(filas) {
+  // Shopify exporta una fila por línea de producto — agrupar por número de pedido
+  const mapa = {};
+
+  filas.forEach(f => {
+    const nro = String(f['Name'] || f['name'] || '').trim();
+    if (!nro || nro === 'nan') return;
+
+    if (!mapa[nro]) {
+      // Parsear fecha
+      let fechaStr = '';
+      const fechaRaw = f['Created at'] || f['created_at'] || '';
+      if (fechaRaw) {
+        const d = new Date(fechaRaw);
+        if (!isNaN(d)) fechaStr = d.toISOString().split('T')[0];
+        else fechaStr = String(fechaRaw).slice(0, 10);
+      }
+
+      // Estado financiero — solo tomar valores válidos
+      const statusRaw = String(f['Financial Status'] || '').trim().toLowerCase();
+      const estadoValidos = ['paid', 'pending', 'refunded', 'voided', 'expired'];
+      const estadoMap = { paid: 'Pagado', pending: 'Pendiente', refunded: 'Reembolsado', voided: 'Anulado', expired: 'Expirado' };
+      const estado = estadoValidos.includes(statusRaw) ? (estadoMap[statusRaw] || 'Pendiente') : 'Pendiente';
+
+      // Método de pago — limpiar
+      const pagoRaw = String(f['Payment Method'] || '').trim();
+      const pagosValidos = ['Bank Deposit', 'PayU Latam', 'custom', 'web', '0.00'];
+      const metodo = pagoRaw.length < 80 && !pagoRaw.includes('\n') ? pagoRaw : 'Ver en Shopify';
+
+      // Shipping — puede ser número o texto
+      const shippingVal = parseFloat(String(f['Shipping'] || '0').replace(/[^0-9.]/g, '')) || 0;
+      const totalVal    = parseFloat(String(f['Total']    || '0').replace(/[^0-9.]/g, '')) || 0;
+
+      mapa[nro] = {
+        nro_pedido:            nro,
+        fecha:                 fechaStr,
+        canal:                 'Shopify',
+        // Comprador
+        nombre_razon_social:   String(f['Billing Name']  || '').trim(),
+        telefono_comprador:    String(f['Billing Phone'] || f['Phone'] || '').trim(),
+        correo_comprador:      String(f['Email']         || '').trim(),
+        ciudad_comprador:      String(f['Billing City']  || '').trim(),
+        direccion_comprador:   String(f['Billing Street'] || f['Billing Address1'] || '').trim(),
+        departamento:          String(f['Billing Province Name'] || '').trim(),
+        correo_factura:        String(f['Email'] || '').trim(),
+        // Destinatario
+        nombres_destinatario:  String(f['Shipping Name'] || '').trim(),
+        apellidos_destinatario:'',
+        telefono_destinatario: String(f['Shipping Phone'] || '').trim(),
+        ciudad_entrega:        String(f['Shipping City']  || '').trim(),
+        direccion_entrega:     String(f['Shipping Address1'] || '').trim(),
+        referencia_entrega:    String(f['Shipping Address2'] || '').trim(),
+        // Envío y pago
+        envio_descripcion:     String(f['Shipping Method'] || '').trim().slice(0, 200),
+        costo_envio:           shippingVal,
+        total_pedido:          totalVal,
+        subtotal_productos:    totalVal - shippingVal,
+        metodo_pago:           metodo,
+        estado:                estado,
+        observaciones:         String(f['Notes'] || '').trim(),
+        // Tipo
+        tipo_cliente:          'Personal',
+        ocasion:               '',
+        protagonista:          '',
+        detalle_protagonista:  '',
+        mensaje:               '',
+        firma_mensaje:         '',
+        atendido_por:          'Shopify',
+        lineas:                [],
+      };
+    }
+
+    // Agregar línea de detalle
+    const nombre  = String(f['Lineitem name']     || '').trim();
+    const qty     = parseInt(f['Lineitem quantity'] || 1) || 1;
+    const precio  = parseFloat(String(f['Lineitem price'] || '0').replace(/[^0-9.]/g, '')) || 0;
+
+    if (nombre) {
+      // Inferir categoría del nombre del producto
+      const nombreL = nombre.toLowerCase();
+      let categoria = 'Producto';
+      if (nombreL.includes('bono'))       categoria = 'Bono';
+      else if (nombreL.includes('caja') || nombreL.includes('sobre') || nombreL.includes('organza')) categoria = 'Empaque';
+      else if (nombreL.includes('vela') || nombreL.includes('planta') || nombreL.includes('orquídea') || nombreL.includes('anturio')) categoria = 'Acompañante';
+
+      mapa[nro].lineas.push({ categoria, producto: nombre, cantidad: qty, precio_unitario: precio, subtotal_linea: precio * qty });
+    }
+  });
+
+  return Object.values(mapa);
+}
+
+function mostrarPreviewShopify() {
+  const card = document.getElementById('shopify-preview-card');
+  card.style.display = 'block';
+
+  document.getElementById('shopify-resumen-badge').textContent =
+    shopifyPedidosProcesados.length.toLocaleString() + ' pedidos listos para importar';
+
+  const muestra = shopifyPedidosProcesados.slice(0, 20);
+  document.getElementById('shopify-preview-body').innerHTML = muestra.map(p => `<tr>
+    <td><strong>${p.nro_pedido}</strong></td>
+    <td>${p.fecha}</td>
+    <td>${p.nombre_razon_social || '—'}</td>
+    <td>${p.ciudad_comprador || '—'}</td>
+    <td style="font-size:.75rem;color:var(--ink-lt);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.lineas.map(l=>l.producto).join(' / ')}</td>
+    <td>${fmt(p.total_pedido)}</td>
+    <td style="font-size:.75rem">${p.metodo_pago || '—'}</td>
+    <td><span class="badge badge-${p.estado==='Pagado'?'entregado':'pendiente'}">${p.estado}</span></td>
+  </tr>`).join('');
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function importarShopify() {
+  if (!shopifyPedidosProcesados.length) return;
+
+  const btnImportar = document.querySelector('#shopify-preview-card .btn-primary');
+  if (btnImportar) { btnImportar.disabled = true; btnImportar.textContent = 'Importando...'; }
+
+  let insertados = 0, omitidos = 0, errores = 0;
+  const LOTE = 20; // lotes pequeños para no sobrecargar
+
+  for (let i = 0; i < shopifyPedidosProcesados.length; i += LOTE) {
+    const lote = shopifyPedidosProcesados.slice(i, i + LOTE);
+
+    for (const p of lote) {
+      try {
+        // Verificar si ya existe
+        const check = await fetch(
+          `${SUPABASE_URL}/rest/v1/pedidos?nro_pedido=eq.${encodeURIComponent(p.nro_pedido)}&select=id&limit=1`,
+          { headers: hdrs() }
+        );
+        const existe = await check.json();
+        if (existe.length > 0) { omitidos++; continue; }
+
+        // Insertar pedido
+        const { lineas, ...pedidoSinLineas } = p;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
+          method: 'POST',
+          headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(pedidoSinLineas)
+        });
+        const nuevo = await res.json();
+        const pedidoId = nuevo[0]?.id;
+
+        // Insertar líneas de detalle
+        if (pedidoId && lineas.length) {
+          for (const linea of lineas) {
+            await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
+              method: 'POST',
+              headers: { ...hdrs(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...linea, pedido_id: pedidoId, nro_pedido: p.nro_pedido, fecha: p.fecha })
+            });
+          }
+        }
+        insertados++;
+      } catch(e) {
+        console.error('Error importando pedido', p.nro_pedido, e);
+        errores++;
+      }
+    }
+
+    // Actualizar progreso en el badge
+    const badge = document.getElementById('shopify-resumen-badge');
+    if (badge) badge.textContent = `Importando... ${Math.min(i + LOTE, shopifyPedidosProcesados.length)} / ${shopifyPedidosProcesados.length}`;
+  }
+
+  // Mostrar resultado
+  document.getElementById('shopify-preview-card').style.display = 'none';
+  document.getElementById('shopify-upload-card').style.display = 'none';
+  const res = document.getElementById('shopify-resultado');
+  res.style.display = 'block';
+  document.getElementById('shopify-resultado-txt').innerHTML =
+    `<strong>${insertados}</strong> pedidos importados correctamente` +
+    (omitidos ? ` · <strong>${omitidos}</strong> ya existían (omitidos)` : '') +
+    (errores   ? ` · <strong>${errores}</strong> con error` : '') +
+    `.<br>Ya están disponibles en <strong>Pedidos</strong> y en la exportación a Excel para Access.`;
+  res.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetShopify() {
+  shopifyPedidosProcesados = [];
+  document.getElementById('shopifyFile').value = '';
+  document.getElementById('shopify-file-info').style.display = 'none';
+  document.getElementById('shopify-preview-card').style.display = 'none';
+  document.getElementById('shopify-resultado').style.display = 'none';
+  document.getElementById('shopify-upload-card').style.display = 'block';
+}
+
 </script>
 </body>
 </html>
