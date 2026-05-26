@@ -2520,7 +2520,12 @@ async function importarShopify() {
         // Verificar si Supabase realmente lo aceptó
         if (!res.ok) {
           const errBody = await res.json().catch(() => ({}));
-          console.error(`❌ Pedido ${p.nro_pedido} rechazado (${res.status}):`, JSON.stringify(errBody));
+          const errMsg = JSON.stringify(errBody);
+          console.error(`❌ Pedido ${p.nro_pedido} rechazado (${res.status}):`, errMsg);
+          // Mostrar el primer error en pantalla para diagnóstico
+          if (errores === 0) {
+            alert(`Error al importar pedido ${p.nro_pedido}:\n\nCódigo: ${res.status}\nMotivo: ${errMsg}\n\nCopia este texto y compártelo.`);
+          }
           errores++;
           continue;
         }
