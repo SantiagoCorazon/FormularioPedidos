@@ -189,6 +189,10 @@ tr:hover td{background:var(--pink-lt)}
       <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
       <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
       <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
+      <div class="nav-item" onclick="irA('bonos')"><span class="nav-icon">🎨</span> Bonos</div>
+      <div class="nav-item" onclick="irA('eventos')"><span class="nav-icon">📅</span> Eventos</div>
+      <div class="nav-item" onclick="irA('temporada')"><span class="nav-icon">🎁</span> Temporada</div>
+      <div class="nav-item" id="nav-envios" onclick="irA('envios')"><span class="nav-icon">🚚</span> Envíos</div>
       <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
       <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
       <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
@@ -357,6 +361,93 @@ tr:hover td{background:var(--pink-lt)}
       </div>
     </div>
 
+
+    <!-- BONOS -->
+    <div class="page" id="page-bonos">
+      <div class="page-title">🎨 Bonos</div>
+      <div class="page-sub">Gestiona los colores y frases de las tarjetas de bono que aparecen en el formulario</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar" style="margin:0;flex:1;gap:8px">
+            <div class="card-title">Colores de tarjeta</div>
+            <select id="filtrTipoBono" onchange="filtrarBonos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+              <option value="">Todos los tipos</option>
+              <option value="pesame">Pésame</option>
+              <option value="toda_ocasion">Toda Ocasión</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalBono()">+ Nuevo color</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Imagen</th><th>Nombre del color</th><th>Frase preimpresa</th><th>Tipo de bono</th><th>Activo</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyBonos"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTOS -->
+    <div class="page" id="page-eventos">
+      <div class="page-title">📅 Eventos</div>
+      <div class="page-sub">Gestiona los eventos activos que aparecen en el formulario</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Eventos</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalEvento()">+ Nuevo evento</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Nombre</th><th>Descripción</th><th>Fecha</th><th>Productos</th><th>Activo</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyEventos"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPORADA -->
+    <div class="page" id="page-temporada">
+      <div class="page-title">🎁 Temporada</div>
+      <div class="page-sub">Configura el botón dinámico de temporada — Navidad, Día de Madres, Día del Niño... Solo puede haber una temporada activa a la vez</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Temporadas</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalTemporada()">+ Nueva temporada</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Nombre del botón</th><th>Emoji</th><th>Descripción</th><th>Productos</th><th>Activa</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyTemporada"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENVÍOS -->
+    <div class="page" id="page-envios">
+      <div class="page-title">🚚 Envíos</div>
+      <div class="page-sub">Configura las tarifas de envío por zona. Solo visible para administradores. Los cambios se reflejan inmediatamente en el formulario</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Tarifas de envío</div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalEnvio()">+ Nueva tarifa</button>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Orden</th><th>Descripción</th><th>Municipios</th><th>Tarifa</th><th>Condición</th><th>Activa</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyEnvios"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
 
     <!-- MANUAL -->
     <div class="page" id="page-manual">
@@ -1166,8 +1257,15 @@ function iniciarApp() {
   $('app').classList.add('show');
   $('sidebarName').textContent = usuarioActual.nombre;
   $('sidebarRol').textContent = usuarioActual.rol === 'admin' ? 'Administrador' : usuarioActual.rol === 'operador' ? 'Operador' : 'Consulta';
-  // Mostrar menú usuarios solo para admin
-  if (usuarioActual.rol === 'admin') $('nav-usuarios').style.display = 'flex';
+  // Mostrar menú usuarios y envíos solo para admin
+  if (usuarioActual.rol === 'admin') {
+    $('nav-usuarios').style.display = 'flex';
+    $('nav-envios').style.display = 'flex';
+  } else {
+    if ($('nav-envios')) $('nav-envios').style.display = 'none';
+  }
+  // Precargar catálogo para que esté disponible en eventos y temporada
+  cargarCatalogo();
   cargarInicio();
 }
 
@@ -1178,17 +1276,512 @@ function irA(pagina) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   $(`page-${pagina}`)?.classList.add('active');
+  // Marcar nav activo
+  const mapaNav = {
+    inicio:'inicio', pedidos:'pedido', terceros:'cliente', catalogo:'catálogo',
+    campanas:'campaña', bonos:'bono', eventos:'evento', temporada:'temporada',
+    envios:'envío', usuarios:'usuario', shopify:'shopify', manual:'manual'
+  };
+  const clave = mapaNav[pagina] || pagina;
   document.querySelectorAll('.nav-item').forEach(n => {
-    if (n.textContent.trim().toLowerCase().includes(pagina === 'inicio' ? 'inicio' : pagina === 'pedidos' ? 'pedido' : pagina === 'terceros' ? 'cliente' : pagina === 'catalogo' ? 'catálogo' : pagina === 'campanas' ? 'campaña' : pagina === 'usuarios' ? 'usuario' : '')) n.classList.add('active');
+    if (n.textContent.trim().toLowerCase().includes(clave)) n.classList.add('active');
   });
-  if (pagina === 'inicio') cargarInicio();
-  if (pagina === 'pedidos') cargarPedidos();
-  if (pagina === 'terceros') cargarTerceros();
-  if (pagina === 'catalogo') cargarCatalogo();
-  if (pagina === 'campanas') cargarCampanas();
-  if (pagina === 'usuarios') cargarUsuarios();
-  if (pagina === 'manual') mostrarSeccionManual('m-inicio');
-  if (pagina === 'shopify') iniciarShopify();
+  if (pagina === 'inicio')    cargarInicio();
+  if (pagina === 'pedidos')   cargarPedidos();
+  if (pagina === 'terceros')  cargarTerceros();
+  if (pagina === 'catalogo')  cargarCatalogo();
+  if (pagina === 'campanas')  cargarCampanas();
+  if (pagina === 'bonos')     cargarBonos();
+  if (pagina === 'eventos')   cargarEventos();
+  if (pagina === 'temporada') cargarTemporada();
+  if (pagina === 'envios')    cargarEnvios();
+  if (pagina === 'usuarios')  cargarUsuarios();
+  if (pagina === 'manual')    mostrarSeccionManual('m-inicio');
+  if (pagina === 'shopify')   iniciarShopify();
+}
+
+// ============================================================
+// BONOS — colores de tarjeta
+// ============================================================
+let todosLosBonos = [];
+
+async function cargarBonos() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/colores_bono?order=tipo_bono.asc,orden.asc`, { headers: hdrs() });
+  todosLosBonos = await r.json();
+  filtrarBonos();
+}
+
+function filtrarBonos() {
+  const tipo = ($('filtrTipoBono')||{value:''}).value;
+  const filtrados = todosLosBonos.filter(b => !tipo || b.tipo_bono === tipo);
+  renderBonos(filtrados);
+}
+
+function renderBonos(lista) {
+  $('bodyBonos').innerHTML = lista.length ? lista.map(b => `<tr>
+    <td><img src="${b.imagen_url||''}" style="height:60px;width:60px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'"></td>
+    <td><strong>${b.nombre||'—'}</strong></td>
+    <td style="font-style:italic;color:var(--ink-lt)">${b.frase||'—'}</td>
+    <td><span style="font-size:.72rem;background:${b.tipo_bono==='pesame'?'#e3f2fd':'#fce4ec'};color:${b.tipo_bono==='pesame'?'#1565c0':'#880e4f'};padding:2px 10px;border-radius:10px;font-weight:600">${b.tipo_bono==='pesame'?'🕊 Pésame':'🎁 Toda Ocasión'}</span></td>
+    <td><label class="toggle"><input type="checkbox" ${b.activo?'checked':''} onchange="toggleBono(${b.id}, this.checked)"><span class="toggle-slider"></span></label></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="editarBono(${b.id})">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarBono(${b.id})">🗑</button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No hay colores configurados</td></tr>';
+}
+
+function previewImgBono() {
+  const url = convertirUrlDrive($('bono_img').value.trim());
+  const preview = $('bono_img_preview');
+  const thumb = $('bono_img_thumb');
+  if (url && preview && thumb) { thumb.src = url; preview.style.display = 'block'; }
+  else if (preview) preview.style.display = 'none';
+}
+
+function abrirModalBono() {
+  $('bono_id').value = '';
+  $('bono_nombre').value = '';
+  $('bono_tipo').value = 'pesame';
+  $('bono_frase').value = '';
+  $('bono_img').value = '';
+  $('bono_orden').value = '';
+  $('bono_img_preview').style.display = 'none';
+  $('modalBonoTitle').textContent = 'Nuevo color de bono';
+  abrirModal('modalBono');
+}
+
+function editarBono(id) {
+  const b = todosLosBonos.find(x => x.id === id);
+  if (!b) return;
+  $('bono_id').value = b.id;
+  $('bono_nombre').value = b.nombre||'';
+  $('bono_tipo').value = b.tipo_bono||'pesame';
+  $('bono_frase').value = b.frase||'';
+  $('bono_img').value = b.imagen_url||'';
+  $('bono_orden').value = b.orden||1;
+  if (b.imagen_url) { $('bono_img_thumb').src = b.imagen_url; $('bono_img_preview').style.display = 'block'; }
+  $('modalBonoTitle').textContent = 'Editar color de bono';
+  abrirModal('modalBono');
+}
+
+async function guardarBono() {
+  const id = $('bono_id').value;
+  const datos = {
+    nombre:     $('bono_nombre').value.trim(),
+    tipo_bono:  $('bono_tipo').value,
+    frase:      $('bono_frase').value.trim(),
+    imagen_url: convertirUrlDrive($('bono_img').value.trim()),
+    orden:      parseInt($('bono_orden').value)||1,
+    activo:     true,
+  };
+  if (!datos.nombre) { alert('El nombre del color es obligatorio.'); return; }
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/colores_bono?id=eq.${id}`, {
+      method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify(datos)
+    });
+    toast('Color actualizado', 'success');
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/colores_bono`, {
+      method:'POST', headers:{...hdrs(),'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify(datos)
+    });
+    toast('Color creado', 'success');
+  }
+  cerrarModal('modalBono');
+  cargarBonos();
+}
+
+async function toggleBono(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/colores_bono?id=eq.${id}`, {
+    method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({activo})
+  });
+  toast(activo ? 'Color activado' : 'Color desactivado', 'success');
+}
+
+async function eliminarBono(id) {
+  if (!confirm('¿Segura que quieres eliminar este color?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/colores_bono?id=eq.${id}`, { method:'DELETE', headers:hdrs() });
+  toast('Color eliminado', 'success');
+  cargarBonos();
+}
+
+// ============================================================
+// EVENTOS
+// ============================================================
+let todosLosEventos = [];
+let prodsEventoTemp = [];
+
+async function cargarEventos() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/eventos?order=nombre.asc`, { headers: hdrs() });
+  todosLosEventos = await r.json();
+  renderEventos(todosLosEventos);
+}
+
+async function renderEventos(lista) {
+  // Cargar conteo de productos por evento
+  const bodyEl = $('bodyEventos');
+  if (!lista.length) {
+    bodyEl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No hay eventos configurados</td></tr>';
+    return;
+  }
+  bodyEl.innerHTML = lista.map(e => `<tr>
+    <td><strong>${e.nombre||'—'}</strong></td>
+    <td>${e.descripcion||'—'}</td>
+    <td>${e.fecha||'—'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="verProductosEvento(${e.id})">Ver productos</button></td>
+    <td><label class="toggle"><input type="checkbox" ${e.activo?'checked':''} onchange="toggleEvento(${e.id}, this.checked)"><span class="toggle-slider"></span></label></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="editarEvento(${e.id})">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarEvento(${e.id})">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+function abrirModalEvento() {
+  $('ev_id').value = '';
+  $('ev_nombre').value = '';
+  $('ev_desc').value = '';
+  $('ev_fecha').value = '';
+  prodsEventoTemp = [];
+  renderProdsEvento();
+  cargarSelectorCatalogoEvento();
+  $('modalEventoTitle').textContent = 'Nuevo evento';
+  abrirModal('modalEvento');
+}
+
+async function editarEvento(id) {
+  const e = todosLosEventos.find(x => x.id === id);
+  if (!e) return;
+  $('ev_id').value = e.id;
+  $('ev_nombre').value = e.nombre||'';
+  $('ev_desc').value = e.descripcion||'';
+  $('ev_fecha').value = e.fecha||'';
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/evento_productos?evento_id=eq.${id}&order=id.asc`, { headers: hdrs() });
+  prodsEventoTemp = await r.json();
+  renderProdsEvento();
+  cargarSelectorCatalogoEvento();
+  $('modalEventoTitle').textContent = 'Editar evento';
+  abrirModal('modalEvento');
+}
+
+function cargarSelectorCatalogoEvento() {
+  const sel = $('ev_prod_existente');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Asociar producto del catálogo...</option>' +
+    todoElCatalogo.filter(p => p.activo).map(p =>
+      `<option value="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-img="${p.imagen_url||''}">${p.nombre} — ${fmt(p.precio)}</option>`
+    ).join('');
+}
+
+function asociarProductoEvento() {
+  const sel = $('ev_prod_existente');
+  if (!sel.value) return;
+  const opt = sel.options[sel.selectedIndex];
+  if (prodsEventoTemp.some(p => p.catalogo_id == parseInt(sel.value))) {
+    toast('Este producto ya está en el evento', 'error'); return;
+  }
+  prodsEventoTemp.push({ catalogo_id: parseInt(sel.value), nombre: opt.dataset.nombre, precio: parseFloat(opt.dataset.precio)||0, imagen_url: opt.dataset.img||'', activo: true });
+  renderProdsEvento();
+  sel.value = '';
+}
+
+function renderProdsEvento() {
+  const lista = $('listaProdsEvento');
+  if (!lista) return;
+  if (!prodsEventoTemp.length) { lista.innerHTML = '<div style="color:var(--ink-lt);font-size:.8rem;padding:8px">No hay productos agregados.</div>'; return; }
+  lista.innerHTML = prodsEventoTemp.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--white)">
+      ${p.imagen_url ? `<img src="${p.imagen_url}" style="width:36px;height:36px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">` : '<div style="width:36px;height:36px;background:var(--cream);border-radius:6px"></div>'}
+      <div style="flex:1"><div style="font-weight:600;font-size:.83rem">${p.nombre}</div><div style="font-size:.75rem;color:var(--ink-lt)">${fmt(p.precio)}</div></div>
+      <label class="toggle" title="Activo en el formulario"><input type="checkbox" ${p.activo?'checked':''} onchange="toggleProdEventoTemp(${i}, this.checked)"><span class="toggle-slider"></span></label>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="quitarProdEvento(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleProdEventoTemp(idx, activo) { prodsEventoTemp[idx].activo = activo; }
+function quitarProdEvento(idx) { prodsEventoTemp.splice(idx, 1); renderProdsEvento(); }
+
+async function guardarEvento() {
+  const id = $('ev_id').value;
+  const datos = { nombre: $('ev_nombre').value.trim(), descripcion: $('ev_desc').value.trim(), fecha: $('ev_fecha').value||null };
+  if (!datos.nombre) { alert('El nombre del evento es obligatorio.'); return; }
+  let eventoId = id ? parseInt(id) : null;
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/eventos?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify(datos) });
+  } else {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/eventos`, { method:'POST', headers:{...hdrs(),'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify({...datos, activo:false}) });
+    const nuevo = await r.json();
+    eventoId = nuevo[0]?.id;
+  }
+  if (eventoId) {
+    await fetch(`${SUPABASE_URL}/rest/v1/evento_productos?evento_id=eq.${eventoId}`, { method:'DELETE', headers:hdrs() });
+    for (const p of prodsEventoTemp) {
+      await fetch(`${SUPABASE_URL}/rest/v1/evento_productos`, { method:'POST', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({...p, evento_id: eventoId}) });
+    }
+  }
+  toast(id ? 'Evento actualizado' : 'Evento creado', 'success');
+  cerrarModal('modalEvento');
+  cargarEventos();
+}
+
+async function toggleEvento(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/eventos?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({activo}) });
+  toast(activo ? 'Evento activado' : 'Evento desactivado', 'success');
+}
+
+async function eliminarEvento(id) {
+  if (!confirm('¿Segura que quieres eliminar este evento?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/eventos?id=eq.${id}`, { method:'DELETE', headers:hdrs() });
+  toast('Evento eliminado', 'success');
+  cargarEventos();
+}
+
+async function verProductosEvento(id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/evento_productos?evento_id=eq.${id}&order=id.asc`, { headers: hdrs() });
+  const prods = await r.json();
+  const ev = todosLosEventos.find(x => x.id === id);
+  alert(`Productos del evento "${ev?.nombre}":\n\n` + (prods.length ? prods.map(p => `• ${p.nombre} — ${fmt(p.precio)} ${p.activo?'✅':'❌'}`).join('\n') : 'Sin productos'));
+}
+
+// ============================================================
+// TEMPORADA
+// ============================================================
+let todasLasTemporadas = [];
+let prodsTemporadaTemp = [];
+
+async function cargarTemporada() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/temporada?order=id.desc`, { headers: hdrs() });
+  todasLasTemporadas = await r.json();
+  renderTemporada(todasLasTemporadas);
+}
+
+async function renderTemporada(lista) {
+  const bodyEl = $('bodyTemporada');
+  if (!lista.length) {
+    bodyEl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No hay temporadas configuradas</td></tr>';
+    return;
+  }
+  bodyEl.innerHTML = lista.map(t => `<tr>
+    <td><strong>${t.nombre_boton||'—'}</strong></td>
+    <td style="font-size:1.4rem">${t.emoji||''}</td>
+    <td>${t.descripcion||'—'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="verProductosTemporada(${t.id})">Ver productos</button></td>
+    <td>
+      <label class="toggle" title="Solo una puede estar activa">
+        <input type="checkbox" ${t.activo?'checked':''} onchange="toggleTemporada(${t.id}, this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+      ${t.activo ? '<span style="font-size:.72rem;color:#2e7d32;font-weight:600;margin-left:6px">● Activa</span>' : ''}
+    </td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="editarTemporada(${t.id})">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarTemporada(${t.id})">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+function abrirModalTemporada() {
+  $('temp_id').value = '';
+  $('temp_nombre').value = '';
+  $('temp_emoji').value = '';
+  $('temp_desc').value = '';
+  prodsTemporadaTemp = [];
+  renderProdsTemporada();
+  cargarSelectorCatalogoTemporada();
+  $('modalTemporadaTitle').textContent = 'Nueva temporada';
+  abrirModal('modalTemporada');
+}
+
+async function editarTemporada(id) {
+  const t = todasLasTemporadas.find(x => x.id === id);
+  if (!t) return;
+  $('temp_id').value = t.id;
+  $('temp_nombre').value = t.nombre_boton||'';
+  $('temp_emoji').value = t.emoji||'';
+  $('temp_desc').value = t.descripcion||'';
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/temporada_productos?temporada_id=eq.${id}&order=id.asc`, { headers: hdrs() });
+  prodsTemporadaTemp = await r.json();
+  renderProdsTemporada();
+  cargarSelectorCatalogoTemporada();
+  $('modalTemporadaTitle').textContent = 'Editar temporada';
+  abrirModal('modalTemporada');
+}
+
+function cargarSelectorCatalogoTemporada() {
+  const sel = $('temp_prod_existente');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Asociar producto del catálogo...</option>' +
+    todoElCatalogo.filter(p => p.activo).map(p =>
+      `<option value="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" data-img="${p.imagen_url||''}">${p.nombre} — ${fmt(p.precio)}</option>`
+    ).join('');
+}
+
+function asociarProductoTemporada() {
+  const sel = $('temp_prod_existente');
+  if (!sel.value) return;
+  const opt = sel.options[sel.selectedIndex];
+  if (prodsTemporadaTemp.some(p => p.catalogo_id == parseInt(sel.value))) {
+    toast('Este producto ya está en la temporada', 'error'); return;
+  }
+  prodsTemporadaTemp.push({ catalogo_id: parseInt(sel.value), nombre: opt.dataset.nombre, precio: parseFloat(opt.dataset.precio)||0, imagen_url: opt.dataset.img||'', activo: true });
+  renderProdsTemporada();
+  sel.value = '';
+}
+
+function renderProdsTemporada() {
+  const lista = $('listaProdsTemporada');
+  if (!lista) return;
+  if (!prodsTemporadaTemp.length) { lista.innerHTML = '<div style="color:var(--ink-lt);font-size:.8rem;padding:8px">No hay productos. Los productos que agregues se guardan aunque cambies la temporada — el año siguiente solo préndalos.</div>'; return; }
+  lista.innerHTML = prodsTemporadaTemp.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--white)">
+      ${p.imagen_url ? `<img src="${p.imagen_url}" style="width:36px;height:36px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">` : '<div style="width:36px;height:36px;background:var(--cream);border-radius:6px"></div>'}
+      <div style="flex:1"><div style="font-weight:600;font-size:.83rem">${p.nombre}</div><div style="font-size:.75rem;color:var(--ink-lt)">${fmt(p.precio)}</div></div>
+      <label class="toggle" title="Activo en formulario"><input type="checkbox" ${p.activo?'checked':''} onchange="toggleProdTempTemp(${i}, this.checked)"><span class="toggle-slider"></span></label>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="quitarProdTemporada(${i})">✕</button>
+    </div>`).join('');
+}
+
+function toggleProdTempTemp(idx, activo) { prodsTemporadaTemp[idx].activo = activo; }
+function quitarProdTemporada(idx) { prodsTemporadaTemp.splice(idx, 1); renderProdsTemporada(); }
+
+async function guardarTemporada() {
+  const id = $('temp_id').value;
+  const datos = { nombre_boton: $('temp_nombre').value.trim(), emoji: $('temp_emoji').value.trim(), descripcion: $('temp_desc').value.trim() };
+  if (!datos.nombre_boton) { alert('El nombre del botón es obligatorio.'); return; }
+  let temporadaId = id ? parseInt(id) : null;
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/temporada?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify(datos) });
+  } else {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/temporada`, { method:'POST', headers:{...hdrs(),'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify({...datos, activo:false}) });
+    const nueva = await r.json();
+    temporadaId = nueva[0]?.id;
+  }
+  if (temporadaId) {
+    await fetch(`${SUPABASE_URL}/rest/v1/temporada_productos?temporada_id=eq.${temporadaId}`, { method:'DELETE', headers:hdrs() });
+    for (const p of prodsTemporadaTemp) {
+      await fetch(`${SUPABASE_URL}/rest/v1/temporada_productos`, { method:'POST', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({...p, temporada_id: temporadaId}) });
+    }
+  }
+  toast(id ? 'Temporada actualizada' : 'Temporada creada', 'success');
+  cerrarModal('modalTemporada');
+  cargarTemporada();
+}
+
+async function toggleTemporada(id, activo) {
+  // Si se activa, desactivar todas las demás primero
+  if (activo) {
+    await fetch(`${SUPABASE_URL}/rest/v1/temporada`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({activo:false}) });
+  }
+  await fetch(`${SUPABASE_URL}/rest/v1/temporada?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({activo}) });
+  toast(activo ? '✅ Temporada activada — ya aparece en el formulario' : 'Temporada desactivada', 'success');
+  cargarTemporada();
+}
+
+async function eliminarTemporada(id) {
+  if (!confirm('¿Segura que quieres eliminar esta temporada? Se perderán los productos asociados.')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/temporada?id=eq.${id}`, { method:'DELETE', headers:hdrs() });
+  toast('Temporada eliminada', 'success');
+  cargarTemporada();
+}
+
+async function verProductosTemporada(id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/temporada_productos?temporada_id=eq.${id}&order=id.asc`, { headers: hdrs() });
+  const prods = await r.json();
+  const t = todasLasTemporadas.find(x => x.id === id);
+  alert(`Productos de "${t?.nombre_boton}":\n\n` + (prods.length ? prods.map(p => `• ${p.nombre} — ${fmt(p.precio)} ${p.activo?'✅ Activo':'❌ Inactivo'}`).join('\n') : 'Sin productos'));
+}
+
+// ============================================================
+// ENVÍOS — tarifas configurables
+// ============================================================
+let todasLasTarifas = [];
+
+async function cargarEnvios() {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/tarifas_envio?order=orden.asc`, { headers: hdrs() });
+  todasLasTarifas = await r.json();
+  renderEnvios(todasLasTarifas);
+}
+
+const condicionLabel = {
+  cualquiera: 'Cualquier producto',
+  solo_bonos: 'Solo bonos',
+  sin_bono: 'Sin bono',
+  bono_sin_acompanante: 'Bono sin acompañante',
+  con_acompanante: 'Con acompañante',
+  bono_con_planta: 'Bono con planta',
+};
+
+function renderEnvios(lista) {
+  $('bodyEnvios').innerHTML = lista.length ? lista.map(e => `<tr>
+    <td style="text-align:center;font-weight:600">${e.orden||'—'}</td>
+    <td>${e.descripcion||'—'}</td>
+    <td style="font-size:.78rem;color:var(--ink-lt)">${e.municipios||'—'}</td>
+    <td><strong style="color:${e.precio===0?'#2e7d32':'var(--pink)'}">${e.precio===0?'GRATIS':fmt(e.precio)}</strong></td>
+    <td><span style="font-size:.72rem;background:var(--cream);padding:2px 8px;border-radius:10px">${condicionLabel[e.condicion]||e.condicion||'—'}</span></td>
+    <td><label class="toggle"><input type="checkbox" ${e.activo?'checked':''} onchange="toggleTarifa(${e.id}, this.checked)"><span class="toggle-slider"></span></label></td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-secondary btn-sm" onclick="editarEnvio(${e.id})">✏️</button>
+      <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarEnvio(${e.id})">🗑</button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No hay tarifas configuradas</td></tr>';
+}
+
+function abrirModalEnvio() {
+  $('env_id').value = '';
+  $('env_desc').value = '';
+  $('env_municipios').value = '';
+  $('env_precio').value = '';
+  $('env_condicion').value = 'cualquiera';
+  $('env_orden').value = '';
+  $('modalEnvioTitle').textContent = 'Nueva tarifa de envío';
+  abrirModal('modalEnvio');
+}
+
+function editarEnvio(id) {
+  const e = todasLasTarifas.find(x => x.id === id);
+  if (!e) return;
+  $('env_id').value = e.id;
+  $('env_desc').value = e.descripcion||'';
+  $('env_municipios').value = e.municipios||'';
+  $('env_precio').value = e.precio||0;
+  $('env_condicion').value = e.condicion||'cualquiera';
+  $('env_orden').value = e.orden||1;
+  $('modalEnvioTitle').textContent = 'Editar tarifa de envío';
+  abrirModal('modalEnvio');
+}
+
+async function guardarEnvio() {
+  const id = $('env_id').value;
+  const datos = {
+    descripcion: $('env_desc').value.trim(),
+    municipios:  $('env_municipios').value.trim(),
+    precio:      parseInt($('env_precio').value)||0,
+    condicion:   $('env_condicion').value,
+    orden:       parseInt($('env_orden').value)||1,
+    activo:      true,
+  };
+  if (!datos.descripcion) { alert('La descripción es obligatoria.'); return; }
+  if (id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/tarifas_envio?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify(datos) });
+    toast('Tarifa actualizada', 'success');
+  } else {
+    await fetch(`${SUPABASE_URL}/rest/v1/tarifas_envio`, { method:'POST', headers:{...hdrs(),'Content-Type':'application/json','Prefer':'return=representation'}, body:JSON.stringify(datos) });
+    toast('Tarifa creada', 'success');
+  }
+  cerrarModal('modalEnvio');
+  cargarEnvios();
+}
+
+async function toggleTarifa(id, activo) {
+  await fetch(`${SUPABASE_URL}/rest/v1/tarifas_envio?id=eq.${id}`, { method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify({activo}) });
+  toast(activo ? 'Tarifa activada' : 'Tarifa desactivada', 'success');
+}
+
+async function eliminarEnvio(id) {
+  if (!confirm('¿Segura que quieres eliminar esta tarifa?')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/tarifas_envio?id=eq.${id}`, { method:'DELETE', headers:hdrs() });
+  toast('Tarifa eliminada', 'success');
+  cargarEnvios();
 }
 
 // ============================================================
@@ -2559,6 +3152,165 @@ function resetShopify() {
 }
 
 </script>
+
+<!-- MODAL BONO -->
+<div class="modal-overlay" id="modalBono">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title" id="modalBonoTitle">Nuevo color de bono</div>
+    <div class="modal-sub">El color y la frase aparecerán en el formulario para que el cliente los elija</div>
+    <input type="hidden" id="bono_id">
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Nombre del color *</label>
+        <input type="text" id="bono_nombre" placeholder="Ej: Rosa Profundo">
+      </div>
+      <div class="form-field">
+        <label>Tipo de bono *</label>
+        <select id="bono_tipo">
+          <option value="pesame">Pésame</option>
+          <option value="toda_ocasion">Toda Ocasión</option>
+        </select>
+      </div>
+      <div class="form-field col-full">
+        <label>Frase preimpresa</label>
+        <input type="text" id="bono_frase" placeholder="Ej: Un abrazo de corazón">
+      </div>
+      <div class="form-field col-full">
+        <label>URL de la imagen de la tarjeta</label>
+        <input type="text" id="bono_img" placeholder="Link de Google Drive o URL pública" oninput="previewImgBono()">
+        <div id="bono_img_preview" style="display:none;margin-top:8px">
+          <img id="bono_img_thumb" src="" style="height:80px;border-radius:8px;border:1px solid var(--border)" onerror="this.style.display='none'">
+        </div>
+        <div style="font-size:.72rem;color:var(--ink-lt);margin-top:4px">💡 Google Drive: abre la imagen → compartir → "Cualquiera con el link" → copia el link</div>
+      </div>
+      <div class="form-field">
+        <label>Orden de aparición</label>
+        <input type="number" id="bono_orden" placeholder="1" min="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalBono')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarBono()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EVENTO -->
+<div class="modal-overlay" id="modalEvento">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title" id="modalEventoTitle">Nuevo evento</div>
+    <div class="modal-sub">Los eventos activos aparecen en el formulario cuando el cliente elige el botón "Evento"</div>
+    <input type="hidden" id="ev_id">
+    <div class="form-grid">
+      <div class="form-field col-full">
+        <label>Nombre del evento *</label>
+        <input type="text" id="ev_nombre" placeholder="Ej: Rodada de Autos, Película, Atelier...">
+      </div>
+      <div class="form-field col-full">
+        <label>Descripción</label>
+        <textarea id="ev_desc" placeholder="Descripción breve del evento"></textarea>
+      </div>
+      <div class="form-field">
+        <label>Fecha del evento</label>
+        <input type="date" id="ev_fecha">
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-weight:600;font-size:.85rem;margin-bottom:12px">🛍 Productos de este evento</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="ev_prod_existente" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+          <option value="">Asociar producto del catálogo...</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="asociarProductoEvento()">+ Asociar</button>
+      </div>
+      <div id="listaProdsEvento" style="max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalEvento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEvento()">Guardar evento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TEMPORADA -->
+<div class="modal-overlay" id="modalTemporada">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title" id="modalTemporadaTitle">Nueva temporada</div>
+    <div class="modal-sub">El nombre y emoji configurados aquí aparecerán en el botón 8 del formulario</div>
+    <input type="hidden" id="temp_id">
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Nombre del botón *</label>
+        <input type="text" id="temp_nombre" placeholder="Ej: Navidad, Día de Madres...">
+      </div>
+      <div class="form-field">
+        <label>Emoji</label>
+        <input type="text" id="temp_emoji" placeholder="Ej: 🎄 🌸 👶" maxlength="4">
+      </div>
+      <div class="form-field col-full">
+        <label>Descripción (se muestra bajo el botón)</label>
+        <input type="text" id="temp_desc" placeholder="Ej: Productos y bonos navideños">
+      </div>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-weight:600;font-size:.85rem;margin-bottom:12px">🛍 Productos de esta temporada</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="temp_prod_existente" style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
+          <option value="">Asociar producto del catálogo...</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="asociarProductoTemporada()">+ Asociar</button>
+      </div>
+      <div id="listaProdsTemporada" style="max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalTemporada')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTemporada()">Guardar temporada</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENVÍO -->
+<div class="modal-overlay" id="modalEnvio">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title" id="modalEnvioTitle">Nueva tarifa de envío</div>
+    <div class="modal-sub">Define la zona, municipios y precio. El formulario calculará el envío automáticamente</div>
+    <input type="hidden" id="env_id">
+    <div class="form-grid">
+      <div class="form-field col-full">
+        <label>Descripción *</label>
+        <input type="text" id="env_desc" placeholder="Ej: Medellín, Envigado, Sabaneta — Solo bonos (1 a 3 días hábiles)">
+      </div>
+      <div class="form-field col-full">
+        <label>Municipios (separados por coma)</label>
+        <input type="text" id="env_municipios" placeholder="Medellín,Envigado,Sabaneta,Itagüí">
+        <div style="font-size:.72rem;color:var(--ink-lt);margin-top:4px">Escribe "Nacional" para envíos fuera del área metropolitana</div>
+      </div>
+      <div class="form-field">
+        <label>Tarifa (COP) *</label>
+        <input type="number" id="env_precio" placeholder="0 = GRATIS" min="0">
+      </div>
+      <div class="form-field">
+        <label>Condición</label>
+        <select id="env_condicion">
+          <option value="cualquiera">Cualquier producto</option>
+          <option value="solo_bonos">Solo bonos</option>
+          <option value="sin_bono">Sin bono (solo productos)</option>
+          <option value="bono_sin_acompanante">Bono sin acompañante</option>
+          <option value="con_acompanante">Con acompañante</option>
+          <option value="bono_con_planta">Bono con planta</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Orden de aparición</label>
+        <input type="number" id="env_orden" placeholder="1" min="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalEnvio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEnvio()">Guardar tarifa</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL EXPORTAR EXCEL -->
 <div id="modal-exportar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center">
