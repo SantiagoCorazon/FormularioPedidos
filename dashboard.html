@@ -2345,11 +2345,9 @@ async function verHistorialCliente(terceroId, nombre) {
   _historialClienteId = terceroId;
   $('historialClienteNombre').textContent = '📋 Historial de ' + nombre;
 
-  // Fechas por defecto: hoy y un año atrás
-  const hoy         = new Date().toISOString().slice(0, 10);
-  const unAnioAtras = new Date(new Date().setFullYear(new Date().getFullYear() - 1)).toISOString().slice(0, 10);
-  $('hist-hasta').value = hoy;
-  $('hist-desde').value = unAnioAtras;
+  // Limpiar fechas — el usuario las ingresa manualmente
+  $('hist-hasta').value = '';
+  $('hist-desde').value = '';
 
   $('hist-totales').textContent = 'Cargando...';
   $('bodyHistorialCliente').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr>';
