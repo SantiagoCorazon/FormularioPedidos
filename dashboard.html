@@ -281,18 +281,25 @@ tr:hover td{background:var(--pink-lt)}
     <!-- CLIENTES -->
     <div class="page" id="page-terceros">
       <div class="page-title">Clientes y Benefactores</div>
-      <div class="page-sub">Maestro único de terceros</div>
+      <div class="page-sub">Maestro único de terceros — escribe mínimo 3 caracteres para buscar</div>
       <div class="card">
-        <div class="card-header">
-          <input class="search-input" id="searchTerceros" placeholder="Buscar por nombre, cédula, correo..." oninput="filtrarTerceros()" style="max-width:400px">
+        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <input class="search-input" id="searchTerceros" placeholder="🔍 Buscar por nombre, cédula, NIT o correo..." style="flex:1"
+              oninput="onBuscarTerceros(this.value)">
+            <span id="terceros-hint" style="font-size:.75rem;color:var(--ink-lt);white-space:nowrap">Escribe para buscar</span>
+          </div>
         </div>
         <div class="card-body">
           <div class="table-wrap"><table>
             <thead><tr>
-              <th>ID</th><th>Documento</th><th>Nombre / Razón Social</th>
+              <th>Documento</th><th>Nombre / Razón Social</th>
               <th>Ciudad</th><th>Teléfono</th><th>Correo</th><th>Tipo</th><th>Acciones</th>
             </tr></thead>
-            <tbody id="bodyTerceros"><tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+            <tbody id="bodyTerceros"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
+              <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+              Escribe el nombre, cédula o correo del cliente para buscarlo
+            </td></tr></tbody>
           </table></div>
           <div class="pagination" id="pagTerceros"></div>
         </div>
@@ -302,7 +309,10 @@ tr:hover td{background:var(--pink-lt)}
     <!-- MODAL HISTORIAL CLIENTE -->
     <div class="modal-overlay" id="modalHistorialCliente">
       <div class="modal" style="max-width:820px">
-        <div class="modal-title" id="historialClienteNombre">Historial del cliente</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="modal-title" id="historialClienteNombre" style="margin:0">Historial del cliente</div>
+          <button onclick="cerrarModal('modalHistorialCliente')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px;border-radius:6px;line-height:1" title="Cerrar">✕</button>
+        </div>
         <div class="modal-sub">Todos los pedidos registrados para este cliente</div>
         <!-- Filtro por fechas -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:var(--cream);border-radius:8px;align-items:flex-end">
@@ -2247,44 +2257,84 @@ async function actualizarEstado() {
 }
 
 // ============================================================
-// TERCEROS
+// TERCEROS — búsqueda en servidor (no carga los 14.000)
 // ============================================================
+let _tercerosBusqTimer = null;
+
 async function cargarTerceros() {
-  todosLosTerceros = [];
-  let offset = 0;
-  const limit = 1000;
-  while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?order=nombrecompleto.asc&limit=${limit}&offset=${offset}`, { headers: hdrs() });
-    const data = await r.json();
-    todosLosTerceros = todosLosTerceros.concat(data);
-    if (data.length < limit) break;
-    offset += limit;
+  // No precarga nada — espera que el usuario escriba
+  const el = $('bodyTerceros');
+  if (el) el.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
+    <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+    Escribe el nombre, cédula o correo del cliente para buscarlo
+  </td></tr>`;
+  const hint = $('terceros-hint');
+  if (hint) hint.textContent = 'Escribe para buscar';
+}
+
+function onBuscarTerceros(q) {
+  clearTimeout(_tercerosBusqTimer);
+  const hint = $('terceros-hint');
+  q = (q||'').trim();
+  if (q.length < 3) {
+    if (hint) hint.textContent = q.length ? `${3-q.length} carácter${3-q.length!==1?'es':''} más...` : 'Escribe para buscar';
+    if (q.length === 0) {
+      $('bodyTerceros').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
+        <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+        Escribe el nombre, cédula o correo del cliente para buscarlo
+      </td></tr>`;
+    }
+    return;
   }
-  renderTerceros(todosLosTerceros);
+  if (hint) hint.textContent = 'Buscando...';
+  // Debounce 350ms para no disparar una consulta por cada tecla
+  _tercerosBusqTimer = setTimeout(() => buscarTercerosServidor(q), 350);
+}
+
+async function buscarTercerosServidor(q) {
+  const hint = $('terceros-hint');
+  try {
+    const enc = encodeURIComponent(q);
+    // Buscar en paralelo por doc, nombre completo y correo
+    const [r1, r2, r3] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=ilike.${enc}%25&limit=50&order=nombrecompleto.asc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?nombrecompleto=ilike.%25${enc}%25&limit=50&order=nombrecompleto.asc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/terceros?correo_principal=ilike.%25${enc}%25&limit=50&order=nombrecompleto.asc`, { headers: hdrs() }),
+    ]);
+    const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()]);
+
+    // Unir resultados eliminando duplicados por id
+    const vistos = new Set();
+    const todos = [...(d1||[]), ...(d2||[]), ...(d3||[])].filter(t => {
+      if (vistos.has(t.id)) return false;
+      vistos.add(t.id); return true;
+    });
+
+    todosLosTerceros = todos;
+    renderTerceros(todos);
+    if (hint) hint.textContent = `${todos.length} resultado${todos.length!==1?'s':''}`;
+  } catch(e) {
+    console.error('Error buscando terceros:', e);
+    if (hint) hint.textContent = 'Error al buscar';
+  }
 }
 
 function filtrarTerceros() {
-  const q = $('searchTerceros').value.toLowerCase();
-  const filtrados = todosLosTerceros.filter(t =>
-    (t.nombrecompleto||'').toLowerCase().includes(q) ||
-    (t.numerodoc||'').includes(q) ||
-    (t.correo_principal||'').toLowerCase().includes(q) ||
-    (t.razonsocial||'').toLowerCase().includes(q)
-  );
-  renderTerceros(filtrados);
+  // Mantener compatibilidad — redirige a la nueva búsqueda
+  const q = ($('searchTerceros')||{value:''}).value;
+  onBuscarTerceros(q);
 }
 
 function renderTerceros(lista) {
   $('bodyTerceros').innerHTML = lista.length ? lista.map(t => `<tr>
-    <td>${t.id}</td>
     <td>${t.tipodoc||''} ${t.numerodoc||''}</td>
     <td><strong>${t.nombrecompleto||t.razonsocial||'—'}</strong></td>
     <td>${t.ciudad||'—'}</td>
     <td>${t.telefono1||'—'}</td>
     <td>${t.correo_principal||'—'}</td>
     <td>${t.tipocliente||'—'}</td>
-    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialCliente(${t.id},'${(t.nombrecompleto||t.razonsocial||'Cliente').replace(/'/g,"\\'")}')">📋 Historial</button></td>
-  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron clientes</td></tr>';
+    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialCliente(${t.id},'${(t.nombrecompleto||t.razonsocial||'Cliente').replace(/'/g,"\\'")}')" >📋 Historial</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron clientes</td></tr>';
 }
 
 // ── Historial cliente ──────────────────────────────────────────
@@ -2352,24 +2402,18 @@ async function verHistorialCliente(terceroId, nombre) {
 
   _historialPedidos = pedidos;
 
-  // Aplicar filtro de fechas DESPUÉS de tener los datos
-  filtrarHistorialCliente();
+  // Pasar fechas directamente para evitar problemas de timing con el DOM
+  filtrarHistorialCliente(fmtDate(unAnioAtras), fmtDate(hoy));
 }
 
-function filtrarHistorialCliente() {
-  const desde = $('hist-desde').value; // YYYY-MM-DD (formato del input date)
-  const hasta = $('hist-hasta').value; // YYYY-MM-DD
-
+function filtrarHistorialCliente(desdeParam, hastaParam) {
+  const desde = desdeParam !== undefined ? desdeParam : ($('hist-desde')||{value:''}).value;
+  const hasta  = hastaParam  !== undefined ? hastaParam  : ($('hist-hasta')||{value:''}).value;
   let filtrados = _historialPedidos;
+
   if (desde || hasta) {
     filtrados = filtrados.filter(p => {
-      // Convertir DD/MM/YYYY → YYYY-MM-DD para poder comparar
-      const raw = (p.fecha||'').slice(0, 10);
-      let fechaP = raw;
-      if (raw.includes('/')) {
-        const [d, m, a] = raw.split('/');
-        fechaP = `${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-      }
+      const fechaP = (p.fecha||'').slice(0, 10); // YYYY-MM-DD
       if (!fechaP) return true;
       if (desde && fechaP < desde) return false;
       if (hasta && fechaP > hasta) return false;
