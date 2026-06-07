@@ -938,10 +938,17 @@ async function confirmarPedido() {
         subtotal_productos: getTotal() - (S.envio ? S.envio.p : 0),
         total_pedido: getTotal(),
         metodo_pago: S.metodoPago||'', atendido_por: S.atendidoPor||'',
+        color_bono: S.tarjeta||'',
         estado: 'Pendiente',
         campana_id: S.campana_id ? parseInt(S.campana_id) : null,
         autorizo_datos: autoData, autorizo_publicidad: autoPub,
-        comprobante_pago: null
+        comprobante_pago: null,
+        numero_factura: ($('numFacturaInput') ? $('numFacturaInput').value.trim() : '') || null,
+        numero_recibo:  ($('numReciboInput')  ? $('numReciboInput').value.trim()  : '') || null,
+        leg_facturado:   $('legFacturado')  ? $('legFacturado').checked   : false,
+        leg_recibo:      $('legRecibo')     ? $('legRecibo').checked      : false,
+        leg_registrado:  $('legRegistrado') ? $('legRegistrado').checked  : false,
+        leg_certificado: $('legCertificado')? $('legCertificado').checked : false
       })
     });
     var pedidoData = await pedRes.json();

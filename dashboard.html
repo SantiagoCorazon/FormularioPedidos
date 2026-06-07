@@ -84,6 +84,15 @@ tr:hover td{background:var(--pink-lt)}
 .badge-despachado{background:#f3e5f5;color:#6a1b9a}
 .badge-entregado{background:#e8f5e9;color:#2e7d32}
 .badge-cancelado{background:#fde8e8;color:#c0392b}
+.badge-confirmado{background:#e0f7fa;color:#00695c}
+.badge-legalizado{background:#f3e5f5;color:#4a148c}
+/* Legalización */
+.leg-chip{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.68rem;font-weight:600;margin:2px}
+.leg-facturado{background:#e8f5e9;color:#2e7d32}
+.leg-recibo{background:#e3f2fd;color:#1565c0}
+.leg-registrado{background:#fff3e0;color:#e65100}
+.leg-certificado{background:#f3e5f5;color:#6a1b9a}
+.leg-pendiente{background:#f5f5f5;color:#9e9e9e}
 
 /* ── BOTONES ── */
 .btn{padding:10px 20px;border-radius:8px;font-family:var(--font);font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
@@ -236,18 +245,19 @@ tr:hover td{background:var(--pink-lt)}
             <select id="filtrEstado" onchange="filtrarPedidos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todos los estados</option>
               <option>Pendiente</option>
+              <option>Confirmado</option>
               <option>En preparación</option>
               <option>Despachado</option>
               <option>Entregado</option>
+              <option>Legalizado</option>
               <option>Cancelado</option>
             </select>
             <select id="filtrCanal" onchange="filtrarPedidos()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todos los canales</option>
-              <option value="Shopify">Shopify</option>
-              <option value="Web">Web</option>
+              <option value="Web / Shopify">Web / Shopify</option>
               <option value="WhatsApp">WhatsApp</option>
               <option value="Tienda">Tienda</option>
-              <option value="Teléfono">Teléfono</option>
+              <option value="Correo">Correo</option>
             </select>
           </div>
         </div>
@@ -280,11 +290,44 @@ tr:hover td{background:var(--pink-lt)}
           <div class="table-wrap"><table>
             <thead><tr>
               <th>ID</th><th>Documento</th><th>Nombre / Razón Social</th>
-              <th>Ciudad</th><th>Teléfono</th><th>Correo</th><th>Tipo</th>
+              <th>Ciudad</th><th>Teléfono</th><th>Correo</th><th>Tipo</th><th>Acciones</th>
             </tr></thead>
-            <tbody id="bodyTerceros"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+            <tbody id="bodyTerceros"><tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
           <div class="pagination" id="pagTerceros"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL HISTORIAL CLIENTE -->
+    <div class="modal-overlay" id="modalHistorialCliente">
+      <div class="modal" style="max-width:820px">
+        <div class="modal-title" id="historialClienteNombre">Historial del cliente</div>
+        <div class="modal-sub">Todos los pedidos registrados para este cliente</div>
+        <!-- Filtro por fechas -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:var(--cream);border-radius:8px;align-items:flex-end">
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Desde</label>
+            <input type="date" id="hist-desde" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Hasta</label>
+            <input type="date" id="hist-hasta" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="filtrarHistorialCliente()">Filtrar</button>
+          <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroHistorial()">Limpiar</button>
+          <div id="hist-totales" style="margin-left:auto;font-size:.83rem;color:var(--ink-mid)"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>N° Pedido</th><th>Fecha</th><th>Canal</th><th>Productos</th><th>Total</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodyHistorialCliente"></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="cerrarModal('modalHistorialCliente')">Cerrar</button>
         </div>
       </div>
     </div>
@@ -1114,26 +1157,69 @@ tr:hover td{background:var(--pink-lt)}
 
 <!-- Modal detalle pedido -->
 <div class="modal-overlay" id="modalPedido">
-  <div class="modal" style="max-width:700px">
+  <div class="modal" style="max-width:760px">
     <div class="modal-title">Detalle del Pedido</div>
     <div id="detallePedidoContent" style="font-size:.85rem;color:var(--ink-mid);line-height:1.8"></div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+
+    <!-- SECCIÓN EDICIÓN (visible según permisos) -->
+    <div id="seccionEdicionPedido" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+
+      <!-- Notas de envío -->
       <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">📝 Notas de envío / entrega</label>
-      <textarea id="notasEnvio" placeholder="Agregar instrucciones para el domiciliario, observaciones de entrega..." style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;resize:vertical;min-height:70px;outline:none"></textarea>
-    </div>
+      <textarea id="notasEnvio" placeholder="Instrucciones para el domiciliario, observaciones de entrega..." style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;resize:vertical;min-height:60px;outline:none;margin-bottom:14px"></textarea>
+
+      <!-- Factura y Recibo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+          <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">🧾 N° Factura</label>
+          <input type="text" id="pedidoNumFactura" placeholder="Ej: FV-00123" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">📄 N° Recibo de caja</label>
+          <input type="text" id="pedidoNumRecibo" placeholder="Ej: RC-00456" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+
+      <!-- Estado de legalización -->
+      <div style="background:var(--cream);border-radius:8px;padding:12px;margin-bottom:14px">
+        <div style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">✅ Estado de legalización</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;padding:8px;background:var(--white);border-radius:6px;border:1px solid var(--border)">
+            <input type="checkbox" id="leg-facturado" style="width:16px;height:16px;accent-color:var(--pink)">
+            <span>📄 Facturado</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;padding:8px;background:var(--white);border-radius:6px;border:1px solid var(--border)">
+            <input type="checkbox" id="leg-recibo" style="width:16px;height:16px;accent-color:var(--pink)">
+            <span>🧾 Recibo emitido</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;padding:8px;background:var(--white);border-radius:6px;border:1px solid var(--border)">
+            <input type="checkbox" id="leg-registrado" style="width:16px;height:16px;accent-color:var(--pink)">
+            <span>📊 Registrado en BD</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;padding:8px;background:var(--white);border-radius:6px;border:1px solid var(--border)">
+            <input type="checkbox" id="leg-certificado" style="width:16px;height:16px;accent-color:var(--pink)">
+            <span>📜 Certificado enviado</span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /seccionEdicionPedido -->
+
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalPedido')">Cerrar</button>
       <button class="btn btn-secondary" onclick="imprimirPedido()" style="background:#f3e5f5;color:#6a1b9a;border-color:#ce93d8">🖨 Imprimir</button>
       <select id="cambiarEstado" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem;outline:none">
         <option value="">Cambiar estado...</option>
         <option>Pendiente</option>
+        <option>Confirmado</option>
         <option>En preparación</option>
         <option>Listo para recoger</option>
         <option>Despachado</option>
         <option>Entregado</option>
+        <option>Legalizado</option>
         <option>Cancelado</option>
       </select>
-      <button class="btn btn-primary" onclick="actualizarEstado()">Guardar</button>
+      <button class="btn btn-primary" id="btnGuardarPedido" onclick="actualizarEstado()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -1893,13 +1979,23 @@ function filtrarPedidos() {
   const est = ($('filtrEstado') ||{value:''}).value;
   const can = ($('filtrCanal')  ||{value:''}).value;
 
-  let filtrados = todosLosPedidos.filter(p =>
-    (!q   || (p.nro_pedido||'').toLowerCase().includes(q)
-           || (p.nombre_razon_social||'').toLowerCase().includes(q)
-           || (p.ciudad_comprador||'').toLowerCase().includes(q)) &&
-    (!est || p.estado === est) &&
-    (!can || (p.canal||'') === can)
-  );
+  let filtrados = todosLosPedidos.filter(p => {
+    const matchQ = !q || (p.nro_pedido||'').toLowerCase().includes(q)
+                       || (p.nombre_razon_social||'').toLowerCase().includes(q)
+                       || (p.ciudad_comprador||'').toLowerCase().includes(q);
+    const matchEst = !est || p.estado === est;
+    // Canal: "Web / Shopify" fusiona Web, Shopify, Sitio web
+    let matchCan = true;
+    if (can) {
+      const canalP = (p.canal||'').toLowerCase();
+      if (can === 'Web / Shopify') {
+        matchCan = canalP.includes('shopify') || canalP.includes('web') || canalP.includes('sitio');
+      } else {
+        matchCan = canalP === can.toLowerCase();
+      }
+    }
+    return matchQ && matchEst && matchCan;
+  });
 
   // Ordenar
   filtrados.sort((a, b) => {
@@ -1970,13 +2066,51 @@ async function verPedido(id) {
   pedidoActual = p;
   const rDet = await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?pedido_id=eq.${id}`, { headers: hdrs() });
   const detalle = await rDet.json();
+
+  // Permiso de edición: solo Paula (productos@santiagocorazon.org) o admins
+  const puedeEditar = usuarioActual?.rol === 'admin' || usuarioActual?.email === 'productos@santiagocorazon.org';
+
   $('cambiarEstado').value = p.estado || '';
+  $('cambiarEstado').disabled = !puedeEditar;
   $('notasEnvio').value = p.observaciones || '';
+  $('notasEnvio').disabled = !puedeEditar;
+
+  // Campos factura/recibo
+  if ($('pedidoNumFactura')) { $('pedidoNumFactura').value = p.numero_factura || ''; $('pedidoNumFactura').disabled = !puedeEditar; }
+  if ($('pedidoNumRecibo'))  { $('pedidoNumRecibo').value  = p.numero_recibo  || ''; $('pedidoNumRecibo').disabled  = !puedeEditar; }
+
+  // Legalización checkboxes
+  ['leg-facturado','leg-recibo','leg-registrado','leg-certificado'].forEach(id => {
+    const el = $(id);
+    if (el) { el.disabled = !puedeEditar; }
+  });
+  if ($('leg-facturado')) $('leg-facturado').checked  = !!p.leg_facturado;
+  if ($('leg-recibo'))    $('leg-recibo').checked     = !!p.leg_recibo;
+  if ($('leg-registrado'))$('leg-registrado').checked = !!p.leg_registrado;
+  if ($('leg-certificado'))$('leg-certificado').checked= !!p.leg_certificado;
+
+  if (!puedeEditar) {
+    const btnGuardar = $('btnGuardarPedido');
+    if (btnGuardar) btnGuardar.style.display = 'none';
+  } else {
+    const btnGuardar = $('btnGuardarPedido');
+    if (btnGuardar) btnGuardar.style.display = '';
+  }
+
   const blk = (titulo, contenido) => contenido ? `
     <div style="margin-bottom:12px">
       <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:4px">${titulo}</div>
       <div style="font-size:.83rem;color:#5A3A48;line-height:1.7">${contenido}</div>
     </div>` : '';
+
+  // Chips de legalización
+  const legChips = `
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <span class="leg-chip ${p.leg_facturado?'leg-facturado':'leg-pendiente'}">📄 Facturado</span>
+      <span class="leg-chip ${p.leg_recibo?'leg-recibo':'leg-pendiente'}">🧾 Recibo emitido</span>
+      <span class="leg-chip ${p.leg_registrado?'leg-registrado':'leg-pendiente'}">📊 Registrado en BD</span>
+      <span class="leg-chip ${p.leg_certificado?'leg-certificado':'leg-pendiente'}">📜 Certificado enviado</span>
+    </div>`;
 
   $('detallePedidoContent').innerHTML = `
     <!-- CABECERA -->
@@ -1987,9 +2121,13 @@ async function verPedido(id) {
       <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Canal</span>${p.canal||'—'}</div>
       <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Atendido por</span>${p.atendido_por||'—'}</div>
       <div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">Tipo cliente</span>${p.tipo_cliente||'—'}</div>
+      ${p.color_bono ? `<div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">🎨 Color del bono</span><strong style="color:var(--pink)">${p.color_bono}</strong></div>` : ''}
+      ${p.numero_factura ? `<div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">N° Factura</span><strong>${p.numero_factura}</strong></div>` : ''}
+      ${p.numero_recibo  ? `<div><span style="color:#9A7A88;font-size:.7rem;text-transform:uppercase;display:block">N° Recibo</span><strong>${p.numero_recibo}</strong></div>`  : ''}
     </div>
+    ${legChips}
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;margin-top:16px">
 
       <!-- COMPRADOR -->
       <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
@@ -2082,11 +2220,26 @@ async function verPedido(id) {
 async function actualizarEstado() {
   const nuevoEstado = $('cambiarEstado').value;
   if (!nuevoEstado || !pedidoActual) return;
-  const notasEnvio = $('notasEnvio').value.trim();
+  const notasEnvio  = $('notasEnvio').value.trim();
+  const numFactura  = $('pedidoNumFactura') ? $('pedidoNumFactura').value.trim() : undefined;
+  const numRecibo   = $('pedidoNumRecibo')  ? $('pedidoNumRecibo').value.trim()  : undefined;
+  const legFact    = $('leg-facturado')  ? $('leg-facturado').checked   : undefined;
+  const legRecibo  = $('leg-recibo')     ? $('leg-recibo').checked      : undefined;
+  const legReg     = $('leg-registrado') ? $('leg-registrado').checked  : undefined;
+  const legCert    = $('leg-certificado')? $('leg-certificado').checked : undefined;
+
+  const payload = { estado: nuevoEstado, observaciones: notasEnvio };
+  if (numFactura !== undefined) payload.numero_factura = numFactura || null;
+  if (numRecibo  !== undefined) payload.numero_recibo  = numRecibo  || null;
+  if (legFact    !== undefined) payload.leg_facturado   = legFact;
+  if (legRecibo  !== undefined) payload.leg_recibo      = legRecibo;
+  if (legReg     !== undefined) payload.leg_registrado  = legReg;
+  if (legCert    !== undefined) payload.leg_certificado = legCert;
+
   await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id=eq.${pedidoActual.id}`, {
     method: 'PATCH',
     headers: { ...hdrs(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ estado: nuevoEstado, observaciones: notasEnvio })
+    body: JSON.stringify(payload)
   });
   toast('Pedido actualizado', 'success');
   cerrarModal('modalPedido');
@@ -2130,7 +2283,74 @@ function renderTerceros(lista) {
     <td>${t.telefono1||'—'}</td>
     <td>${t.correo_principal||'—'}</td>
     <td>${t.tipocliente||'—'}</td>
-  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron clientes</td></tr>';
+    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialCliente(${t.id},'${(t.nombrecompleto||t.razonsocial||'Cliente').replace(/'/g,"\\'")}')">📋 Historial</button></td>
+  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron clientes</td></tr>';
+}
+
+// ── Historial cliente ──────────────────────────────────────────
+let _historialClienteId = null;
+let _historialPedidos   = [];
+
+async function verHistorialCliente(terceroId, nombre) {
+  _historialClienteId = terceroId;
+  $('historialClienteNombre').textContent = '📋 Historial de ' + nombre;
+  $('hist-desde').value = '';
+  $('hist-hasta').value = '';
+  $('hist-totales').textContent = 'Cargando...';
+  $('bodyHistorialCliente').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr>';
+  abrirModal('modalHistorialCliente');
+
+  // Buscar pedidos del cliente por NIT/doc (cruzando con pedidos)
+  // Primero obtener el tercero
+  const rT = await fetch(`${SUPABASE_URL}/rest/v1/terceros?id=eq.${terceroId}&select=numerodoc,nombrecompleto,razonsocial`, { headers: hdrs() });
+  const [terc] = await rT.json();
+  if (!terc) { $('bodyHistorialCliente').innerHTML = '<tr><td colspan="7">Cliente no encontrado</td></tr>'; return; }
+
+  // Buscar pedidos donde id_nit_comprador coincide o nombre coincide
+  const doc = (terc.numerodoc||'').trim();
+  const nomCompleto = (terc.nombrecompleto||terc.razonsocial||'').trim();
+
+  let pedidos = [];
+  if (doc) {
+    const r1 = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?id_nit_comprador=eq.${encodeURIComponent(doc)}&order=fecha.desc&limit=500`, { headers: hdrs() });
+    pedidos = await r1.json();
+  }
+  // Si no hay por doc, buscar por nombre
+  if (!pedidos.length && nomCompleto) {
+    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?nombre_razon_social=eq.${encodeURIComponent(nomCompleto)}&order=fecha.desc&limit=500`, { headers: hdrs() });
+    pedidos = await r2.json();
+  }
+  _historialPedidos = Array.isArray(pedidos) ? pedidos : [];
+  renderHistorialCliente(_historialPedidos);
+}
+
+function filtrarHistorialCliente() {
+  const desde = $('hist-desde').value;
+  const hasta = $('hist-hasta').value;
+  let filtrados = _historialPedidos;
+  if (desde) filtrados = filtrados.filter(p => (p.fecha||'') >= desde);
+  if (hasta) filtrados = filtrados.filter(p => (p.fecha||'') <= hasta);
+  renderHistorialCliente(filtrados);
+}
+
+function limpiarFiltroHistorial() {
+  $('hist-desde').value = '';
+  $('hist-hasta').value = '';
+  renderHistorialCliente(_historialPedidos);
+}
+
+function renderHistorialCliente(lista) {
+  const total = lista.reduce((s, p) => s + (p.total_pedido||0), 0);
+  $('hist-totales').innerHTML = `<strong>${lista.length}</strong> pedido${lista.length!==1?'s':''} · Total: <strong>${fmt(total)}</strong>`;
+  $('bodyHistorialCliente').innerHTML = lista.length ? lista.map(p => `<tr>
+    <td><strong>${p.nro_pedido||'—'}</strong></td>
+    <td>${p.fecha||'—'}</td>
+    <td>${p.canal||'—'}</td>
+    <td style="font-size:.78rem;color:var(--ink-lt)">${p.ocasion||p.observaciones||'—'}</td>
+    <td>${fmt(p.total_pedido)}</td>
+    <td><span class="badge badge-${badgeClass(p.estado)}">${p.estado||'—'}</span></td>
+    <td><button class="btn btn-secondary btn-sm" onclick="cerrarModal('modalHistorialCliente');verPedido(${p.id})">Ver</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No hay pedidos en este período</td></tr>';
 }
 
 // ============================================================
@@ -2588,6 +2808,64 @@ async function exportarExcelConFiltro() {
   await exportarExcel(desde, hasta, canal);
 }
 
+async function exportarCSVConFiltro() {
+  const desde = $('exp-desde').value;
+  const hasta = $('exp-hasta').value;
+  const canal = $('exp-canal').value;
+  cerrarModalExportar();
+  await exportarCSV(desde, hasta, canal);
+}
+
+async function exportarCSV(desde, hasta, canal) {
+  toast('Generando CSV...', '');
+  try {
+    let filtrosPed = 'order=fecha.desc&limit=10000';
+    if (desde) filtrosPed += `&fecha=gte.${desde}`;
+    if (hasta) filtrosPed += `&fecha=lte.${hasta}`;
+    // Para Web/Shopify no filtramos por canal exacto — descargamos todo y filtramos en JS
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/pedidos?${filtrosPed}`, { headers: hdrs() });
+    let pedidos = await r.json();
+
+    if (canal) {
+      pedidos = pedidos.filter(p => {
+        const c = (p.canal||'').toLowerCase();
+        if (canal === 'Web / Shopify') return c.includes('shopify') || c.includes('web') || c.includes('sitio');
+        return c === canal.toLowerCase();
+      });
+    }
+
+    if (!pedidos.length) { toast('No hay pedidos en ese rango', 'error'); return; }
+
+    // Construir CSV
+    const cols = ['nro_pedido','fecha','canal','nombre_razon_social','id_nit_comprador',
+      'telefono_comprador','correo_comprador','ciudad_comprador','direccion_comprador',
+      'nombres_destinatario','apellidos_destinatario','telefono_destinatario',
+      'ciudad_entrega','direccion_entrega','ocasion','metodo_pago',
+      'subtotal_productos','costo_envio','total_pedido','estado',
+      'numero_factura','numero_recibo','atendido_por','observaciones'];
+
+    const escaparCSV = v => {
+      const s = String(v === null || v === undefined ? '' : v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+
+    const encabezado = cols.join(',');
+    const filas = pedidos.map(p => cols.map(c => escaparCSV(p[c])).join(','));
+    const csv = '\uFEFF' + [encabezado, ...filas].join('\r\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const fecha = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    link.href = URL.createObjectURL(blob);
+    link.download = `SantiagoCorazon_Pedidos_${fecha}.csv`;
+    link.click();
+    toast('✅ CSV descargado correctamente', 'success');
+  } catch(e) {
+    console.error(e);
+    toast('Error generando CSV', 'error');
+  }
+}
+
 async function exportarExcel(desde, hasta, canal) {
   toast('Generando Excel...', '');
   try {
@@ -2605,7 +2883,8 @@ async function exportarExcel(desde, hasta, canal) {
     let filtrosPed = 'order=fecha.desc&limit=10000';
     if (desde) filtrosPed += `&fecha=gte.${desde}`;
     if (hasta) filtrosPed += `&fecha=lte.${hasta}`;
-    if (canal) filtrosPed += `&canal=eq.${encodeURIComponent(canal)}`;
+    // No filtramos canal en URL para Web/Shopify (filtro JS después)
+    if (canal && canal !== 'Web / Shopify') filtrosPed += `&canal=eq.${encodeURIComponent(canal)}`;
 
     // Etiqueta de rango para el nombre del archivo
     const etiqueta = desde || hasta
@@ -2618,7 +2897,16 @@ async function exportarExcel(desde, hasta, canal) {
       fetch(`${SUPABASE_URL}/rest/v1/terceros?order=id.asc&limit=10000`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle?order=pedido_id.asc&limit=50000`, { headers: hdrs() }),
     ]);
-    const [pedidos, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
+    const [pedidosRaw, terceros, detalle] = await Promise.all([rPed.json(), rTerc.json(), rDet.json()]);
+
+    // Filtrar Web/Shopify si corresponde
+    let pedidos = pedidosRaw;
+    if (canal === 'Web / Shopify') {
+      pedidos = pedidosRaw.filter(p => {
+        const c = (p.canal||'').toLowerCase();
+        return c.includes('shopify') || c.includes('web') || c.includes('sitio');
+      });
+    }
 
     if (!pedidos.length) { toast('No hay pedidos en ese rango de fechas', 'error'); return; }
 
@@ -2655,7 +2943,10 @@ async function exportarExcel(desde, hasta, canal) {
       envio_descripcion: p.envio_descripcion||'', costo_envio: p.costo_envio||0,
       subtotal_productos: p.subtotal_productos||0, total_pedido: p.total_pedido||0,
       metodo_pago: p.metodo_pago||'', atendido_por: p.atendido_por||'',
-      estado: p.estado||'', observaciones: p.observaciones||''
+      estado: p.estado||'', observaciones: p.observaciones||'',
+      numero_factura: p.numero_factura||'', numero_recibo: p.numero_recibo||'',
+      leg_facturado: p.leg_facturado?'Sí':'No', leg_recibo: p.leg_recibo?'Sí':'No',
+      leg_registrado: p.leg_registrado?'Sí':'No', leg_certificado: p.leg_certificado?'Sí':'No'
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pedidosExport), 'pedidos');
 
@@ -2777,7 +3068,11 @@ function imprimirPedido() {
 
 
 function badgeClass(estado) {
-  const mapa = { 'Pendiente':'pendiente','En preparación':'preparacion','Listo para recoger':'preparacion','Despachado':'despachado','Entregado':'entregado','Cancelado':'cancelado' };
+  const mapa = {
+    'Pendiente':'pendiente','Confirmado':'confirmado','En preparación':'preparacion',
+    'Listo para recoger':'preparacion','Despachado':'despachado',
+    'Entregado':'entregado','Legalizado':'legalizado','Cancelado':'cancelado'
+  };
   return mapa[estado] || 'pendiente';
 }
 
@@ -3335,18 +3630,19 @@ function resetShopify() {
         <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Canal (opcional)</label>
         <select id="exp-canal" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
           <option value="">Todos los canales</option>
-          <option value="Shopify">Shopify</option>
-          <option value="Web">Web</option>
+          <option value="Web / Shopify">Web / Shopify</option>
           <option value="WhatsApp">WhatsApp</option>
           <option value="Tienda">Tienda</option>
+          <option value="Correo">Correo</option>
         </select>
       </div>
     </div>
     <div style="margin-top:8px;padding:10px 12px;background:var(--cream);border-radius:8px;font-size:.75rem;color:var(--ink-lt)">
       💡 Si dejas las fechas vacías, se exporta todo el historial.
     </div>
-    <div style="display:flex;gap:10px;margin-top:20px">
-      <button class="btn btn-primary" style="flex:1" onclick="exportarExcelConFiltro()">Descargar Excel</button>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="flex:1" onclick="exportarExcelConFiltro()">📥 Descargar Excel</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="exportarCSVConFiltro()">📋 Descargar CSV</button>
       <button class="btn btn-secondary" onclick="cerrarModalExportar()">Cancelar</button>
     </div>
   </div>
