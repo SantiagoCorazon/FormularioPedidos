@@ -360,6 +360,7 @@ tr:hover td{background:var(--pink-lt)}
               <option value="empaque">Empaques</option>
               <option value="acompanante">Acompañantes</option>
               <option value="empresarial">Empresarial</option>
+              <option value="combo">Combos</option>
             </select>
             <select id="filtrSub" onchange="filtrarCatalogo()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todas las subcategorías</option>
@@ -555,26 +556,25 @@ tr:hover td{background:var(--pink-lt)}
       <div class="manual-section active" id="m-inicio">
         <div class="manual-card">
           <h3>❤ Bienvenida al Dashboard de Santiago Corazón</h3>
-          <p>Este Dashboard es el centro de operaciones del aplicativo <strong>DataHert</strong> desarrollado para la Fundación Infantil Santiago Corazón. Desde aquí puedes gestionar pedidos, clientes, catálogo de productos, campañas de donación y usuarios del sistema.</p>
-          <div class="tip">💡 <strong>Tip:</strong> Este manual está siempre disponible desde el menú lateral. Puedes consultarlo en cualquier momento sin perder lo que estás haciendo.</div>
+          <p>Este Dashboard es el centro de operaciones del aplicativo <strong>DataHert</strong> desarrollado para la Fundación Infantil Santiago Corazón. Desde aquí puedes gestionar pedidos, clientes, catálogo, campañas de donación y usuarios del sistema.</p>
+          <div class="tip">💡 Este manual está siempre disponible desde el menú lateral. Puedes consultarlo en cualquier momento sin perder lo que estás haciendo.</div>
         </div>
-
         <div class="manual-card">
           <h3>🗺 ¿Qué puedo hacer en cada sección?</h3>
           <table class="tabla-manual">
             <thead><tr><th>Sección</th><th>¿Qué puedes hacer?</th><th>¿Quién puede?</th></tr></thead>
             <tbody>
               <tr><td>🏠 <strong>Inicio</strong></td><td>Ver métricas del día, últimos pedidos y uso del sistema</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
-              <tr><td>📦 <strong>Pedidos</strong></td><td>Ver, buscar, filtrar y gestionar todos los pedidos. Cambiar estado, agregar notas de envío, imprimir orden y ver comprobante</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
-              <tr><td>👥 <strong>Clientes</strong></td><td>Buscar y consultar la base de datos de clientes y benefactores</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
+              <tr><td>📦 <strong>Pedidos</strong></td><td>Ver, buscar, filtrar y gestionar pedidos. Cambiar estado, registrar factura, recibo, legalizar e imprimir</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
+              <tr><td>👥 <strong>Clientes</strong></td><td>Buscar clientes y ver su historial completo de pedidos con filtro por fechas</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
               <tr><td>🛍 <strong>Catálogo</strong></td><td>Agregar, editar, activar y desactivar productos del formulario</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
               <tr><td>❤ <strong>Campañas</strong></td><td>Crear y gestionar campañas de donación con sus productos</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
               <tr><td>👤 <strong>Usuarios</strong></td><td>Crear usuarios, resetear contraseñas, activar o desactivar accesos</td><td><span class="badge-manual badge-admin">Solo Admin</span></td></tr>
-              <tr><td>📥 <strong>Exportar Excel</strong></td><td>Descargar todos los datos para importar en Access</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
+              <tr><td>📥 <strong>Exportar</strong></td><td>Descargar datos en Excel (.xlsx) o CSV para importar en Access</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
+              <tr><td>🛒 <strong>Importar Shopify</strong></td><td>Traer pedidos de la tienda web al Dashboard</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
             </tbody>
           </table>
         </div>
-
         <div class="manual-card">
           <h3>🔗 URLs del sistema</h3>
           <table class="tabla-manual">
@@ -587,17 +587,15 @@ tr:hover td{background:var(--pink-lt)}
         </div>
       </div>
 
-      <!-- SECCIÓN: ACCESO -->
       <div class="manual-section" id="m-login">
         <div class="manual-card">
           <h3>🔐 Cómo ingresar al Dashboard</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Abre la URL del Dashboard en tu navegador (Chrome recomendado)</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Ingresa tu <strong>correo electrónico</strong> — el mismo que te asignaron</div></div>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Abre la URL del Dashboard en Chrome (recomendado)</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Ingresa tu <strong>correo electrónico</strong></div></div>
           <div class="step"><div class="step-num">3</div><div class="step-content">Ingresa tu <strong>contraseña</strong> — la inicial es <span class="kbd">Santiago2026*</span></div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Presiona <strong>Ingresar</strong> o la tecla <span class="kbd">Enter</span></div></div>
-          <div class="warning">⚠️ Si ves el mensaje "Usuario no encontrado o inactivo", contacta a la administradora para verificar tu acceso.</div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Presiona <strong>Ingresar</strong> o <span class="kbd">Enter</span></div></div>
+          <div class="warning">⚠️ Si ves "Usuario no encontrado o inactivo", contacta a una administradora.</div>
         </div>
-
         <div class="manual-card">
           <h3>👤 Usuarios del sistema</h3>
           <table class="tabla-manual">
@@ -611,337 +609,248 @@ tr:hover td{background:var(--pink-lt)}
               <tr><td>Alejandra</td><td>secretaria@santiagocorazon.org</td><td><span class="badge-manual badge-op">Operadora</span></td></tr>
             </tbody>
           </table>
-          <div class="tip">💡 Si olvidaste tu contraseña, pídele a una administradora que la resetee desde la sección <strong>Usuarios</strong>.</div>
+          <div class="tip">💡 Si olvidaste tu contraseña, pídele a una administradora que la resetee desde Usuarios.</div>
         </div>
-
         <div class="manual-card">
-          <h3>🚪 Cómo cerrar sesión</h3>
-          <p>En la parte inferior del menú lateral, haz clic en el botón <strong>Cerrar sesión</strong>. Tu sesión se cerrará y la próxima vez tendrás que ingresar nuevamente.</p>
-          <div class="tip">💡 El Dashboard recuerda tu sesión mientras no cierres el navegador. Si recargas la página, no tendrás que volver a ingresar.</div>
+          <h3>🔒 Permisos de edición de pedidos</h3>
+          <p>Solo <strong>Paula</strong> (productos@santiagocorazon.org) y las <strong>administradoras</strong> pueden editar estado, notas, factura, recibo y legalización de un pedido. Las demás operadoras pueden ver la información pero no modificarla.</p>
+        </div>
+        <div class="manual-card">
+          <h3>🚪 Cerrar sesión</h3>
+          <p>En la parte inferior del menú lateral, haz clic en <strong>Cerrar sesión</strong>.</p>
+          <div class="tip">💡 El Dashboard recuerda tu sesión mientras no cierres el navegador.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: PEDIDOS -->
       <div class="manual-section" id="m-pedidos">
         <div class="manual-card">
-          <h3>📦 Ver la lista de pedidos</h3>
-          <p>En la sección <strong>Pedidos</strong> encuentras todos los pedidos registrados en el sistema, ordenados del más reciente al más antiguo.</p>
-          <h4>Buscar un pedido</h4>
-          <p>Usa la barra de búsqueda para encontrar un pedido por:</p>
-          <ul>
-            <li><strong>Número de pedido</strong> — ejemplo: SC-8470843</li>
-            <li><strong>Nombre del cliente</strong></li>
-            <li><strong>Ciudad</strong></li>
-          </ul>
-          <h4>Filtrar por estado</h4>
-          <p>Usa el menú desplegable para ver solo los pedidos en un estado específico: Pendiente, En preparación, Listo para recoger, Despachado, Entregado o Cancelado.</p>
-        </div>
-
-        <div class="manual-card">
-          <h3>📋 Ver el detalle de un pedido</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Busca el pedido en la lista</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Haz clic en el botón <strong>Ver</strong> a la derecha del pedido</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Se abre una ventana con toda la información del pedido organizada en bloques:
-            <ul style="margin-top:6px">
-              <li>📦 <strong>Comprador</strong> — nombre, documento, teléfono, correos, ciudad, dirección</li>
-              <li>🚚 <strong>Destinatario y entrega</strong> — nombre, teléfono, ciudad, dirección, método de envío</li>
-              <li>✨ <strong>Detalles del bono</strong> — ocasión, fallecido (si aplica), para quién, de parte de</li>
-              <li>💳 <strong>Pago</strong> — método, subtotal, total, comprobante adjunto</li>
-              <li>✉ <strong>Mensaje para la tarjeta</strong></li>
-              <li>🛍 <strong>Productos del pedido</strong> con cantidades y precios</li>
-            </ul>
-          </div></div>
-        </div>
-
-        <div class="manual-card">
-          <h3>🔄 Cambiar el estado de un pedido</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Abre el detalle del pedido haciendo clic en <strong>Ver</strong></div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">En la parte inferior de la ventana, selecciona el nuevo estado en el menú desplegable</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Si quieres agregar instrucciones para el domiciliario, escríbelas en el campo <strong>Notas de envío</strong></div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Haz clic en <strong>Guardar</strong> — el estado se actualiza inmediatamente</div></div>
-          <h4>Estados disponibles</h4>
+          <h3>📦 Lista de pedidos</h3>
+          <p>Todos los pedidos ordenados del más reciente al más antiguo. Busca por número de pedido, nombre del cliente o ciudad. Filtra por estado o canal.</p>
+          <h4>Estados del pedido</h4>
           <table class="tabla-manual">
             <thead><tr><th>Estado</th><th>Cuándo usarlo</th></tr></thead>
             <tbody>
               <tr><td>🟡 <strong>Pendiente</strong></td><td>Recién llegó, aún no se ha procesado</td></tr>
+              <tr><td>🩵 <strong>Confirmado</strong></td><td>El pago fue verificado, listo para preparar</td></tr>
               <tr><td>🔵 <strong>En preparación</strong></td><td>El equipo está armando el pedido</td></tr>
               <tr><td>🟣 <strong>Listo para recoger</strong></td><td>El cliente viene a recoger en tienda</td></tr>
               <tr><td>🟣 <strong>Despachado</strong></td><td>Salió a domicilio</td></tr>
               <tr><td>🟢 <strong>Entregado</strong></td><td>El cliente ya lo recibió</td></tr>
+              <tr><td>🟤 <strong>Legalizado</strong></td><td>Facturado, con recibo e importado en BD — proceso completo</td></tr>
               <tr><td>🔴 <strong>Cancelado</strong></td><td>No se realizó el pedido</td></tr>
             </tbody>
           </table>
+          <h4>Canales disponibles en el filtro</h4>
+          <p>Web / Shopify, WhatsApp, Tienda, Correo.</p>
         </div>
-
+        <div class="manual-card">
+          <h3>📋 Ver el detalle de un pedido</h3>
+          <p>Haz clic en <strong>Ver</strong> a la derecha del pedido. Se abre una ventana con:</p>
+          <ul>
+            <li>📦 Comprador — nombre, documento, teléfono, correos, ciudad, dirección</li>
+            <li>🚚 Destinatario y entrega — nombre, teléfono, ciudad, dirección, referencia, método de envío</li>
+            <li>✨ Detalles del pedido — ocasión, fallecido (si aplica), para quién, de parte de</li>
+            <li>💳 Pago — método, subtotal, envío, total y comprobante adjunto</li>
+            <li>🎨 Color del bono — el color seleccionado por el cliente</li>
+            <li>✅ Chips de legalización — estado visual del proceso contable</li>
+            <li>🛍 Productos — líneas con cantidades y precios</li>
+          </ul>
+        </div>
+        <div class="manual-card">
+          <h3>✏️ Editar un pedido <span class="badge-manual badge-admin" style="font-size:.7rem">Paula y Admins</span></h3>
+          <p>En la parte inferior del detalle del pedido aparece la sección de edición:</p>
+          <h4>📝 Notas de envío</h4>
+          <p>Instrucciones para el domiciliario. Aparecen en la impresión del pedido.</p>
+          <h4>🧾 N° Factura y N° Recibo de caja</h4>
+          <p>Ingresa los números generados en World Office. Quedan guardados y se incluyen en Excel y CSV.</p>
+          <h4>✅ Legalización</h4>
+          <table class="tabla-manual">
+            <thead><tr><th>Checkbox</th><th>Qué significa</th></tr></thead>
+            <tbody>
+              <tr><td>📄 <strong>Facturado</strong></td><td>Se generó la factura en World Office</td></tr>
+              <tr><td>🧾 <strong>Recibo emitido</strong></td><td>Se generó el recibo de caja</td></tr>
+              <tr><td>📊 <strong>Registrado en BD</strong></td><td>El pedido fue importado en Access</td></tr>
+              <tr><td>📜 <strong>Certificado enviado</strong></td><td>Se envió el certificado de donación al cliente</td></tr>
+            </tbody>
+          </table>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Completa los campos que correspondan</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Selecciona el nuevo estado</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Haz clic en <strong>Guardar cambios</strong></div></div>
+          <div class="tip">💡 Cuando todos los checkboxes estén marcados, cambia el estado a <strong>Legalizado</strong>.</div>
+        </div>
         <div class="manual-card">
           <h3>🖨 Imprimir un pedido</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Abre el detalle del pedido</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Agrega las <strong>notas de envío</strong> si es necesario (aparecerán en la impresión)</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Haz clic en el botón <strong>🖨 Imprimir</strong></div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Se abre una nueva pestaña con el documento formateado listo para imprimir — el documento incluye todas las líneas de firma</div></div>
-          <div class="tip">💡 El documento impreso incluye: datos del comprador, destinatario, productos, total, notas y líneas de firma.</div>
+          <p>Abre el detalle → agrega notas de envío si aplica → clic en <strong>🖨 Imprimir</strong>. Se abre una nueva pestaña con el documento listo para imprimir, incluyendo líneas de firma.</p>
         </div>
-
         <div class="manual-card">
-          <h3>📎 Ver el comprobante de pago</h3>
-          <p>Si el cliente adjuntó su comprobante al hacer el pedido, aparecerá un botón verde <strong>📎 Ver comprobante de pago</strong> en el bloque de Pago del detalle del pedido. Al hacer clic, se abre el archivo en una nueva pestaña.</p>
-          <div class="warning">⚠️ Si dice "Sin comprobante adjunto", el cliente no adjuntó el soporte al momento de hacer el pedido.</div>
+          <h3>📎 Ver comprobante de pago</h3>
+          <p>Si el cliente adjuntó su comprobante, aparece el botón verde <strong>📎 Ver comprobante de pago</strong> en el bloque de Pago. Al hacer clic se abre en una nueva pestaña.</p>
+          <div class="warning">⚠️ Si dice "Sin comprobante adjunto", el cliente no lo adjuntó al hacer el pedido.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: CLIENTES -->
       <div class="manual-section" id="m-clientes">
         <div class="manual-card">
-          <h3>👥 Consultar clientes y benefactores</h3>
-          <p>En esta sección encuentras el <strong>Maestro Único de Terceros</strong> — la base de datos completa de todas las personas y empresas que han interactuado con Santiago Corazón.</p>
-          <h4>Buscar un cliente</h4>
-          <p>Escribe en la barra de búsqueda para encontrar por:</p>
-          <ul>
-            <li><strong>Nombre completo</strong> o razón social</li>
-            <li><strong>Número de documento</strong> (cédula, NIT, etc.)</li>
-            <li><strong>Correo electrónico</strong></li>
-          </ul>
-          <div class="tip">💡 La base de datos se actualiza automáticamente cada vez que alguien hace un pedido o donación. Los datos del cliente se actualizan si él mismo los corrige en el formulario.</div>
+          <h3>👥 Buscar clientes y benefactores</h3>
+          <p>Maestro único de más de 14.000 terceros. <strong>No carga automáticamente</strong> — debes escribir para buscar.</p>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Escribe mínimo <strong>3 caracteres</strong> en la barra de búsqueda</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">El sistema busca en paralelo por nombre, cédula/NIT y correo</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Los resultados aparecen automáticamente — máximo 50 por búsqueda</div></div>
+          <div class="tip">💡 Si no aparece por cédula, intenta por nombre. Algunos registros antiguos no tienen documento.</div>
+        </div>
+        <div class="manual-card">
+          <h3>📋 Historial de pedidos de un cliente</h3>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Busca el cliente y haz clic en <strong>📋 Historial</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Se abre un modal con todos sus pedidos — número, fecha, canal, total y estado</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Usa <strong>Desde</strong> y <strong>Hasta</strong> para filtrar por rango de fechas y haz clic en <strong>Filtrar</strong></div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Haz clic en <strong>Ver</strong> en cualquier pedido para abrirlo directamente</div></div>
+          <div class="tip">💡 El contador muestra cuántos pedidos hay y el total acumulado del período.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: CATÁLOGO -->
       <div class="manual-section" id="m-catalogo">
         <div class="manual-card">
-          <h3>🛍 Gestionar el catálogo de productos</h3>
-          <p>Aquí controlas todos los productos que aparecen en el formulario de pedidos: bonos base, empaques, acompañantes y productos empresariales.</p>
-          <h4>Filtrar productos</h4>
-          <ul>
-            <li>Usa <strong>Buscar</strong> para encontrar por nombre</li>
-            <li>Usa <strong>Tipo</strong> para filtrar: Bonos Base, Empaques, Acompañantes, Empresarial</li>
-            <li>Usa <strong>Subcategoría</strong> para filtrar: Plantas, Velas, Consumibles, etc.</li>
-          </ul>
+          <h3>🛍 Gestionar el catálogo</h3>
+          <p>Controla todos los productos del formulario: bonos base, empaques, acompañantes y empresariales. Filtra por nombre, tipo o subcategoría.</p>
         </div>
-
         <div class="manual-card">
           <h3>➕ Agregar un producto nuevo</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Haz clic en el botón <strong>+ Nuevo producto</strong></div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Completa los campos:
-            <ul style="margin-top:6px">
-              <li><strong>Nombre</strong> — como aparecerá en el formulario</li>
-              <li><strong>Tipo</strong> — Bono Base, Empaque, Acompañante o Empresarial</li>
-              <li><strong>Subcategoría</strong> — ejemplo: Plantas, Velas, Línea de Corazón</li>
-              <li><strong>Precio</strong> — en pesos colombianos, sin puntos ni comas</li>
-              <li><strong>Orden</strong> — número que define el orden de aparición (1 = primero)</li>
-              <li><strong>URL de imagen</strong> — pega el link de la imagen</li>
-            </ul>
-          </div></div>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Haz clic en <strong>+ Nuevo producto</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Completa: Nombre, Tipo, Subcategoría, Precio y URL de imagen</div></div>
           <div class="step"><div class="step-num">3</div><div class="step-content">Haz clic en <strong>Guardar</strong></div></div>
-          <div class="tip">💡 <strong>Para imágenes de Google Drive:</strong>
-            <ol style="margin-top:6px;padding-left:16px">
-              <li>Abre la imagen en Google Drive</li>
-              <li>Haz clic en los 3 puntos (⋮) → <strong>Compartir</strong></li>
-              <li>Cambia a <strong>"Cualquiera con el link puede ver"</strong></li>
-              <li>Haz clic en <strong>Copiar link</strong></li>
-              <li>Pégalo en el campo de URL — el sistema lo convierte automáticamente ✨</li>
-            </ol>
-          </div>
-          <div class="warning">⚠️ Si la imagen no aparece en el formulario, verifica que esté compartida como "Cualquiera con el link". Si está en privado, no será visible para los clientes.</div>
+          <div class="tip">💡 Para imágenes de Google Drive: abre la imagen → Compartir → "Cualquiera con el link" → copia y pega el link.</div>
         </div>
-
         <div class="manual-card">
-          <h3>✏️ Editar un producto</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Encuentra el producto en la lista</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Haz clic en el botón <strong>✏️</strong> a la derecha</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Modifica los datos que necesites</div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Haz clic en <strong>Guardar</strong></div></div>
-        </div>
-
-        <div class="manual-card">
-          <h3>🔛 Activar o desactivar un producto</h3>
-          <p>Cada producto tiene un <strong>toggle</strong> (interruptor) en la columna <em>Activo</em>. Al desactivarlo, el producto deja de aparecer en el formulario inmediatamente, pero no se borra de la base de datos.</p>
-          <div class="tip">💡 Usa esto cuando un producto no esté disponible temporalmente — es mejor desactivarlo que eliminarlo.</div>
-          <div class="warning">⚠️ El botón 🗑 <strong>elimina</strong> el producto permanentemente. Solo úsalo si estás completamente segura de que no lo necesitarás más.</div>
+          <h3>🔛 Activar o desactivar</h3>
+          <p>Usa el toggle en la columna <em>Activo</em>. Al desactivar, el producto deja de aparecer en el formulario pero no se borra.</p>
+          <div class="warning">⚠️ El botón 🗑 elimina permanentemente. Úsalo solo si estás segura de que no lo necesitarás.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: CAMPAÑAS -->
       <div class="manual-section" id="m-campanas">
         <div class="manual-card">
-          <h3>❤ ¿Qué son las campañas?</h3>
-          <p>Las campañas son iniciativas especiales de recaudo de recursos. Aparecen en el formulario cuando alguien elige hacer una <strong>Donación</strong>. El donante elige a qué campaña va su aporte.</p>
-          <h4>Tipos de recaudo</h4>
+          <h3>❤ Campañas de donación</h3>
+          <p>Aparecen en el formulario cuando alguien elige <strong>Donación</strong>.</p>
           <table class="tabla-manual">
-            <thead><tr><th>Tipo</th><th>¿Cómo funciona?</th><th>Ejemplo</th></tr></thead>
+            <thead><tr><th>Tipo</th><th>¿Cómo funciona?</th></tr></thead>
             <tbody>
-              <tr><td>💰 <strong>Solo dinero</strong></td><td>El donante ingresa el valor que quiere donar</td><td>Donación General</td></tr>
-              <tr><td>🛍 <strong>Solo productos</strong></td><td>El donante elige productos específicos de la campaña</td><td>Campaña de Pañales</td></tr>
-              <tr><td>💰🛍 <strong>Ambos</strong></td><td>El donante puede dar dinero, productos o los dos</td><td>Salud Oral</td></tr>
+              <tr><td>💰 Solo dinero</td><td>El donante ingresa el valor</td></tr>
+              <tr><td>🛍 Solo productos</td><td>El donante elige productos específicos</td></tr>
+              <tr><td>💰🛍 Ambos</td><td>Dinero, productos o los dos</td></tr>
             </tbody>
           </table>
         </div>
-
         <div class="manual-card">
-          <h3>➕ Crear una campaña nueva</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Haz clic en <strong>+ Nueva campaña</strong></div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Completa el nombre, descripción, tipo de recaudo y fechas</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Si el tipo es <strong>Solo productos</strong> o <strong>Ambos</strong>, aparecerá la sección de productos donde puedes:
-            <ul style="margin-top:6px">
-              <li><strong>Asociar un producto del catálogo</strong> — selecciónalo del menú y haz clic en + Asociar</li>
-              <li><strong>Crear un producto exclusivo</strong> — llena el formulario y haz clic en + Agregar producto</li>
-            </ul>
-          </div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Haz clic en <strong>Guardar campaña</strong></div></div>
-          <div class="tip">💡 La campaña aparecerá inmediatamente en el formulario de donación para que los donantes puedan elegirla.</div>
-        </div>
-
-        <div class="manual-card">
-          <h3>🔛 Activar o desactivar una campaña</h3>
-          <p>Usa el toggle en la columna <em>Activa</em> para activar o desactivar una campaña. Las campañas desactivadas no aparecen en el formulario pero conservan su información.</p>
-          <div class="tip">💡 Desactiva las campañas cuando terminen para que no aparezcan en el formulario, sin perder el historial de donaciones.</div>
+          <h3>➕ Crear una campaña</h3>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Clic en <strong>+ Nueva campaña</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Completa nombre, descripción, tipo de recaudo y fechas</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Si incluye productos, agrégalos del catálogo o créalos exclusivos</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Clic en <strong>Guardar campaña</strong></div></div>
+          <div class="tip">💡 Desactiva las campañas cuando terminen para que no aparezcan en el formulario.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: USUARIOS -->
       <div class="manual-section" id="m-usuarios">
         <div class="manual-card">
           <h3>👤 Gestión de usuarios <span class="badge-manual badge-admin">Solo Admin</span></h3>
-          <p>Esta sección solo la ven las administradoras. Aquí puedes crear nuevos accesos, resetear contraseñas y activar o desactivar usuarios.</p>
+          <p>Crea accesos, resetea contraseñas y activa o desactiva usuarios.</p>
         </div>
-
         <div class="manual-card">
-          <h3>➕ Crear un usuario nuevo</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Haz clic en <strong>+ Nuevo usuario</strong></div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Ingresa el nombre completo, correo electrónico y una contraseña (mínimo 8 caracteres)</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Selecciona el rol:
-            <ul style="margin-top:6px">
-              <li><strong>Administrador</strong> — acceso total incluyendo gestión de usuarios</li>
-              <li><strong>Operador</strong> — acceso a todo excepto gestión de usuarios</li>
-              <li><strong>Consulta</strong> — solo lectura</li>
-            </ul>
-          </div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Haz clic en <strong>Crear usuario</strong> y comunícale la contraseña a la persona</div></div>
-        </div>
-
-        <div class="manual-card">
-          <h3>🔑 Resetear la contraseña de un usuario</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Encuentra el usuario en la lista</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Haz clic en el botón <strong>🔑 Reset</strong></div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Ingresa la nueva contraseña (mínimo 8 caracteres)</div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Comunícale la nueva contraseña al usuario</div></div>
-          <div class="warning">⚠️ Las contraseñas no se pueden ver — solo resetear. Si alguien olvida su contraseña, debes asignarle una nueva.</div>
+          <h3>➕ Crear usuario</h3>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Clic en <strong>+ Nuevo usuario</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Nombre, correo y contraseña (mínimo 8 caracteres)</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Rol: <strong>Administrador</strong> (acceso total) u <strong>Operador</strong> (sin gestión de usuarios)</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Clic en <strong>Crear usuario</strong> y comunica la contraseña</div></div>
+          <div class="warning">⚠️ Las contraseñas no se pueden ver — solo resetear con el botón 🔑 Reset.</div>
         </div>
       </div>
 
-      <!-- SECCIÓN: EXCEL -->
       <div class="manual-section" id="m-excel">
         <div class="manual-card">
-          <h3>📥 Exportar datos a Excel para Access</h3>
-          <p>Con un solo clic puedes descargar toda la información del sistema en un archivo Excel listo para importar en Microsoft Access. El archivo incluye 4 hojas con toda la información.</p>
-          <h4>¿Qué contiene el archivo?</h4>
+          <h3>📥 Exportar a Excel o CSV</h3>
+          <p>En el menú lateral, clic en <strong>📥 Exportar a Excel</strong>. Elige el rango de fechas y canal (opcionales) y descarga en el formato que necesites.</p>
           <table class="tabla-manual">
-            <thead><tr><th>Hoja</th><th>Contenido</th></tr></thead>
+            <thead><tr><th>Formato</th><th>Cuándo usarlo</th></tr></thead>
             <tbody>
-              <tr><td><strong>clientes</strong></td><td>Todos los clientes y benefactores con sus datos completos</td></tr>
-              <tr><td><strong>pedidos</strong></td><td>Todos los pedidos con información del comprador, destinatario, pago y envío</td></tr>
-              <tr><td><strong>pedido_detalle</strong></td><td>Productos de cada pedido con cantidades y precios</td></tr>
-              <tr><td><strong>pedido_acompanantes</strong></td><td>Acompañantes de cada pedido</td></tr>
+              <tr><td>📥 <strong>Excel (.xlsx)</strong></td><td>Para importar en Access — 4 hojas: clientes, pedidos, detalle, acompañantes</td></tr>
+              <tr><td>📋 <strong>CSV (.csv)</strong></td><td>Para abrir en cualquier programa o importar en otras herramientas</td></tr>
+            </tbody>
+          </table>
+          <div class="tip">💡 Si dejas las fechas vacías, exporta todo el historial. Se recomienda exportar mínimo una vez por semana.</div>
+        </div>
+        <div class="manual-card">
+          <h3>📋 Campos incluidos en la exportación</h3>
+          <table class="tabla-manual">
+            <thead><tr><th>Campo</th><th>Descripción</th></tr></thead>
+            <tbody>
+              <tr><td>nro_pedido, fecha, canal</td><td>Identificación del pedido</td></tr>
+              <tr><td>nombre, documento, teléfono, correo, ciudad, dirección</td><td>Datos del comprador</td></tr>
+              <tr><td>destinatario, ciudad entrega, dirección, referencia</td><td>Datos de entrega</td></tr>
+              <tr><td>ocasión, método pago, subtotal, envío, total, estado</td><td>Detalle comercial</td></tr>
+              <tr><td>atendido por, observaciones</td><td>Gestión interna</td></tr>
+              <tr><td><strong>color_bono</strong></td><td>Color de tarjeta elegido por el cliente</td></tr>
+              <tr><td><strong>numero_factura, numero_recibo</strong></td><td>Documentos contables</td></tr>
+              <tr><td><strong>leg_facturado, leg_recibo, leg_registrado, leg_certificado</strong></td><td>Estado de legalización (Sí / No)</td></tr>
             </tbody>
           </table>
         </div>
-
-        <div class="manual-card">
-          <h3>📋 Cómo exportar</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">En el menú lateral, haz clic en <strong>📥 Exportar a Excel</strong></div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Espera unos segundos mientras el sistema descarga los datos</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">El archivo se descarga automáticamente con el nombre <span class="kbd">SantiagoCorazon_Access_YYYYMMDD.xlsx</span></div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Abre Access → usa el asistente de importación de Excel para cargar cada hoja</div></div>
-          <div class="tip">💡 El nombre del archivo incluye la fecha, así puedes saber exactamente cuándo se hizo cada exportación.</div>
-        </div>
       </div>
 
-      <!-- SECCIÓN: FORMULARIO -->
       <div class="manual-section" id="m-formulario">
         <div class="manual-card">
-          <h3>📝 Cómo funciona el formulario de pedidos</h3>
-          <p>El formulario es la herramienta que usan las operadoras para registrar pedidos — ya sea desde la tienda, por WhatsApp o desde la web. También pueden usarlo los clientes directamente desde internet.</p>
-          <h4>Tipos de pedido disponibles</h4>
+          <h3>📝 Formulario de pedidos</h3>
+          <p>Herramienta para registrar pedidos desde tienda, WhatsApp, correo o web. También lo usan los clientes directamente.</p>
           <table class="tabla-manual">
-            <thead><tr><th>Tipo</th><th>¿Cuándo usarlo?</th></tr></thead>
+            <thead><tr><th>Tipo de pedido</th><th>¿Cuándo?</th></tr></thead>
             <tbody>
-              <tr><td>🕊 <strong>Bono de Pésame</strong></td><td>Condolencias, acompañamiento en momentos difíciles</td></tr>
-              <tr><td>🎁 <strong>Bono Toda Ocasión</strong></td><td>Cumpleaños, amor, graduación, cualquier celebración</td></tr>
-              <tr><td>🛍 <strong>Solo Productos</strong></td><td>Velas, libros, corazones y artículos sin bono</td></tr>
-              <tr><td>🏢 <strong>Línea Empresarial</strong></td><td>Manillas, pins y artículos corporativos</td></tr>
-              <tr><td>❤ <strong>Donación</strong></td><td>Apoyo directo a los niños con cardiopatías</td></tr>
+              <tr><td>🕊 Bono de Pésame</td><td>Condolencias y acompañamiento</td></tr>
+              <tr><td>🎁 Bono Toda Ocasión</td><td>Cumpleaños, amor, graduación</td></tr>
+              <tr><td>🛍 Solo Productos</td><td>Velas, libros, corazones sin bono</td></tr>
+              <tr><td>🏢 Línea Empresarial</td><td>Manillas, pins y artículos corporativos</td></tr>
+              <tr><td>❤ Donación</td><td>Apoyo directo a los niños</td></tr>
             </tbody>
           </table>
         </div>
-
         <div class="manual-card">
-          <h3>📲 Canales de atención</h3>
-          <p>Al inicio del formulario se selecciona desde dónde se está haciendo el pedido:</p>
-          <ul>
-            <li><strong>Estoy en la tienda</strong> — atención presencial en el CC Oviedo</li>
-            <li><strong>Por WhatsApp</strong> — el cliente llama o escribe al número</li>
-            <li><strong>Sitio web / link</strong> — el cliente entra directamente al link</li>
-          </ul>
+          <h3>📲 Canales en el formulario</h3>
+          <table class="tabla-manual">
+            <thead><tr><th>Canal</th><th>Cuándo usarlo</th></tr></thead>
+            <tbody>
+              <tr><td>🏪 Estoy en la tienda</td><td>Atención presencial CC Oviedo</td></tr>
+              <tr><td>💬 Por WhatsApp</td><td>El cliente escribe al número</td></tr>
+              <tr><td>🌐 Sitio web / link</td><td>El cliente entra al formulario</td></tr>
+              <tr><td>✉️ Por Correo</td><td>El pedido llega por email</td></tr>
+            </tbody>
+          </table>
         </div>
-
         <div class="manual-card">
-          <h3>🔍 Búsqueda de clientes en el formulario</h3>
-          <div class="step"><div class="step-num">1</div><div class="step-content">Selecciona el tipo de documento del cliente</div></div>
-          <div class="step"><div class="step-num">2</div><div class="step-content">Ingresa el número de documento</div></div>
-          <div class="step"><div class="step-num">3</div><div class="step-content">Haz clic en <strong>🔍 Buscar mis datos</strong></div></div>
-          <div class="step"><div class="step-num">4</div><div class="step-content">Si el cliente ya está registrado, sus datos se cargan automáticamente. Si hay cambios, el cliente puede corregirlos y se actualizarán en la base de datos al confirmar el pedido</div></div>
-          <div class="tip">💡 El formulario incluye el tipo de documento para evitar confusiones entre cédulas, pasaportes y cédulas de extranjería que puedan coincidir en número.</div>
-        </div>
-
-        <div class="manual-card">
-          <h3>💳 Métodos de pago y comprobante</h3>
-          <p>Al final del formulario, el comprador puede seleccionar el método de pago (Nequi, Bancolombia, Tarjeta, Efectivo, etc.) y adjuntar una foto del comprobante de pago.</p>
-          <p>El comprobante se sube automáticamente y queda disponible en el Dashboard para que el equipo lo pueda consultar desde el detalle del pedido.</p>
-          <div class="tip">💡 El sistema comprime automáticamente las imágenes del comprobante para ahorrar espacio de almacenamiento.</div>
-        </div>
-
-        <div class="manual-card">
-          <h3>📄 Comprobante del pedido (PDF)</h3>
-          <p>Al finalizar el pedido, el sistema genera automáticamente un PDF con el resumen completo. El cliente puede descargarlo o imprimirlo como comprobante de que realizó el pedido.</p>
-          <p>El PDF incluye: número de pedido, datos del comprador, destinatario, productos elegidos, total y mensaje para la tarjeta.</p>
+          <h3>🧾 Factura, recibo y legalización</h3>
+          <p>En el último paso del formulario hay campos opcionales para registrar desde el inicio: N° Factura, N° Recibo y checkboxes de legalización. También se pueden completar o actualizar después desde el Dashboard.</p>
         </div>
       </div>
 
-      <!-- SECCIÓN: FAQ -->
       <div class="manual-section" id="m-faq">
         <div class="manual-card">
           <h3>❓ Preguntas frecuentes</h3>
-
+          <h4>¿Por qué la sección Clientes no carga nada al entrar?</h4>
+          <p>La BD tiene más de 14.000 registros. La búsqueda se activa cuando escribes mínimo 3 caracteres.</p>
           <h4>¿Qué pasa si el sistema no carga?</h4>
-          <p>Recarga la página con <span class="kbd">F5</span>. Si el problema persiste, verifica tu conexión a internet. El sistema requiere conexión activa para funcionar.</p>
-
+          <p>Recarga con <span class="kbd">F5</span>. Si persiste, verifica tu conexión a internet.</p>
           <h4>¿Puedo usar el Dashboard desde el celular?</h4>
-          <p>Sí, el Dashboard funciona en móvil, aunque está optimizado para computador. Para una mejor experiencia, usa Chrome en computador.</p>
-
-          <h4>¿Cada cuánto debo exportar a Excel?</h4>
-          <p>Se recomienda exportar al menos una vez por semana para mantener Access actualizado. En épocas de campaña intensiva, puede ser diariamente.</p>
-
-          <h4>¿Qué pasa si desactivo un producto del catálogo?</h4>
-          <p>El producto deja de aparecer en el formulario inmediatamente, pero los pedidos anteriores que lo incluyen no se afectan.</p>
-
-          <h4>¿Puedo recuperar un pedido que quedó en estado incorrecto?</h4>
-          <p>Sí. Abre el detalle del pedido, selecciona el estado correcto en el menú y haz clic en Guardar.</p>
-
-          <h4>¿Qué hago si el Storage de comprobantes llega al 80%?</h4>
-          <p>El Dashboard te mostrará una alerta automática. En ese momento contacta a Diana Said para evaluar actualizar el plan de almacenamiento de Supabase.</p>
-
-          <h4>¿Cómo sé si un pedido ya fue pagado?</h4>
-          <p>En el detalle del pedido, el bloque de Pago muestra el método seleccionado y el botón de comprobante si fue adjuntado. El estado "Entregado" confirma que el proceso fue completado.</p>
-
-          <h4>¿Qué pasa si el formulario no guarda un pedido?</h4>
-          <p>Verifica que todos los campos obligatorios estén llenos. Si el error persiste, toma una captura de pantalla del error que aparezca en la página y envíala a Diana Said.</p>
-
-          <h4>¿Con qué frecuencia se actualiza el Dashboard?</h4>
-          <p>Los pedidos y métricas se cargan en tiempo real cada vez que entras a una sección. Para ver los más recientes, navega a la sección de Pedidos o recarga la página.</p>
+          <p>Sí, aunque está optimizado para computador. Usa Chrome para mejor experiencia.</p>
+          <h4>¿Cada cuánto exportar?</h4>
+          <p>Mínimo una vez por semana. En campaña intensiva, diariamente.</p>
+          <h4>¿Quién puede editar un pedido?</h4>
+          <p>Solo Paula (productos@santiagocorazon.org) y las administradoras pueden cambiar estado, factura, recibo y legalización.</p>
+          <h4>¿Cuándo cambio el estado a "Legalizado"?</h4>
+          <p>Cuando el pedido está facturado, con recibo emitido, registrado en Access y el certificado fue enviado al cliente.</p>
+          <h4>¿Puedo corregir un estado incorrecto?</h4>
+          <p>Sí. Abre el detalle, selecciona el estado correcto y haz clic en Guardar cambios.</p>
+          <h4>¿Qué hago si el Storage llega al 80%?</h4>
+          <p>El Dashboard mostrará una alerta automática. Contacta a Diana Said.</p>
         </div>
-
         <div class="manual-card">
-          <h3>📞 Contacto soporte técnico</h3>
-          <p>Para problemas técnicos con el aplicativo, contacta a:</p>
+          <h3>📞 Soporte técnico</h3>
           <table class="tabla-manual">
             <thead><tr><th>Contacto</th><th>Información</th></tr></thead>
             <tbody>
@@ -949,23 +858,23 @@ tr:hover td{background:var(--pink-lt)}
               <tr><td><strong>Empresa</strong></td><td>Flowando / Indunnova</td></tr>
             </tbody>
           </table>
-          <div class="tip">💡 Al reportar un problema, incluye: qué estabas haciendo, qué pasó, y una captura de pantalla si es posible. Esto agiliza la solución.</div>
+          <div class="tip">💡 Al reportar: qué estabas haciendo, qué pasó y captura de pantalla.</div>
         </div>
       </div>
 
-
-              <div id="m-shopify" class="manual-section" style="display:none">
-                <h3>🛒 Importar pedidos de Shopify</h3>
-                <p>Este módulo permite traer al Dashboard los pedidos que los clientes hicieron directamente en la tienda web de Shopify, para que queden junto con los demás pedidos y puedan exportarse a Access.</p>
-                <div class="step"><div class="step-num">1</div><div class="step-content">En Shopify, ve a <strong>Orders → Export → Export orders</strong> y descarga el archivo en formato <strong>CSV</strong>.</div></div>
-                <div class="step"><div class="step-num">2</div><div class="step-content">En el menú lateral del Dashboard, haz clic en <strong>🛒 Importar Shopify</strong>.</div></div>
-                <div class="step"><div class="step-num">3</div><div class="step-content">Arrastra el archivo CSV a la zona indicada, o haz clic en ella para buscarlo en tu computador.</div></div>
-                <div class="step"><div class="step-num">4</div><div class="step-content">El sistema mostrará una <strong>previsualización</strong> de los pedidos encontrados. Revisa que se vean correctos.</div></div>
-                <div class="step"><div class="step-num">5</div><div class="step-content">Haz clic en <strong>⬆ Importar al Dashboard</strong>. El sistema importa solo los pedidos nuevos — si ya habías subido ese archivo antes, los duplicados se omiten automáticamente.</div></div>
-                <div class="step"><div class="step-num">6</div><div class="step-content">Al terminar verás un resumen: cuántos se importaron y cuántos ya estaban. Los pedidos de Shopify quedan identificados con una etiqueta naranja <strong>Shopify</strong> en la sección Pedidos.</div></div>
-                <div class="step"><div class="step-num">7</div><div class="step-content">Para exportar a Access, usa <strong>📥 Exportar a Excel</strong> como siempre — los pedidos de Shopify ya están incluidos junto con los demás.</div></div>
-                <p style="margin-top:16px;padding:12px 16px;background:#fff3e0;border-radius:8px;font-size:.83rem;color:#e65100"><strong>💡 Tip:</strong> Puedes filtrar solo los pedidos de Shopify en la sección Pedidos usando el selector de canal.</p>
-              </div>
+      <div id="m-shopify" class="manual-section">
+        <div class="manual-card">
+          <h3>🛒 Importar pedidos de Shopify</h3>
+          <p>Trae al Dashboard los pedidos de la tienda web de Shopify para que queden junto con los demás y puedan exportarse a Access.</p>
+          <div class="step"><div class="step-num">1</div><div class="step-content">En Shopify: <strong>Orders → Export → Export orders</strong> → descarga en formato <strong>CSV</strong></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">En el menú lateral, clic en <strong>🛒 Importar Shopify</strong></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Arrastra el CSV o haz clic para buscarlo</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Revisa la previsualización y haz clic en <strong>⬆ Importar al Dashboard</strong></div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-content">Los duplicados se omiten automáticamente. Los pedidos quedan bajo el canal <strong>Web / Shopify</strong></div></div>
+          <div class="step"><div class="step-num">6</div><div class="step-content">Para exportar a Access, usa <strong>📥 Exportar a Excel</strong> — los pedidos de Shopify ya están incluidos</div></div>
+          <div class="tip">💡 Filtra los pedidos de Shopify en la sección Pedidos seleccionando el canal Web / Shopify.</div>
+        </div>
+      </div>
     </div><!-- /page-manual -->
 
 
@@ -2917,12 +2826,18 @@ async function exportarCSV(desde, hasta, canal) {
     if (!pedidos.length) { toast('No hay pedidos en ese rango', 'error'); return; }
 
     // Construir CSV
-    const cols = ['nro_pedido','fecha','canal','nombre_razon_social','id_nit_comprador',
+    const cols = [
+      'nro_pedido','fecha','canal','nombre_razon_social','id_nit_comprador',
       'telefono_comprador','correo_comprador','ciudad_comprador','direccion_comprador',
       'nombres_destinatario','apellidos_destinatario','telefono_destinatario',
       'ciudad_entrega','direccion_entrega','ocasion','metodo_pago',
       'subtotal_productos','costo_envio','total_pedido','estado',
-      'numero_factura','numero_recibo','atendido_por','observaciones'];
+      'numero_factura','numero_recibo','color_bono','atendido_por','observaciones',
+      'leg_facturado','leg_recibo','leg_registrado','leg_certificado'
+    ];
+
+    // Para los booleanos de legalización mostrar Sí/No
+    const legCols = new Set(['leg_facturado','leg_recibo','leg_registrado','leg_certificado']);
 
     const escaparCSV = v => {
       const s = String(v === null || v === undefined ? '' : v);
@@ -2930,7 +2845,10 @@ async function exportarCSV(desde, hasta, canal) {
     };
 
     const encabezado = cols.join(',');
-    const filas = pedidos.map(p => cols.map(c => escaparCSV(p[c])).join(','));
+    const filas = pedidos.map(p => cols.map(c => {
+      const v = legCols.has(c) ? (p[c] ? 'Sí' : 'No') : p[c];
+      return escaparCSV(v);
+    }).join(','));
     const csv = '\uFEFF' + [encabezado, ...filas].join('\r\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -3024,6 +2942,7 @@ async function exportarExcel(desde, hasta, canal) {
       subtotal_productos: p.subtotal_productos||0, total_pedido: p.total_pedido||0,
       metodo_pago: p.metodo_pago||'', atendido_por: p.atendido_por||'',
       estado: p.estado||'', observaciones: p.observaciones||'',
+      color_bono: p.color_bono||'',
       numero_factura: p.numero_factura||'', numero_recibo: p.numero_recibo||'',
       leg_facturado: p.leg_facturado?'Sí':'No', leg_recibo: p.leg_recibo?'Sí':'No',
       leg_registrado: p.leg_registrado?'Sí':'No', leg_certificado: p.leg_certificado?'Sí':'No'

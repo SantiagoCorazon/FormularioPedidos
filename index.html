@@ -100,19 +100,25 @@
         <div class="canal-icon">🌐</div>
         <div class="canal-name">Sitio web /<br>link</div>
       </div>
-      <div class="canal-card" id="canal-Correo" onclick="selCanal('Correo')">
-        <div class="canal-icon">✉️</div>
-        <div class="canal-name">Por<br>Correo</div>
-      </div>
     </div>
     <button class="btn btn-primary" onclick="irDesdeInicio()" style="margin-top:8px">Continuar →</button>
+  </div>
+</div>
+
+<!-- ══ SEC COMBOS ═════════════════════════════════════════ -->
+<div class="section" id="sec-combos">
+  <div class="card">
+    <div class="step-label">Paso 1</div>
+    <div class="section-title">¿Quieres un <em>combo</em>?</div>
+    <div class="section-sub">Tenemos combos prearmados con bono y acompañante incluidos — o arma tu pedido a tu gusto eligiendo cada pieza por separado.</div>
+    <div id="comboGrid"><div style="color:var(--ink-lt);padding:20px;text-align:center">Cargando...</div></div>
   </div>
 </div>
 
 <!-- ══ SEC 1: QUIÉN COMPRA ════════════════════════════════ -->
 <div class="section" id="sec-1">
   <div class="card">
-    <div class="step-label" id="sl-1">Paso 1</div>
+    <div class="step-label" id="sl-1">Comprador</div>
     <div class="section-title">¿Quién <em>compra</em>?</div>
     <div class="section-sub">Ingresa tu documento — si ya estás registrado, tus datos se cargarán automáticamente.</div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
@@ -170,7 +176,7 @@
 <!-- ══ SEC 2: QUIÉN RECIBE ════════════════════════════════ -->
 <div class="section" id="sec-2">
   <div class="card">
-    <div class="step-label" id="sl-2">Paso 2</div>
+    <div class="step-label" id="sl-2">Destinatario</div>
     <div class="section-title">¿Quién <em>recibe</em>?</div>
     <div class="section-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega.</div>
     <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;cursor:pointer;background:var(--white)">
@@ -204,7 +210,7 @@
 <!-- ══ SEC 3A: INFO PÉSAME ════════════════════════════════ -->
 <div class="section" id="sec-3-pesame">
   <div class="card">
-    <div class="step-label" id="sl-3">Paso 3</div>
+    <div class="step-label">Datos del Bono</div>
     <div class="section-title">Información del <em>Bono de Pésame</em></div>
     <div class="section-sub">El nombre del fallecido y el del destinatario los escribiremos a mano en caligrafía en el bono.</div>
     <div class="grid-2">
@@ -298,7 +304,7 @@
 <!-- ══ SEC 4: PRESENTACIÓN ════════════════════════════════ -->
 <div class="section" id="sec-4-bono">
   <div class="card">
-    <div class="step-label" id="sl-4b">Paso 4</div>
+    <div class="step-label">Presentación</div>
     <div class="section-title">¿Cómo quieres <em>tu bono</em>?</div>
     <div class="section-sub" id="sec4b-sub">Elige entre Bono Virtual (se envía por email o WhatsApp) o Bono Plegable físico.</div>
     <div class="prod-grid" id="bonoGrid"></div>
@@ -329,7 +335,7 @@
 <!-- ══ SEC ACOMPAÑANTE ════════════════════════════════════ -->
 <div class="section" id="sec-acompanante">
   <div class="card">
-    <div class="step-label" id="sl-ac">Paso 5</div>
+    <div class="step-label">Acompañante</div>
     <div class="section-title">¿Quieres un <em>acompañante</em>? <span style="font-size:.75rem;color:var(--ink-lt);font-weight:400">(opcional)</span></div>
     <div class="section-sub">Complementa el bono con un detalle especial. Este paso es opcional — si no quieres acompañante presiona <strong>Saltar este paso</strong>.</div>
     <div class="cat-tabs" id="acompTabs"></div>
@@ -415,22 +421,6 @@
         </select>
       </div>
       <div class="field"><label>Atendido por</label><input type="text" id="atendidoPor" placeholder="Quien registra el pedido"></div>
-    </div>
-
-    <div class="grid-2" style="margin-top:6px">
-      <div class="field"><label>N° Factura <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(opcional)</span></label><input type="text" id="numFacturaInput" placeholder="Ej: FV-00123"></div>
-      <div class="field"><label>N° Recibo de caja <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(opcional)</span></label><input type="text" id="numReciboInput" placeholder="Ej: RC-00456"></div>
-    </div>
-
-    <!-- Estado de legalización -->
-    <div style="background:var(--bg-lt,#f9f9f9);border-radius:10px;padding:14px;margin-top:10px;border:1px solid var(--border,#eee)">
-      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mid,#666);margin-bottom:10px">✅ Estado de legalización</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer"><input type="checkbox" id="legFacturado"> Facturado</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer"><input type="checkbox" id="legRecibo"> Recibo emitido</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer"><input type="checkbox" id="legRegistrado"> Registrado en BD</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer"><input type="checkbox" id="legCertificado"> Certificado enviado</label>
-      </div>
     </div>
 
     <div class="field" style="margin-top:6px">

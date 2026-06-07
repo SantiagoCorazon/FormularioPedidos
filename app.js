@@ -26,6 +26,8 @@ const S = {
   ocasion:'',
   bonos:[], sinBono:false, bono:null, empaque:null,
   acompanantes:[], productosElegidos:[],
+  combo:null,           // combo elegido (si aplica)
+  eligioCombo:false,    // true si eligió un combo y saltó armado individual
   envio:null, valorDonacion:0, campana_id:null, campana:'', campana_tipo:'',
   productosDonacion:[],
   metodoPago:'', atendidoPor:'', esNuevo:false,
@@ -33,26 +35,30 @@ const S = {
   flujo:[], flujoIdx:0,
 };
 
+// ── FLUJOS ACTUALIZADOS ─────────────────────────────────────
+// Nuevo orden pésame y toda ocasión:
+//   sec-combos → sec-4-bono → sec-acompanante → sec-3-pesame/toda → sec-envio → sec-1 → sec-2 → sec-orden
+// Los combos: si elige combo salta a sec-3-pesame/toda directamente (omite sec-4-bono y sec-acompanante)
 const FLUJOS = {
-  pesame:      ['sec-1','sec-2','sec-3-pesame','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
-  toda_ocasion:['sec-1','sec-2','sec-3-toda','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
-  producto:    ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
-  empresarial: ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
+  pesame:      ['sec-combos','sec-4-bono','sec-acompanante','sec-3-pesame','sec-envio','sec-1','sec-2','sec-orden'],
+  toda_ocasion:['sec-combos','sec-4-bono','sec-acompanante','sec-3-toda','sec-envio','sec-1','sec-2','sec-orden'],
+  producto:    ['sec-3-producto','sec-productos','sec-envio','sec-1','sec-2','sec-orden'],
+  empresarial: ['sec-3-producto','sec-productos','sec-envio','sec-1','sec-2','sec-orden'],
   donacion:    ['sec-1','sec-3-donacion','sec-orden'],
-  campana:     ['sec-1','sec-2','sec-productos-campana','sec-envio','sec-orden'],
-  evento:      ['sec-1','sec-2','sec-productos-evento','sec-envio','sec-orden'],
-  temporada:   ['sec-1','sec-2','sec-productos-temporada','sec-envio','sec-orden'],
+  campana:     ['sec-productos-campana','sec-envio','sec-1','sec-2','sec-orden'],
+  evento:      ['sec-productos-evento','sec-envio','sec-1','sec-2','sec-orden'],
+  temporada:   ['sec-productos-temporada','sec-envio','sec-1','sec-2','sec-orden'],
 };
 
 const PASOS_LABELS = {
-  pesame:      ['Comprador','Destinatario','Info Bono','Presentación','Acompañante','Envío','Orden'],
-  toda_ocasion:['Comprador','Destinatario','Info Bono','Presentación','Acompañante','Envío','Orden'],
-  producto:    ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
-  empresarial: ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
-  donacion:    ['Comprador','Donación','Orden'],
-  campana:     ['Comprador','Destinatario','Campaña','Envío','Orden'],
-  evento:      ['Comprador','Destinatario','Evento','Envío','Orden'],
-  temporada:   ['Comprador','Destinatario','Temporada','Envío','Orden'],
+  pesame:      ['Combos','Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
+  toda_ocasion:['Combos','Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
+  producto:    ['Ocasión','Productos','Envío','Comprador','Destinatario','Pago'],
+  empresarial: ['Ocasión','Productos','Envío','Comprador','Destinatario','Pago'],
+  donacion:    ['Comprador','Donación','Pago'],
+  campana:     ['Campaña','Envío','Comprador','Destinatario','Pago'],
+  evento:      ['Evento','Envío','Comprador','Destinatario','Pago'],
+  temporada:   ['Temporada','Envío','Comprador','Destinatario','Pago'],
 };
 
 // ── Init ────────────────────────────────────────────────────
@@ -81,6 +87,7 @@ async function cargarCatalogo() {
       acompanantes: data.filter(p => p.tipo === 'acompanante'),
       productos:    data.filter(p => p.tipo === 'acompanante'),
       empresarial:  data.filter(p => p.tipo === 'empresarial'),
+      combos:       data.filter(p => p.tipo === 'combo'),
     };
   } catch(e) { console.error('Error catálogo:', e); }
   await cargarCampanas();
@@ -109,7 +116,7 @@ async function onCampanaChange() {
   S.campana_id = sel.value;
   S.campana = opt.text;
   S.campana_tipo = tipo;
-  const secDinero   = $('sec-donacion-dinero');
+  const secDinero    = $('sec-donacion-dinero');
   const secProductos = $('sec-donacion-productos');
   if (secDinero) secDinero.style.display = (tipo === 'dinero' || tipo === 'ambos') ? 'block' : 'none';
   if (secProductos) secProductos.style.display = (tipo === 'productos' || tipo === 'ambos') ? 'block' : 'none';
@@ -146,7 +153,7 @@ function selProdDonacion(id, nombre, precio) {
   actualizarTotal();
 }
 
-// ── Colores de bonos desde Supabase ────────────────────────
+// ── Colores de bonos ────────────────────────────────────────
 async function cargarColoresBonos() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/colores_bono?activo=eq.true&order=orden.asc', { headers: sbH() });
@@ -159,125 +166,98 @@ async function cargarColoresBonos() {
 function renderColoresBono(containerId, colores, tipo) {
   var el = $(containerId);
   if (!el) return;
-  if (!colores.length) { el.innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem">No hay colores configurados</div>'; return; }
+  if (!colores.length) { el.innerHTML = '<p style="color:var(--ink-lt);font-size:.82rem">Sin colores disponibles.</p>'; return; }
   el.innerHTML = colores.map(function(c) {
-    var safe = (c.nombre + (c.frase ? ' - ' + c.frase : '')).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    var img  = c.imagen_url ? '<img src="' + c.imagen_url + '" onerror="this.style.display=\'none\'">' : '';
+    var safe  = (c.nombre||'').replace(/'/g,"&#39;");
+    var img   = c.imagen_url ? '<img src="' + c.imagen_url + '" onerror="this.style.display=\'none\'">' : '';
     var frase = c.frase ? '<div class="tarjeta-frase">' + c.frase + '</div>' : '';
     return '<div class="tarjeta-card" onclick="selTarjeta(this,\'' + safe + '\',\'' + tipo + '\')">' +
       img + '<div class="tarjeta-info">' + frase + '<div class="tarjeta-color">' + c.nombre + '</div></div></div>';
   }).join('');
 }
 
-// ── Envíos desde Supabase ───────────────────────────────────
+// ── Envíos desde BD ─────────────────────────────────────────
 async function cargarEnviosDB() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/tarifas_envio?activo=eq.true&order=orden.asc', { headers: sbH() });
     ENVIOS_DB = await r.json();
-  } catch(e) { console.error('Error envíos:', e); }
+  } catch(e) { console.warn('Error envíos:', e); ENVIOS_DB = []; }
 }
 
-function renderEnvios() {
-  if (!ENVIOS_DB.length) {
-    $('envioOpts').innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem;padding:10px">Cargando opciones de envío...</div>';
-    return;
-  }
-  $('envioOpts').innerHTML = ENVIOS_DB.map(function(e) {
-    var sel   = S.envio && S.envio.l === e.descripcion ? ' sel' : '';
-    var color = e.precio === 0 ? '#2e7d32' : 'var(--pink)';
-    var precio = e.precio === 0 ? 'GRATIS' : fmt(e.precio);
-    var desc  = (e.descripcion || '').replace(/"/g, '&quot;');
-    return '<div class="envio-item' + sel + '" onclick="selEnvio(this,' + e.precio + ')" data-label="' + desc + '">' +
-      '<span class="envio-label">' + e.descripcion + '</span>' +
-      '<span class="envio-precio" style="color:' + color + '">' + precio + '</span></div>';
-  }).join('');
-}
-
-function selEnvio(el, precio) {
-  S.envio = { l: el.dataset.label, p: precio };
-  renderEnvios();
-  actualizarTotal();
-}
-
-// ── Temporada activa ────────────────────────────────────────
+// ── Temporada activa ─────────────────────────────────────────
 async function cargarTemporadaActiva() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/temporada?activo=eq.true&limit=1', { headers: sbH() });
     const data = await r.json();
-    if (data.length) {
-      const t = data[0];
-      window._temporadaActiva = t;
+    if (data && data[0]) {
+      var t = data[0];
       var btn = $('btn-temporada');
       if (btn) {
-        btn.style.display = '';
-        $('icon-temporada').textContent = t.emoji || '🎁';
-        $('name-temporada').textContent = t.nombre_boton || 'Temporada';
-        $('desc-temporada').textContent = t.descripcion || '';
+        btn.style.display = 'flex';
+        var ic = $('icon-temporada'); if (ic) ic.textContent = t.emoji || '🎁';
+        var nm = $('name-temporada'); if (nm) nm.textContent = t.nombre_boton || 'Temporada';
+        var dc = $('desc-temporada'); if (dc) dc.textContent = t.descripcion || '';
+        $('temporada-sec-title') && ($('temporada-sec-title').innerHTML = 'Productos de <em>' + (t.nombre_boton||'Temporada') + '</em>');
+        window._temporadaId = t.id;
       }
     }
-  } catch(e) { console.error('Error temporada:', e); }
+  } catch(e) { console.warn('Error temporada:', e); }
 }
 
-// ── Departamentos y municipios ──────────────────────────────
-async function cargarDepartamentos() {
-  var deptos = [
-    'Amazonas','Antioquia','Arauca','Atlántico','Bolívar','Boyacá','Caldas',
-    'Caquetá','Casanare','Cauca','Cesar','Chocó','Córdoba','Cundinamarca',
-    'Guainía','Guaviare','Huila','La Guajira','Magdalena','Meta','Nariño',
-    'Norte de Santander','Putumayo','Quindío','Risaralda','San Andrés y Providencia',
-    'Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada','Bogotá D.C.'
-  ];
+// ── Departamentos y municipios ───────────────────────────────
+function cargarDepartamentos() {
+  var deptos = ['Amazonas','Antioquia','Arauca','Atlántico','Bogotá D.C.','Bolívar','Boyacá','Caldas','Caquetá','Casanare','Cauca','Cesar','Chocó','Cundinamarca','Córdoba','Guainía','Guaviare','Huila','La Guajira','Magdalena','Meta','Nariño','Norte de Santander','Putumayo','Quindío','Risaralda','San Andrés, Providencia y Santa Catalina','Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada'];
   var sel = $('d_departamento');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Selecciona departamento...</option>' +
-    deptos.map(d => '<option value="' + d + '">' + d + '</option>').join('');
+  if (sel) sel.innerHTML = '<option value="">Selecciona departamento...</option>' + deptos.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
 }
 
 function cargarMunicipios() {
-  var depto = $('d_departamento').value;
+  var selDepto  = $('d_departamento');
   var selCiudad = $('d_ciudad');
-  if (!selCiudad) return;
+  if (!selDepto || !selCiudad) return;
+  var depto = selDepto.value;
   var munis = {
-    'Amazonas':['El Encanto','La Chorrera','La Pedrera','La Victoria','Leticia','Miriti-Paraná','Puerto Alegría','Puerto Arica','Puerto Nariño','Puerto Santander','Tarapacá'],
-    'Antioquia':['Abejorral','Abriaquí','Alejandría','Amagá','Amalfi','Andes','Angelópolis','Angostura','Anorí','Anzá','Apartadó','Arboletes','Argelia','Armenia','Barbosa','Bello','Belmira','Betania','Betulia','Briceño','Buriticá','Caicedo','Caldas','Campamento','Caracolí','Caramanta','Carepa','Carolina del Príncipe','Caucasia','Cañasgordas','Chigorodó','Cisneros','Ciudad Bolívar','Cocorná','Concepción','Concordia','Copacabana','Cáceres','Dabeiba','Don Matías','Ebéjico','El Bagre','El Carmen de Viboral','El Peñol','El Retiro','El Santuario','Entrerríos','Envigado','Fredonia','Frontino','Giraldo','Girardota','Granada','Guadalupe','Guarne','Guatapé','Gómez Plata','Heliconia','Hispania','Itagüí','Ituango','Jardín','Jericó','La Ceja','La Estrella','La Pintada','La Unión','Liborina','Maceo','Marinilla','Medellín','Montebello','Murindó','Mutatá','Nariño','Nechí','Necoclí','Olaya','Peque','Peñol','Pueblorrico','Puerto Berrío','Puerto Nare','Puerto Triunfo','Remedios','Retiro','Rionegro','Sabanalarga','Sabaneta','Salgar','San Andrés de Cuerquia','San Carlos','San Francisco','San Jerónimo','San José de la Montaña','San Juan de Urabá','San Luis','San Pedro','San Pedro de Urabá','San Pedro de los Milagros','San Rafael','San Roque','San Vicente','Santa Bárbara','Santa Fe de Antioquia','Santa Rosa de Osos','Santo Domingo','Santuario','Segovia','Sonsón','Sopetrán','Tarazá','Tarso','Titiribí','Toledo','Turbo','Támesis','Uramita','Urrao','Valdivia','Valparaíso','Vegachí','Venecia','Vigía del Fuerte','Yalí','Yarumal','Yolombó','Yondó','Zaragoza'],
-    'Arauca':['Arauca','Arauquita','Cravo Norte','Fortul','Puerto Rondón','Saravena','Tame'],
-    'Atlántico':['Baranoa','Barranquilla','Campo de la Cruz','Candelaria','Galapa','Juan de Acosta','Luruaco','Malambo','Manatí','Palmar de Varela','Piojó','Polonuevo','Ponedera','Puerto Colombia','Repelón','Sabanagrande','Sabanalarga','Santa Lucía','Santo Tomás','Soledad','Suan','Tubará','Usiacurí'],
+    'Amazonas':['Leticia','Puerto Nariño'],
+    'Antioquia':['Abejorral','Abriaquí','Alejandría','Amagá','Amalfi','Andes','Angelópolis','Angostura','Anorí','Ansermanuevo','Apartadó','Arboletes','Argelia','Armenia','Barbosa','Bello','Belmira','Betania','Betulia','Briceño','Buriticá','Cáceres','Caicedo','Caldas','Campamento','Cañasgordas','Caracolí','Caramanta','Carepa','Carolina del Príncipe','Caucasia','Chigorodó','Cisneros','Ciudad Bolívar','Cocorná','Concepción','Concordia','Copacabana','Dabeiba','Don Matías','Ebéjico','El Bagre','El Carmen de Viboral','El Santuario','Entrerríos','Envigado','Fredonia','Frontino','Giraldo','Girardota','Gómez Plata','Granada','Guadalupe','Guarne','Guatapé','Heliconia','Hispania','Itagüi','Ituango','Jardín','Jericó','La Ceja','La Estrella','La Pintada','La Unión','Liborina','Maceo','Marinilla','Medellín','Montebello','Murindó','Mutatá','Nariño','Nechí','Necoclí','Olaya','Peñol','Peque','Pueblorrico','Puerto Berrío','Puerto Nare','Puerto Triunfo','Remedios','Retiro','Rionegro','Sabanalarga','Sabaneta','Salgar','San Andrés de Cuerquia','San Carlos','San Francisco','San Jerónimo','San José de la Montaña','San Juan de Urabá','San Luis','San Pedro de los Milagros','San Pedro de Urabá','San Rafael','San Roque','San Vicente Ferrer','Santa Bárbara','Santa Fe de Antioquia','Santa Rosa de Osos','Santo Domingo','Segovia','Sonsón','Sopetrán','Támesis','Tarazá','Tarso','Titiribí','Toledo','Turbo','Uramita','Urrao','Valdivia','Valparaíso','Vegachí','Venecia','Vigía del Fuerte','Yalí','Yarumal','Yolombó','Yondó','Zaragoza'],
     'Bogotá D.C.':['Bogotá D.C.'],
-    'Bolívar':['Achí','Altos del Rosario','Arenal','Arjona','Arroyohondo','Barranco de Loba','Calamar','Cantagallo','Cartagena de Indias','Cicuco','Clemencia','Córdoba','El Carmen de Bolívar','El Guamo','El Peñón','Hatillo de Loba','Magangué','Mahates','Margarita','María la Baja','Montecristo','Morales','Norosí','Pinillos','Regidor','Río Viejo','San Cristóbal','San Estanislao','San Fernando','San Jacinto','San Jacinto del Cauca','San Juan Nepomuceno','San Martín de Loba','San Pablo','Santa Catalina','Santa Rosa','Santa Rosa del Sur','Simití','Soplaviento','Talaigua Nuevo','Tiquisio','Turbaco','Turbaná','Villanueva','Zambrano'],
-    'Boyacá':['Almeida','Aquitania','Arcabuco','Belén','Berbeo','Betéitiva','Boavita','Boyacá','Briceño','Buenavista','Busbanzá','Caldas','Campohermoso','Cerinza','Chinavita','Chiquinquirá','Chiscas','Chita','Chitaraque','Chivatá','Chivor','Chíquiza','Ciénega','Coper','Corrales','Covarachía','Cubará','Cucaita','Cuítiva','Cómbita','Duitama','El Cocuy','El Espino','Firvitoba','Floresta','Gachantivá','Garagoa','Guacamayas','Guateque','Guayatá','Guicán de la Sierra','Gámeza','Iza','Jenesano','Jericó','La Capilla','La Uvita','La Victoria','Labranzagrande','Macanal','Maripí','Miraflores','Mongua','Monguí','Moniquirá','Motavita','Muzo','Nobsa','Nuevo Colón','Oicatá','Otanche','Pachavita','Paipa','Pajarito','Panqueba','Pauna','Paya','Paz de Río','Pesca','Pisba','Puerto Boyacá','Páez','Quípama','Ramiriquí','Rondón','Ráquira','Saboyá','Samacá','San Eduardo','San José de Pare','San Luis de Gaceno','San Mateo','San Miguel de Sema','San Pablo de Borbur','Santa María','Santa Rosa de Viterbo','Santa Sofía','Santana','Sativanorte','Sativasur','Siachoque','Soatá','Socha','Socotá','Sogamoso','Somondoco','Sora','Soracá','Sotaquirá','Susacón','Sutamarchán','Sutatenza','Sáchica','Tasco','Tenza','Tibaná','Tibasosa','Tinjacá','Tipacoque','Toca','Togüí','Tota','Tunja (capital)','Tununguá','Turmequé','Tuta','Tutazá','Tópaga','Ventaquemada','Villa de Leyva','Viracachá','Zetaquira','Úmbita'],
-    'Caldas':['Aguadas','Anserma','Aranzazu','Belalcázar','Chinchiná','Filadelfia','La Dorada','La Merced','Manizales','Manzanares','Marmato','Marquetalia','Marulanda','Neira','Norcasia','Palestina','Pensilvania','Pácora','Riosucio','Risaralda','Salamina','Samaná','San José','Supía','Victoria','Villamaría','Viterbo'],
-    'Caquetá':['Albania','Belén de los Andaquíes','Cartagena del Chairá','Curillo','El Doncello','El Paujil','Florencia','La Montañita','Milán','Morelia','Puerto Rico','San José del Fragua','San Vicente del Caguán','Solano','Solita','Valparaíso'],
-    'Casanare':['Aguazul','Chámeza','Hato Corozal','La Salina','Maní','Monterrey','Nunchía','Orocué','Paz de Ariporo','Pore','Recetor','Sabanalarga','San Luis de Palenque','Sácama','Tauramena','Trinidad','Támara','Villanueva','Yopal'],
-    'Cauca':['Almaguer','Argelia','Balboa','Bolívar','Buenos Aires','Cajibío','Caldono','Caloto','Corinto','El Tambo','Florencia','Guachené','Guapi','Inzá','Jambaló','La Sierra','La Vega','López de Micay','Mercaderes','Miranda','Morales','Padilla','Patía','Piamonte','Piendamó','Popayán','Puerto Tejada','Puracé','Páez','Rosas','San Sebastián','Santa Rosa','Santander de Quilichao','Silvia','Sotará','Sucre','Suárez','Timbiquí','Timbío','Toribío','Totoró','Villa Rica'],
-    'Cesar':['Aguachica','Agustín Codazzi','Astrea','Becerril','Bosconia','Chimichagua','Chiriguaná','Curumaní','El Copey','El Paso','Gamarra','González','La Gloria','La Jagua de Ibirico','La Paz','Manaure','Pailitas','Pelaya','Pueblo Bello','Río de Oro','San Alberto','San Diego','San Martín','Tamalameque','Valledupar'],
-    'Chocó':['Acandí','Alto Baudó','Atrato','Bagadó','Bahía Solano','Bajo Baudó','Bojayá','Carmen del Darién','Condoto','Cértegui','El Cantón de San Pablo','El Carmen de Atrato','El Litoral de San Juan','Istmina','Juradó','Lloró','Medio Atrato','Medio Baudó','Medio San Juan','Nuquí','Nóvita','Quibdó','Riosucio','Río Iró','Río Quito','San José del Palmar','Sipí','Tadó','Unguía','Unión Panamericana'],
-    'Cundinamarca':['Agua de Dios','Albán','Anapoima','Anolaima','Apulo','Arbeláez','Beltrán','Bituima','Bogotá','Bojacá','Cabrera','Cachipay','Cajicá','Caparrapí','Carmen de Carupa','Chaguaní','Chipaque','Choachí','Chocontá','Chía','Cogua','Cota','Cucunubá','Cáqueza','El Colegio','El Peñón','El Rosal','Facatativá','Fosca','Funza','Fusagasugá','Fómeque','Fúquene','Gachalá','Gachancipá','Gachetá','Gama','Girardot','Granada','Guachetá','Guaduas','Guasca','Guataquí','Guatavita','Guayabal de Síquima','Guayabetal','Gutiérrez','Jerusalén','Junín','La Calera','La Mesa','La Peña','La Vega','Lenguazaque','Machetá','Madrid','Manta','Mosquera','Nariño','Nilo','Nimaima','Nocaima','Pacho','Paime','Paratebueno','Pasca','Puerto Salgar','Quebradanegra','Quetame','Ricaurte','San Antonio del Tequendama','San Bernardo','San Francisco','San Juan de Rioseco','Sasaima','Sesquilé','Sibaté','Silvania','Simijaca','Soacha','Sopó','Subachoque','Suesca','Supatá','Tabio','Tausa','Tenjo','Tibacuy','Tibirita','Tocaima','Tocancipá','Topaipí','Ubalá','Vergara','Villeta','Viotá','Yacopí','Zipacón','Zipaquirá','Útica'],
-    'Córdoba':['Ayapel','Buenavista','Canalete','Cereté','Chimá','Chinú','Ciénaga de Oro','Cotorra','La Apartada','Los Córdobas','Momil','Montelíbano','Montería','Moñitos','Planeta Rica','Pueblo Nuevo','Puerto Escondido','Puerto Libertador','Purísima','Sahagún','San Andrés de Sotavento','San Antero','San Bernardo del Viento','San Carlos','San José de Uré','San Pelayo','Tierralta','Tuchín','Valencia'],
-    'Guainía':['Barrancominas','Inírida'],
-    'Guaviare':['Calamar','El Retorno','Miraflores','San José del Guaviare'],
-    'Huila':['Acevedo','Agrado','Aipe','Algeciras','Altamira','Baraya','Campoalegre','Colombia','Elías','Garzón','Gigante','Guadalupe','Hobo','Isnos','La Argentina','La Plata','Neiva','Nátaga','Oporapa','Paicol','Palermo','Palestina','Pital','Pitalito','Rivera','Saladoblanco','San Agustín','Santa María','Suaza','Tarqui','Tello','Teruel','Tesalia','Timaná','Villavieja','Yaguará','Íquira'],
-    'La Guajira':['Albania','Barrancas','Dibulla','Distracción','El Molino','Fonseca','Hatonuevo','La Jagua del Pilar','Maicao','Manaure','Riohacha','San Juan del Cesar','Uribia','Urumita'],
-    'Magdalena':['Algarrobo','Aracataca','Ariguaní','Cerro de San Antonio','Chibolo','Ciénaga','Concordia','El Banco','El Piñón','El Retén','Fundación','Guamal','Nueva Granada','Pedraza','Pijiño del Carmen','Pivijay','Plato','Puebloviejo','Remolino','Sabanas de San Ángel','Salamina','San Sebastián de Buenavista','San Zenón','Santa Ana','Santa Bárbara de Pinto','Santa Marta','Sitionuevo','Tenerife','Zapayán','Zona Bananera'],
-    'Meta':['Acacías','Barranca de Upía','Cabuyaro','Castilla la Nueva','Cubarral','Cumaral','El Calvario','El Castillo','El Dorado','Fuente de Oro','Granada','Guamal','La Macarena','La Uribe','Lejanías','Mapiripán','Mesetas','Puerto Concordia','Puerto Gaitán','Puerto Lleras','Puerto López','Puerto Rico','Restrepo','San Carlos de Guaroa','San Juan de Arama','San Juanito','San Martín','Villavicencio','Vista Hermosa'],
-    'Nariño':['Albán','Aldana','Ancuya','Arboleda','Barbacoas','Belén','Buesaco','Chachagüí','Colón','Consacá','Contadero','Cuaspud','Cumbal','Cumbitara','Córdoba','El Charco','El Peñol','El Rosario','El Tablón de Gómez','El Tambo','Francisco Pizarro','Funes','Guachucal','Guaitarilla','Gualmatán','Iles','Imués','Ipiales','La Cruz','La Florida','La Llanada','La Tola','La Unión','Leiva','Linares','Los Andes','Magüí Payán','Mallama','Mosquera','Nariño','Olaya Herrera','Ospina','Pasto','Policarpa','Potosí','Providencia','Puerres','Pupiales','Ricaurte','Roberto Payán','Samaniego','San Bernardo','San Lorenzo','San Pablo','San Pedro de Cartago','Sandoná','Santa Bárbara','Santa Cruz','Sapuyes','Taminango','Tangua','Tumaco','Túquerres','Yacuanquer'],
-    'Norte de Santander':['Arboledas','Bochalema','Bucarasica','Convención','Cucutilla','Cáchira','Cúcuta','Durania','El Carmen','El Tarra','El Zulia','Gramalote','Hacarí','Herrán','La Esperanza','La Playa de Belén','Los Patios','Lourdes','Mutiscua','Ocaña','Pamplona','Pamplonita','Puerto Santander','Ragonvalia','Salazar de Las Palmas','San Calixto','San Cayetano','Santiago','Sardinata','Teorama','Tibú','Toledo','Villa Caro','Villa del Rosario','Ábrego'],
-    'Putumayo':['Colón','Mocoa','Orito','Puerto Asís','Puerto Caicedo','Puerto Guzmán','Puerto Leguízamo','San Francisco','San Miguel','Santiago','Sibundoy','Valle del Guamuez','Villagarzón'],
-    'Quindío':['Armenia','Buenavista','Calarcá','Circasia','Córdoba','Filandia','Génova','La Tebaida','Montenegro','Pijao','Quimbaya','Salento'],
-    'Risaralda':['Apía','Balboa','Belén de Umbría','Dosquebradas','Guática','La Celia','La Virginia','Marsella','Mistrató','Pereira','Pueblo Rico','Quinchía','Santa Rosa de Cabal','Santuario'],
-    'San Andrés, Providencia y Santa Catalina':['Providencia y Santa Catalina','San Andrés'],
-    'Santander':['Aguada','Albania','Aratoca','Barbosa','Barichara','Barrancabermeja','Betulia','Bolívar','Bucaramanga','Cabrera','California','Capitanejo','Carcasí','Cepitá','Cerrito','Charalá','Charta','Chipatá','Cimitarra','Concepción','Confines','Contratación','Coromoro','Curití','El Carmen de Chucurí','El Guacamayo','El Peñón','El Playón','Encino','Enciso','Floridablanca','Florián','Galán','Gambita','Girón','Guaca','Guadalupe','Guapotá','Guavatá','Güepsa','Hato','Jesús María','Jordán','La Belleza','La Paz','Landázuri','Lebrija','Los Santos','Macaravita','Matanza','Mogotes','Málaga','Ocamonte','Oiba','Onzaga','Palmar','Palmas del Socorro','Pinchote','Puente Nacional','Puerto Wilches','Páramo','Rionegro','Sabana de Torres','San Andrés','San Benito','San Gil','San Joaquín','San José de Miranda','San Miguel','San Vicente de Chucurí','Santa Bárbara','Santa Helena del Opón','Simacota','Socorro','Suaita','Sucre','Suratá','Tona','Valle de San José','Villanueva','Vélez','Zapatoca'],
-    'Sucre':['Buenavista','Caimito','Chalán','Colosó','Corozal','Coveñas','El Roble','Galeras','Guaranda','La Unión','Los Palmitos','Majagual','Morroa','Ovejas','Palmito','Sampués','San Benito Abad','San Juan de Betulia','San Marcos','San Onofre','San Pedro','Sincelejo','Sincé','Sucre','Toluviejo','Tolú'],
-    'Tolima':['Alpujarra','Alvarado','Ambalema','Anzoátegui','Armero Guayabal','Ataco','Cajamarca','Carmen de Apicalá','Casabianca','Chaparral','Coello','Coyaima','Cunday','Dolores','Espinal','Falan','Flandes','Fresno','Guamo','Herveo','Honda','Ibagué','Icononzo','Lérida','Líbano','Mariquita','Melgar','Murillo','Natagaima','Ortega','Palocabildo','Piedras','Planadas','Prado','Purificación','Rioblanco','Roncesvalles','Rovira','Saldaña','San Antonio','San Luis','Santa Isabel','Suárez','Valle de San Juan','Venadillo','Villahermosa','Villarrica'],
-    'Valle del Cauca':['Alcalá','Andalucía','Ansermanuevo','Argelia','Bolívar','Buenaventura','Buga','Bugalagrande','Caicedonia','Cali','Calima‑Darien','Candelaria','Cartago','Dagua','El Cairo','El Cerrito','El Dovio','El Águila','Florida','Ginebra','Guacarí','Jamundí','La Cumbre','La Unión','La Victoria','Obando','Palmira','Pradera','Restrepo','Riofrío','Roldanillo','San Pedro','Sevilla','Toro','Trujillo','Tuluá','Ulloa','Versalles','Vijes','Yotoco','Yumbo','Zarzal'],
-    'Vaupés':['Carurú','Mitú','Taraira'],
-    'Vichada':['Cumaribo','La Primavera','Puerto Carreño','Santa Rosalía']
+    'Cundinamarca':['Agua de Dios','Albán','Anapoima','Anolaima','Apulo','Arbeláez','Beltrán','Bituima','Bojacá','Cajicá','Caparrapí','Chaguaní','Chipaque','Choachí','Chocontá','Chía','Cogua','Cota','Cucunubá','El Colegio','El Peñón','El Rosal','Facatativá','Fosca','Funza','Fusagasugá','Gachalá','Gachancipá','Gachetá','Gama','Girardot','Granada','Guachetá','Guaduas','Guasca','Guataquí','Guatavita','Guayabetal','Gutiérrez','Jerusalén','Junín','La Calera','La Mesa','La Peña','La Vega','Lenguazaque','Machetá','Madrid','Manta','Mosquera','Nariño','Nilo','Nimaima','Nocaima','Pacho','Paime','Paratebueno','Pasca','Puerto Salgar','Quebradanegra','Quetame','Ricaurte','San Antonio del Tequendama','San Bernardo','San Francisco','San Juan de Rioseco','Sasaima','Sesquilé','Sibaté','Silvania','Simijaca','Soacha','Sopó','Subachoque','Suesca','Supatá','Tabio','Tausa','Tenjo','Tibacuy','Tibirita','Tocaima','Tocancipá','Topaipí','Ubalá','Vergara','Villeta','Viotá','Yacopí','Zipacón','Zipaquirá','Útica'],
+    'Valle del Cauca':['Alcalá','Andalucía','Ansermanuevo','Argelia','Bolívar','Buenaventura','Buga','Bugalagrande','Caicedonia','Cali','Calima','Candelaria','Cartago','Dagua','El Cairo','El Cerrito','El Dovio','Florida','Ginebra','Guacarí','Jamundí','La Cumbre','La Unión','La Victoria','Obando','Palmira','Pradera','Restrepo','Riofrío','Roldanillo','San Pedro','Sevilla','Toro','Trujillo','Tuluá','Ulloa','Versalles','Vijes','Yotoco','Yumbo','Zarzal'],
+    'Atlántico':['Barranquilla','Soledad','Malambo','Galapa','Sabanalarga','Manatí','Baranoa','Sabanagrande','Puerto Colombia','Santo Tomás','Palmar de Varela','Polonuevo','Ponedera','Juan de Acosta','Tubará','Usiacurí','Campo de la Cruz','Candelaria','Luruaco','Repelón','Santa Lucía','Suan','Piojó'],
+    'Bolívar':['Cartagena de Indias','Magangué','El Carmen de Bolívar','Mompós','Turbaco','Arjona','Mahates','San Juan Nepomuceno','Zambrano','Calamar','Santa Rosa','San Pablo','Montecristo','Barranco de Loba','Cantagallo','Morales','Norosí','Regidor','Río Viejo','San Estanislao','San Fernando','San Jacinto','San Jacinto del Cauca','San Martín de Loba','Simití','Soplaviento','Talaigua Nuevo','Tiquisio','Turbaná','Villanueva'],
+    'Boyacá':['Tunja','Duitama','Sogamoso','Chiquinquirá','Paipa','Villa de Leyva','Puerto Boyacá','Nobsa','Aquitania','Guateque','Soatá','Moniquirá','Samacá','Ramiriquí','Garagoa','Rondón'],
+    'Caldas':['Manizales','La Dorada','Chinchiná','Anserma','Riosucio','Salamina','Aguadas','Villamaría','Neira','Palestina','Supía','Pácora'],
+    'Caquetá':['Florencia','San Vicente del Caguán','El Doncello','El Paujil','Puerto Rico','La Montañita'],
+    'Cauca':['Popayán','Santander de Quilichao','Puerto Tejada','Patía','Piendamó','Bolívar','Corinto','Miranda'],
+    'Cesar':['Valledupar','Aguachica','Agustín Codazzi','Bosconia','Chiriguaná'],
+    'Chocó':['Quibdó','Bahía Solano','Nuquí','Istmina','Tadó'],
+    'Córdoba':['Montería','Cereté','Sahagún','Montelíbano','Lorica','Tierralta'],
+    'Huila':['Neiva','Pitalito','Garzón','La Plata','Campoalegre'],
+    'La Guajira':['Riohacha','Maicao','Uribia','Manaure','San Juan del Cesar'],
+    'Magdalena':['Santa Marta','Ciénaga','Fundación','El Banco','Aracataca'],
+    'Meta':['Villavicencio','Acacías','Granada','Restrepo','Puerto López'],
+    'Nariño':['Pasto','Tumaco','Ipiales','Túquerres','Samaniego'],
+    'Norte de Santander':['Cúcuta','Ocaña','Pamplona','Tibú','Los Patios','Villa del Rosario'],
+    'Putumayo':['Mocoa','Puerto Asís','Sibundoy','Orito'],
+    'Quindío':['Armenia','Calarcá','Montenegro','Quimbaya','La Tebaida'],
+    'Risaralda':['Pereira','Dosquebradas','Santa Rosa de Cabal','La Virginia','Belén de Umbría'],
+    'Santander':['Bucaramanga','Floridablanca','Girón','Barrancabermeja','San Gil','Piedecuesta','Vélez','Socorro'],
+    'Sucre':['Sincelejo','Corozal','Sampués','San Marcos','Tolú','Morroa'],
+    'Tolima':['Ibagué','Espinal','Melgar','Honda','Chaparral','El Espinal'],
+    'San Andrés, Providencia y Santa Catalina':['San Andrés','Providencia y Santa Catalina'],
+    'Arauca':['Arauca','Saravena','Arauquita','Tame'],
+    'Casanare':['Yopal','Aguazul','Tauramena','Villanueva'],
+    'Guainía':['Inírida'],
+    'Guaviare':['San José del Guaviare'],
+    'Vichada':['Puerto Carreño'],
+    'Vaupés':['Mitú'],
+    'Amazonas':['Leticia','Puerto Nariño'],
   };
   var lista = munis[depto] || [];
   selCiudad.innerHTML = '<option value="">Selecciona municipio...</option>' +
     lista.map(m => '<option value="' + m + '">' + m + '</option>').join('');
 }
 
-// ── Pantalla de inicio ──────────────────────────────────────
+// ── Pantalla de inicio ───────────────────────────────────────
 function selTipoPedido(tipo) {
   S.tipoPedido = tipo;
   document.querySelectorAll('.tipo-pedido-card').forEach(c => c.classList.remove('sel'));
@@ -303,14 +283,17 @@ function selTipoCliente(tipo) {
 
 function irDesdeInicio() {
   if (!S.tipoPedido) { alert('Selecciona el tipo de pedido.'); return; }
-  if (!S.canal) { alert('Selecciona desde dónde haces tu pedido.'); return; }
-  S.flujo = FLUJOS[S.tipoPedido];
+  if (!S.canal)      { alert('Selecciona desde dónde haces tu pedido.'); return; }
+  // Resetear estado de combo
+  S.combo = null;
+  S.eligioCombo = false;
+  S.flujo = FLUJOS[S.tipoPedido].slice(); // copia
   S.flujoIdx = 0;
   construirProgress();
   mostrarSeccion(S.flujo[0]);
 }
 
-// ── Navegación ──────────────────────────────────────────────
+// ── Navegación ───────────────────────────────────────────────
 function construirProgress() {
   var labels = PASOS_LABELS[S.tipoPedido];
   $('progressSteps').innerHTML = labels.map((l, i) =>
@@ -338,6 +321,7 @@ function mostrarSeccion(secId) {
   var esUltimo = S.flujoIdx === S.flujo.length - 1;
   $('btnSkip').style.display  = esAcomp ? 'inline-block' : 'none';
   $('btnSig').textContent     = esUltimo ? '✓ Confirmar y Guardar' : 'Siguiente →';
+  if (secId === 'sec-combos')              renderCombos();
   if (secId === 'sec-4-bono')              renderBonos();
   if (secId === 'sec-productos')           renderProductos();
   if (secId === 'sec-acompanante')         renderAcompanantes('Velas');
@@ -355,8 +339,22 @@ function irSiguiente(skip) {
   var secActual = S.flujo[S.flujoIdx];
   if (secActual === 'sec-orden') { confirmarPedido(); return; }
   if (!skip && !validar(secActual)) return;
+
+  // Si elige combo en sec-combos, saltar sec-4-bono y sec-acompanante
+  if (secActual === 'sec-combos' && S.eligioCombo) {
+    // Buscar el índice de sec-3-pesame o sec-3-toda (siguiente después de sec-acompanante)
+    var idxDestino = S.flujo.findIndex(s => s === 'sec-3-pesame' || s === 'sec-3-toda');
+    if (idxDestino > -1) {
+      S.flujoIdx = idxDestino;
+      mostrarSeccion(S.flujo[S.flujoIdx]);
+      return;
+    }
+  }
+
+  // Si elige combo y vuelve atrás desde sec-3, debe ir a sec-combos directamente
   if (secActual === 'sec-4-bono' && S.sinBono)
     S.empaque = { nombre:'Sin empaque', precio:0, es_virtual:false };
+
   S.flujoIdx++;
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
@@ -369,12 +367,92 @@ function irAtras() {
     $('totalBar').style.display     = 'none';
     return;
   }
+  // Si venía de combo (eligioCombo) y está en sec-3, volver a sec-combos
+  var secActual = S.flujo[S.flujoIdx];
+  if (S.eligioCombo && (secActual === 'sec-3-pesame' || secActual === 'sec-3-toda')) {
+    var idxCombos = S.flujo.findIndex(s => s === 'sec-combos');
+    if (idxCombos > -1) { S.flujoIdx = idxCombos; mostrarSeccion(S.flujo[S.flujoIdx]); return; }
+  }
   S.flujoIdx--;
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
 
-// ── Validaciones ────────────────────────────────────────────
+// ── COMBOS ───────────────────────────────────────────────────
+function renderCombos() {
+  var el = $('comboGrid');
+  if (!el) return;
+  // Filtrar combos por tipo de pedido
+  var lista = (CATALOGO.combos || []).filter(c => {
+    if (!c.subcategoria) return true;
+    if (S.tipoPedido === 'pesame')       return c.subcategoria === 'pesame'       || c.subcategoria === 'ambos';
+    if (S.tipoPedido === 'toda_ocasion') return c.subcategoria === 'toda_ocasion' || c.subcategoria === 'ambos';
+    return true;
+  });
+  var noComboSel = !S.eligioCombo && !S.combo;
+  var sinComboClass = noComboSel ? ' sel' : '';
+  var html = '<div class="combo-sin' + sinComboClass + '" onclick="elegirSinCombo()" style="border:2px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s">' +
+    '<div style="font-size:1.2rem">🛍</div>' +
+    '<div style="font-weight:600;margin-top:6px">Armar mi propio pedido</div>' +
+    '<div style="font-size:.82rem;color:var(--ink-lt);margin-top:4px">Elige el bono, empaque y acompañantes por separado</div>' +
+    '</div>';
+  if (lista.length) {
+    html += '<div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-mid);margin-bottom:10px">✨ O elige un combo prearmado</div>';
+    html += '<div class="prod-grid">' + lista.map(function(p) {
+      var sel = S.combo && S.combo.id === p.id ? ' sel' : '';
+      var img = (p.imagen_url || p.imagen_url_shopify)
+        ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" onerror="this.style.display=\'none\'">'
+        : '';
+      var desc = p.descripcion ? '<div style="font-size:.75rem;color:var(--ink-lt);margin-top:3px">' + p.descripcion + '</div>' : '';
+      return '<div class="prod-card' + sel + '" onclick="selCombo(' + p.id + ')">' +
+        img + '<div class="prod-info">' +
+        '<div class="prod-nombre">' + p.nombre + '</div>' + desc +
+        '<div class="prod-precio">' + fmt(p.precio) + '</div>' +
+        '</div></div>';
+    }).join('') + '</div>';
+  } else {
+    html += '<div style="color:var(--ink-lt);font-size:.83rem;padding:12px;text-align:center">No hay combos disponibles para este tipo de pedido.</div>';
+  }
+  el.innerHTML = html;
+}
+
+function elegirSinCombo() {
+  S.combo = null;
+  S.eligioCombo = false;
+  // Limpiar lo que se pudo haber llenado con combo
+  S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  // Resaltar opción sin combo
+  document.querySelectorAll('.combo-sin').forEach(c => c.style.borderColor = 'var(--pink)');
+  document.querySelectorAll('.prod-card').forEach(c => c.classList.remove('sel'));
+  actualizarTotal();
+}
+
+function selCombo(id) {
+  var lista = CATALOGO.combos || [];
+  var p = lista.find(x => x.id === id);
+  if (!p) return;
+  if (S.combo && S.combo.id === id) {
+    // Deseleccionar
+    S.combo = null;
+    S.eligioCombo = false;
+    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  } else {
+    S.combo = p;
+    S.eligioCombo = true;
+    // El combo reemplaza bonos, empaque y acompañantes
+    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+    // Quitar selección en opción "sin combo"
+    document.querySelectorAll('.combo-sin').forEach(c => c.style.borderColor = 'var(--border)');
+  }
+  renderCombos();
+  actualizarTotal();
+}
+
+// ── Validaciones ─────────────────────────────────────────────
 function validar(secId) {
+  if (secId === 'sec-combos') {
+    // Esta sección siempre es válida — el usuario puede ir sin combo o con combo
+    return true;
+  }
   if (secId === 'sec-1') {
     if (S.tipoCliente === 'Personal') {
       if (!$('c_nombres').value.trim())          { alert('Ingresa los nombres.'); return false; }
@@ -478,7 +556,6 @@ function validar(secId) {
     return true;
   }
   if (secId === 'sec-orden') {
-    // Validar autorización de datos
     var cbDatos = $('cb-autorizo-datos');
     if (cbDatos && !cbDatos.checked) { alert('Debes autorizar el tratamiento de tus datos personales para continuar.'); return false; }
     return true;
@@ -486,9 +563,9 @@ function validar(secId) {
   return true;
 }
 
-// ── Buscar tercero ──────────────────────────────────────────
+// ── Buscar tercero ───────────────────────────────────────────
 async function buscarTercero() {
-  var doc    = $('docInput').value.trim();
+  var doc     = $('docInput').value.trim();
   var tipodoc = $('tipoDocInput').value;
   if (!doc) { alert('Ingresa el número de documento.'); return; }
   $('searchTxt').textContent = '...';
@@ -540,7 +617,7 @@ function toggleMismo(cb) {
   $('campos-dest').style.display = cb.checked ? 'none' : 'block';
 }
 
-// ── Tarjetas de color ───────────────────────────────────────
+// ── Tarjetas de color ────────────────────────────────────────
 function selTarjeta(card, val, scope) {
   S.tarjeta = val;
   var contenedor = scope === 'pesame' ? 'sec-3-pesame' : 'sec-3-toda';
@@ -548,7 +625,7 @@ function selTarjeta(card, val, scope) {
   card.classList.add('sel');
 }
 
-// ── Render bonos ────────────────────────────────────────────
+// ── Render bonos ─────────────────────────────────────────────
 function renderBonos() {
   var lista = CATALOGO.bonos_base || [];
   if (!lista.length) { $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>'; return; }
@@ -593,7 +670,7 @@ function selBono(idx) {
   actualizarTotal();
 }
 
-// ── Render empaques ─────────────────────────────────────────
+// ── Render empaques ──────────────────────────────────────────
 function renderEmpaques() {
   var lista = CATALOGO.empaques || [];
   if (!lista.length) { $('empaqueGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>'; return; }
@@ -616,7 +693,7 @@ function selEmpaque(idx) {
   actualizarTotal();
 }
 
-// ── Render productos ────────────────────────────────────────
+// ── Render productos ─────────────────────────────────────────
 function renderProductos(cat) {
   var lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
   var cats = [...new Set(lista.map(p => p.subcategoria).filter(Boolean))];
@@ -669,7 +746,7 @@ function actualizarResumenProductos() {
   }
 }
 
-// ── Render acompañantes ─────────────────────────────────────
+// ── Render acompañantes ──────────────────────────────────────
 function renderAcompanantes(cat) {
   var lista = CATALOGO.acompanantes || [];
   var cats = [...new Set(lista.map(p => p.subcategoria).filter(Boolean))];
@@ -705,7 +782,28 @@ function selAcompanante(idx) {
   actualizarTotal();
 }
 
-// ── Campaña / Evento / Temporada en flujo propio ────────────
+// ── Envíos ───────────────────────────────────────────────────
+function renderEnvios() {
+  var el = $('envioOpts');
+  if (!el) return;
+  if (!ENVIOS_DB.length) { el.innerHTML = '<p style="color:var(--ink-lt)">Cargando opciones de envío...</p>'; return; }
+  el.innerHTML = ENVIOS_DB.map(function(e, i) {
+    var sel = S.envio && S.envio.id === e.id ? ' checked' : '';
+    var precio = e.precio === 0 ? '<strong style="color:#2e7d32">GRATIS</strong>' : '$ ' + Number(e.precio).toLocaleString('es-CO');
+    return '<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:2px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;background:var(--white)">' +
+      '<input type="radio" name="envio" value="' + i + '"' + sel + ' onchange="selEnvio(' + i + ')" style="margin-top:3px;accent-color:var(--pink)">' +
+      '<div style="flex:1"><div style="font-size:.87rem;color:var(--ink)">' + e.descripcion + '</div></div>' +
+      '<div style="font-weight:700;white-space:nowrap">' + precio + '</div></label>';
+  }).join('');
+}
+
+function selEnvio(idx) {
+  var e = ENVIOS_DB[idx];
+  S.envio = { id:e.id, l:e.descripcion, p:e.precio };
+  actualizarTotal();
+}
+
+// ── Campaña / Evento / Temporada ─────────────────────────────
 async function cargarProductosCampanaForm() {
   var cont = $('sec-prod-campana-content');
   if (!cont) return;
@@ -737,18 +835,17 @@ async function cargarProductosEventoForm() {
     var eventos = await r.json();
     if (!eventos.length) { cont.innerHTML = '<div style="color:var(--ink-lt);padding:16px">No hay eventos activos.</div>'; return; }
     cont.innerHTML = eventos.map(function(e) {
-      var safe  = e.nombre.replace(/'/g, '&#39;');
-      var desc  = e.descripcion ? '<div style="font-size:.8rem;color:var(--ink-lt);margin-top:4px">' + e.descripcion + '</div>' : '';
-      var fecha = e.fecha ? '<div style="font-size:.78rem;color:var(--pink);margin-top:4px">📅 ' + e.fecha + '</div>' : '';
+      var safe = e.nombre.replace(/'/g,'&#39;');
       return '<div style="border:2px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;background:var(--white)" onclick="selEventoForm(' + e.id + ',\'' + safe + '\',this)">' +
-        '<div style="font-weight:600;font-size:.95rem">' + e.nombre + '</div>' + desc + fecha + '</div>';
+        '<div style="font-weight:600;font-size:.95rem">' + e.nombre + '</div>' +
+        (e.descripcion ? '<div style="font-size:.8rem;color:var(--ink-lt);margin-top:4px">' + e.descripcion + '</div>' : '') +
+        (e.fecha ? '<div style="font-size:.78rem;color:var(--pink);margin-top:4px">📅 ' + e.fecha + '</div>' : '') + '</div>';
     }).join('');
   } catch(e) { console.error(e); }
 }
 
 function selEventoForm(id, nombre, el) {
-  S.evento_id = id;
-  S.evento    = nombre;
+  S.evento_id = id; S.evento = nombre;
   document.querySelectorAll('#sec-prod-evento-content > div').forEach(d => d.style.borderColor = 'var(--border)');
   el.style.borderColor = 'var(--pink)';
 }
@@ -756,10 +853,9 @@ function selEventoForm(id, nombre, el) {
 async function cargarProductosTemporadaForm() {
   var cont = $('sec-prod-temporada-content');
   if (!cont) return;
-  var t = window._temporadaActiva;
-  if (!t) return;
+  if (!window._temporadaId) { cont.innerHTML = '<div style="color:var(--ink-lt);padding:16px">No hay temporada activa.</div>'; return; }
   try {
-    var r = await fetch(SUPABASE_URL + '/rest/v1/temporada_productos?temporada_id=eq.' + t.id + '&activo=eq.true', { headers: sbH() });
+    var r = await fetch(SUPABASE_URL + '/rest/v1/temporada_productos?temporada_id=eq.' + window._temporadaId + '&activo=eq.true&order=id.asc', { headers: sbH() });
     var prods = await r.json();
     if (!prods.length) { cont.innerHTML = '<div style="color:var(--ink-lt);padding:16px">No hay productos en esta temporada.</div>'; return; }
     cont.innerHTML = '<div class="prod-grid">' + prods.map(function(p) {
@@ -779,7 +875,7 @@ function toggleProdTemporadaForm(id, nombre, precio, el) {
   actualizarTotal();
 }
 
-// ── Total ───────────────────────────────────────────────────
+// ── Total ────────────────────────────────────────────────────
 function getTotal() {
   if (S.tipoPedido === 'donacion') {
     var t = S.valorDonacion || 0;
@@ -787,10 +883,15 @@ function getTotal() {
     return Math.max(0, t);
   }
   var total = 0;
-  if (S.bonos && S.bonos.length) total += S.bonos.reduce((s, b) => s + b.precio, 0);
-  else if (S.bono) total += S.bono.precio;
-  if (S.empaque && S.empaque.precio) total += S.empaque.precio;
-  total += S.acompanantes.reduce((s, a) => s + a.precio, 0);
+  // Si eligió combo, el precio del combo es la base
+  if (S.eligioCombo && S.combo) {
+    total += S.combo.precio;
+  } else {
+    if (S.bonos && S.bonos.length) total += S.bonos.reduce((s, b) => s + b.precio, 0);
+    else if (S.bono) total += S.bono.precio;
+    if (S.empaque && S.empaque.precio) total += S.empaque.precio;
+    total += S.acompanantes.reduce((s, a) => s + a.precio, 0);
+  }
   total += S.productosElegidos.reduce((s, p) => s + (p.precio * (p.qty||1)), 0);
   if (S.envio) total += S.envio.p;
   return Math.max(0, total);
@@ -800,15 +901,19 @@ function actualizarTotal() {
   $('totalAmount').textContent = fmt(getTotal());
 }
 
-// ── Render orden final ──────────────────────────────────────
+// ── Render orden final ───────────────────────────────────────
 function renderOrden() {
   var total = getTotal();
   var c = S.comprador, d = S.destinatario;
   var items = [];
-  if (S.bonos && S.bonos.length) S.bonos.forEach(b => items.push({ desc:b.nombre, precio:b.precio }));
-  else if (S.bono) items.push({ desc:S.bono.nombre, precio:S.bono.precio });
-  if (S.empaque && S.empaque.precio) items.push({ desc:'Empaque: ' + S.empaque.nombre, precio:S.empaque.precio });
-  S.acompanantes.forEach(a => items.push({ desc:'Acompañante: ' + a.nombre, precio:a.precio }));
+  if (S.eligioCombo && S.combo) {
+    items.push({ desc:'Combo: ' + S.combo.nombre, precio:S.combo.precio });
+  } else {
+    if (S.bonos && S.bonos.length) S.bonos.forEach(b => items.push({ desc:b.nombre, precio:b.precio }));
+    else if (S.bono) items.push({ desc:S.bono.nombre, precio:S.bono.precio });
+    if (S.empaque && S.empaque.precio) items.push({ desc:'Empaque: ' + S.empaque.nombre, precio:S.empaque.precio });
+    S.acompanantes.forEach(a => items.push({ desc:'Acompañante: ' + a.nombre, precio:a.precio }));
+  }
   S.productosElegidos.forEach(p => items.push({ desc:p.nombre + (p.qty>1?' x'+p.qty:''), precio:p.precio*(p.qty||1) }));
   if (S.tipoPedido === 'donacion') items.push({ desc:'Donación', precio:S.valorDonacion });
   if (S.envio && S.envio.p > 0) items.push({ desc:'Envío', precio:S.envio.p });
@@ -826,6 +931,7 @@ function renderOrden() {
     ((d.nombres||'')+' '+(d.apellidos||'')).trim() + '</strong><br>Tel: ' + (d.celular||'—') +
     '<br>Ciudad: ' + (d.ciudad||'—') + '<br>Dir: ' + (d.direccion||'—') + '</p></div>' +
     '<div class="orden-block"><h4>✨ Detalle</h4><p>' +
+    (S.combo ? '<strong>Combo: '+S.combo.nombre+'</strong><br>' : '') +
     (S.fallecido ? '<strong>Fallecido: '+S.fallecido+'</strong><br>' : '') +
     (S.dirigido ? 'Para: <strong>'+S.dirigido+'</strong><br>' : '') +
     (S.firma ? 'De parte de: '+S.firma+'<br>' : '') +
@@ -851,9 +957,8 @@ function renderOrden() {
   });
 }
 
-// ── Confirmar y guardar ─────────────────────────────────────
+// ── Confirmar y guardar ──────────────────────────────────────
 async function confirmarPedido() {
-  // Validar autorización
   var cbDatos = $('cb-autorizo-datos');
   if (cbDatos && !cbDatos.checked) { alert('Debes autorizar el tratamiento de tus datos personales para continuar.'); return; }
 
@@ -912,7 +1017,6 @@ async function confirmarPedido() {
     // 2. Pedido
     var nombreComprador = c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'')+' '+(c.apellidos||'')).trim();
     var d = S.destinatario;
-    // Leer valores de autorización
     var autoData = $('cb-autorizo-datos') ? $('cb-autorizo-datos').checked : false;
     var autoPub  = $('cb-autorizo-publi') ? $('cb-autorizo-publi').checked : false;
 
@@ -957,10 +1061,17 @@ async function confirmarPedido() {
     // 3. Detalle
     if (pedidoId) {
       var lineas = [];
-      if (S.bonos && S.bonos.length) S.bonos.forEach(b => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:b.nombre, cantidad:1, precio_unitario:b.precio, subtotal_linea:b.precio }));
-      else if (S.bono) lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:S.bono.nombre, cantidad:1, precio_unitario:S.bono.precio, subtotal_linea:S.bono.precio });
-      if (S.empaque && S.empaque.precio) lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Empaque', subcategoria:'Empaque', producto:S.empaque.nombre, cantidad:1, precio_unitario:S.empaque.precio, subtotal_linea:S.empaque.precio });
-      S.acompanantes.forEach(a => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Acompañante', subcategoria:a.subcategoria||'', producto:a.nombre, cantidad:1, precio_unitario:a.precio, subtotal_linea:a.precio }));
+      // Si fue combo, registrarlo como una línea
+      if (S.eligioCombo && S.combo) {
+        lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr,
+          categoria:'Combo', subcategoria:S.tipoPedido, producto:S.combo.nombre,
+          cantidad:1, precio_unitario:S.combo.precio, subtotal_linea:S.combo.precio });
+      } else {
+        if (S.bonos && S.bonos.length) S.bonos.forEach(b => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:b.nombre, cantidad:1, precio_unitario:b.precio, subtotal_linea:b.precio }));
+        else if (S.bono) lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:S.bono.nombre, cantidad:1, precio_unitario:S.bono.precio, subtotal_linea:S.bono.precio });
+        if (S.empaque && S.empaque.precio) lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Empaque', subcategoria:'Empaque', producto:S.empaque.nombre, cantidad:1, precio_unitario:S.empaque.precio, subtotal_linea:S.empaque.precio });
+        S.acompanantes.forEach(a => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Acompañante', subcategoria:a.subcategoria||'', producto:a.nombre, cantidad:1, precio_unitario:a.precio, subtotal_linea:a.precio }));
+      }
       S.productosElegidos.forEach(p => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Producto', subcategoria:p.subcategoria||'', producto:p.nombre, cantidad:p.qty||1, precio_unitario:p.precio, subtotal_linea:p.precio*(p.qty||1) }));
       if (S.tipoPedido === 'donacion') lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Donación', subcategoria:'Donación', producto:'Donación', cantidad:1, precio_unitario:S.valorDonacion, subtotal_linea:S.valorDonacion });
       for (var linea of lineas) {
@@ -1036,7 +1147,7 @@ function generarPDF() {
 
 function nuevoPedido() { location.reload(); }
 
-// ── Comprimir imagen ────────────────────────────────────────
+// ── Comprimir imagen ─────────────────────────────────────────
 function comprimirImagen(file, maxKB) {
   return new Promise((resolve) => {
     if (!file.type.startsWith('image/') || file.size <= maxKB * 1024) { resolve(file); return; }
@@ -1065,7 +1176,7 @@ function comprimirImagen(file, maxKB) {
   });
 }
 
-// ── Utilidades UI ───────────────────────────────────────────
+// ── Utilidades UI ────────────────────────────────────────────
 function cc(el, cntId) {
   var c = $(cntId);
   if (c) { c.textContent = el.value.length; c.style.color = el.value.length >= 160 ? 'var(--pink)' : 'var(--ink-lt)'; }
