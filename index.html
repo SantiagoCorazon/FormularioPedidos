@@ -5,193 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Haz tu Pedido — Santiago Corazón</title>
 <meta name="description" content="Apoya a los niños de la Fundación Infantil Santiago Corazón a través de nuestros productos. Haz tu pedido aquí.">
-
-<!-- Open Graph — controla cómo se ve el enlace en WhatsApp, redes sociales y correo -->
 <meta property="og:type"        content="website">
 <meta property="og:url"         content="https://santiagocorazon.github.io/FormularioPedidos/">
 <meta property="og:title"       content="🤍 Haz tu Pedido — Fundación Santiago Corazón">
 <meta property="og:description" content="Apoya a los niños con cardiopatías congénitas. Elige tu bono o producto y haz tu pedido fácilmente.">
 <meta property="og:image"       content="https://santiagocorazon.github.io/FormularioPedidos/preview.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height"content="630">
 <meta property="og:locale"      content="es_CO">
 <meta property="og:site_name"   content="Fundación Infantil Santiago Corazón">
-
-<!-- Twitter / WhatsApp fallback -->
 <meta name="twitter:card"        content="summary_large_image">
 <meta name="twitter:title"       content="🤍 Haz tu Pedido — Fundación Santiago Corazón">
 <meta name="twitter:description" content="Apoya a los niños con cardiopatías congénitas. Elige tu bono o producto y haz tu pedido fácilmente.">
 <meta name="twitter:image"       content="https://santiagocorazon.github.io/FormularioPedidos/preview.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --pink:#E8176B;--pink-dk:#C4105A;--pink-lt:#FDE8F2;
-  --ink:#1A0A10;--ink-mid:#5A3A48;--ink-lt:#9A7A88;
-  --border:#F0D8E4;--cream:#FDF8FB;--white:#fff;
-  --shadow:0 4px 24px rgba(232,23,107,.10);--radius:12px;
-  --font:'Poppins',Arial,sans-serif;
-}
-body{background:var(--cream);font-family:var(--font);color:var(--ink);min-height:100vh;padding-bottom:100px}
-header{background:var(--white);border-bottom:2px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(232,23,107,.08)}
-.header-logo{height:46px;width:auto}
-.header-right{font-size:.85rem;color:var(--ink-mid);text-align:right;line-height:1.4}
-.header-right strong{color:var(--pink);display:block}
-.progress-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:none}
-.progress-steps{display:flex;max-width:900px;margin:0 auto;overflow-x:auto}
-.ps{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 6px;position:relative;min-width:60px}
-.ps:not(:last-child)::after{content:'';position:absolute;top:18px;left:55%;width:90%;height:2px;background:var(--border);z-index:0}
-.ps.done:not(:last-child)::after{background:var(--pink)}
-.ps-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:var(--ink-lt);position:relative;z-index:1;transition:all .3s;margin-bottom:4px}
-.ps.active .ps-dot{border-color:var(--pink);background:var(--pink);color:var(--white)}
-.ps.done .ps-dot{border-color:var(--pink);background:var(--pink);color:var(--white)}
-.ps-label{font-size:.58rem;color:var(--ink-lt);text-align:center;font-weight:500;text-transform:uppercase;letter-spacing:.03em;line-height:1.3}
-.ps.active .ps-label{color:var(--pink);font-weight:600}
-.ps.done .ps-label{color:var(--ink-mid)}
-.container{max-width:900px;margin:0 auto;padding:0 16px 24px}
-.section{display:none}
-.section.active{display:block;animation:fadeUp .3s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px;margin-top:20px}
-.step-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--pink);font-weight:600;margin-bottom:4px}
-.section-title{font-size:1.4rem;font-weight:600;color:var(--ink);margin-bottom:4px}
-.section-title em{color:var(--pink);font-style:normal}
-.section-sub{font-size:.83rem;color:var(--ink-lt);margin-bottom:20px;line-height:1.6}
-/* TIPO PEDIDO */
-.tipo-pedido-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px}
-.tipo-pedido-card{border:2px solid var(--border);border-radius:var(--radius);padding:20px 14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s}
-.tipo-pedido-card:hover{border-color:var(--pink);box-shadow:0 4px 16px rgba(232,23,107,.12);transform:translateY(-2px)}
-.tipo-pedido-card.sel{border-color:var(--pink);background:var(--pink-lt)}
-.tipo-pedido-icon{font-size:2rem;margin-bottom:8px}
-.tipo-pedido-name{font-size:.88rem;font-weight:600;color:var(--ink)}
-.tipo-pedido-desc{font-size:.72rem;color:var(--ink-lt);margin-top:3px;line-height:1.4}
-/* CANAL */
-.canal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:420px;margin:0 auto 20px}
-.canal-card{border:2px solid var(--border);border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s}
-.canal-card:hover{border-color:var(--pink)}
-.canal-card.sel{border-color:var(--pink);background:var(--pink-lt)}
-.canal-icon{font-size:1.5rem;margin-bottom:4px}
-.canal-name{font-size:.75rem;font-weight:500;color:var(--ink);line-height:1.3}
-/* FORM */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.col-full{grid-column:1/-1}
-.field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
-.field:last-child{margin-bottom:0}
-label{font-size:.72rem;font-weight:600;color:var(--ink-mid);letter-spacing:.05em;text-transform:uppercase}
-label .req{color:var(--pink);margin-left:2px}
-input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.88rem;color:var(--ink);background:var(--cream);transition:all .2s;outline:none}
-input:focus,select:focus,textarea:focus{border-color:var(--pink);background:var(--white);box-shadow:0 0 0 3px rgba(232,23,107,.08)}
-textarea{resize:vertical;min-height:80px}
-.char-count{text-align:right;font-size:.7rem;color:var(--ink-lt);margin-top:3px}
-.buscar-row{display:flex;gap:10px;align-items:flex-end;margin-bottom:14px}
-.buscar-row .field{flex:1;margin-bottom:0}
-.btn-buscar{background:var(--ink);color:var(--white);padding:11px 20px;border-radius:8px;border:none;font-family:var(--font);font-size:.85rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .2s;flex-shrink:0}
-.btn-buscar:hover{background:var(--pink)}
-.status{padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:14px;display:none;align-items:center;gap:8px}
-.status.found{background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;display:flex}
-.status.notfound{background:#fff8e1;border:1px solid #ffe082;color:#f57f17;display:flex}
-hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
-.sub-title{font-size:1rem;font-weight:600;color:var(--pink);margin-bottom:14px}
-/* TARJETAS COLOR */
-.tarjeta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:14px}
-.tarjeta-card{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--white)}
-.tarjeta-card:hover{border-color:var(--pink);box-shadow:0 4px 12px rgba(232,23,107,.15)}
-.tarjeta-card.sel{border-color:var(--pink);box-shadow:0 4px 16px rgba(232,23,107,.25)}
-.tarjeta-card img{width:100%;height:110px;object-fit:cover}
-.tarjeta-info{padding:8px 10px}
-.tarjeta-frase{font-size:.78rem;font-weight:500;color:var(--ink);line-height:1.3}
-.tarjeta-color{font-size:.7rem;color:var(--ink-lt);margin-top:2px}
-.tarjeta-card.sel .tarjeta-frase{color:var(--pink)}
-/* PRODUCTOS del catálogo */
-.cat-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.cat-tab{padding:7px 16px;border-radius:24px;border:2px solid var(--border);background:var(--white);font-size:.8rem;font-weight:500;cursor:pointer;color:var(--ink-mid);transition:all .2s}
-.cat-tab.active{background:var(--pink);border-color:var(--pink);color:var(--white)}
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;max-height:420px;overflow-y:auto;margin-bottom:14px}
-.prod-card{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--white);position:relative}
-.prod-card:hover{border-color:var(--pink)}
-.prod-card.sel{border-color:var(--pink);background:var(--pink-lt)}
-.prod-card.sel::after{content:"✓";position:absolute;top:6px;right:6px;width:22px;height:22px;background:var(--pink);color:white;border-radius:50%;font-size:.65rem;display:flex;align-items:center;justify-content:center}
-.prod-card img{width:100%;height:120px;object-fit:cover}
-.prod-info{padding:8px 10px}
-.prod-nombre{font-size:.75rem;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:3px}
-.prod-precio{font-size:.8rem;color:var(--pink);font-weight:600}
-/* ENVIO */
-.envio-item{border:2px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--white);transition:all .2s}
-.envio-item:hover{border-color:var(--pink)}
-.envio-item.sel{border-color:var(--pink);background:var(--pink-lt)}
-.envio-label{font-size:.85rem;color:var(--ink);font-weight:500}
-.envio-precio{font-size:.92rem;font-weight:600;white-space:nowrap;margin-left:14px}
-/* ORDEN */
-.orden-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-top:16px}
-.orden-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--border);margin-bottom:20px}
-.orden-logo{height:38px;width:auto}
-.orden-num{text-align:right;font-size:.8rem;color:var(--ink-mid)}
-.orden-num strong{display:block;font-size:1rem;color:var(--pink);font-weight:600}
-.orden-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-.orden-block h4{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--pink);margin-bottom:8px;font-weight:600}
-.orden-block p{font-size:.82rem;color:var(--ink-mid);line-height:1.7}
-.orden-block p strong{color:var(--ink)}
-.orden-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:14px}
-.orden-table th{background:var(--cream);padding:8px 10px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mid);border-bottom:1px solid var(--border)}
-.orden-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--ink)}
-.orden-totals{margin-left:auto;width:220px}
-.orden-total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:.82rem;color:var(--ink-mid)}
-.orden-total-row.grand{font-weight:700;color:var(--pink);font-size:1rem;border-top:1.5px solid var(--border);padding-top:8px;margin-top:4px}
-.mensaje-box{background:var(--pink-lt);border-left:3px solid var(--pink);padding:12px 16px;border-radius:0 8px 8px 0;font-size:.85rem;color:var(--ink-mid);margin:14px 0;font-style:italic}
-.notas-box{background:var(--cream);border-left:3px solid var(--border);padding:10px 14px;border-radius:0 8px 8px 0;font-size:.82rem;color:var(--ink-mid);margin:10px 0}
-/* TOTAL BAR */
-.total-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:2px solid var(--border);padding:12px 24px;display:none;justify-content:space-between;align-items:center;z-index:200;box-shadow:0 -4px 16px rgba(232,23,107,.08)}
-.total-label{font-size:.74rem;color:var(--ink-lt);margin-bottom:2px}
-.total-amount{font-size:1.25rem;font-weight:700;color:var(--pink)}
-.btn-row{display:flex;gap:10px;align-items:center}
-.btn{padding:11px 24px;border-radius:8px;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:all .2s}
-.btn-primary{background:var(--pink);color:var(--white)}
-.btn-primary:hover{background:var(--pink-dk);transform:translateY(-1px)}
-.btn-secondary{background:var(--white);color:var(--ink-mid);border:1.5px solid var(--border)}
-.btn-secondary:hover{border-color:var(--ink-mid)}
-.btn-skip{background:none;border:none;color:var(--ink-lt);font-size:.8rem;cursor:pointer;text-decoration:underline;font-family:var(--font)}
-/* LOADING */
-.loading-overlay{display:none;position:fixed;inset:0;background:rgba(26,10,16,.45);z-index:999;align-items:center;justify-content:center}
-.loading-overlay.show{display:flex}
-.loading-box{background:var(--white);border-radius:12px;padding:24px 32px;text-align:center;font-size:.88rem;color:var(--ink-mid)}
-.spinner{width:34px;height:34px;border:3px solid var(--pink-lt);border-top-color:var(--pink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* SUCCESS */
-.success-section{display:none;text-align:center;padding:60px 20px}
-.success-section.show{display:block}
-.success-heart{font-size:3.5rem;animation:hb 1.2s ease infinite}
-@keyframes hb{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.12)}}
-.success-title{font-size:2rem;font-weight:700;color:var(--pink);margin:14px 0 6px}
-.order-badge{display:inline-block;background:var(--pink-lt);border:2px solid var(--pink);color:var(--pink);padding:5px 20px;border-radius:20px;font-weight:600;font-size:.95rem;margin:12px 0}
-/* DONACION */
-.donacion-info{background:var(--pink-lt);border-radius:10px;padding:16px 20px;font-size:.87rem;color:var(--ink-mid);border:1.5px solid var(--pink);margin-bottom:16px}
-/* COMPROBANTE */
-.comp-label{display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;background:var(--cream);transition:all .2s}
-.comp-label:hover{border-color:var(--pink)}
-.comp-preview{display:none;margin-top:8px;padding:9px 12px;background:var(--cream);border-radius:8px;align-items:center;gap:8px;font-size:.82rem;color:var(--ink-mid)}
-.virtual-alert{background:#fff3e0;border:1.5px solid #ffb300;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.83rem;color:#e65100;display:none}
-/* SELECCIÓN RESUMEN */
-.sel-resumen{background:var(--pink-lt);border-radius:8px;padding:10px 14px;font-size:.83rem;color:var(--ink-mid);margin-top:8px;display:none}
-.sel-resumen strong{color:var(--pink)}
-@media(max-width:600px){
-  header{padding:10px 14px}
-  .card{padding:18px 14px}
-  .grid-2{grid-template-columns:1fr}
-  .tipo-pedido-grid{grid-template-columns:1fr 1fr}
-  .orden-grid{grid-template-columns:1fr}
-  .orden-totals{width:100%}
-  .total-bar{padding:10px 14px}
-}
-@media print{
-  header,.progress-wrap,.total-bar,.no-print{display:none!important}
-  .section{display:block!important}
-  .section:not(#sec-orden){display:none!important}
-  .card{box-shadow:none}
-  body{background:white}
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -210,13 +37,14 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 
 <div class="container">
 
-<!-- SEC 0: TIPO DE PEDIDO -->
+<!-- ══ SEC 0: TIPO DE PEDIDO ══════════════════════════════ -->
 <div class="section active" id="sec-0">
   <div class="card" style="text-align:center">
     <div class="section-title" style="margin-bottom:6px;color:var(--pink)">¡Bienvenido! ❤️</div>
-    <div style="font-size:.97rem;color:var(--ink-mid);margin-bottom:8px;font-weight:400;line-height:1.6">Gracias por apoyar a nuestros niños a través de nuestros productos.</div>
-    <div style="text-align:center;font-size:1.18rem;font-weight:700;margin-bottom:8px">¿<span style="color:var(--pink)">Qué</span> <span style="color:#111">buscas</span> <span style="color:var(--pink)">hoy</span>?</div><div class="section-sub">Para comenzar, selecciona el tipo de pedido que deseas, luego baja para elegir desde dónde compras y presiona <strong>Continuar</strong> ↓</div>
-    <div class="tipo-pedido-grid" style="max-width:700px;margin:0 auto 20px">
+    <div style="font-size:.97rem;color:var(--ink-mid);margin-bottom:8px;line-height:1.6">Gracias por apoyar a nuestros niños a través de nuestros productos.</div>
+    <div style="font-size:1.18rem;font-weight:700;margin-bottom:8px">¿<span style="color:var(--pink)">Qué</span> buscas <span style="color:var(--pink)">hoy</span>?</div>
+    <div class="section-sub">Para comenzar, selecciona el tipo de pedido que deseas, luego elige desde dónde compras y presiona <strong>Continuar</strong> ↓</div>
+    <div class="tipo-pedido-grid" style="max-width:760px;margin:0 auto 20px">
       <div class="tipo-pedido-card" onclick="selTipoPedido('pesame')">
         <div class="tipo-pedido-icon">🕊</div>
         <div class="tipo-pedido-name">Bono de Pésame</div>
@@ -242,6 +70,21 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
         <div class="tipo-pedido-name">Donación</div>
         <div class="tipo-pedido-desc">Apoya directamente a los niños con cardiopatías</div>
       </div>
+      <div class="tipo-pedido-card" onclick="selTipoPedido('campana')">
+        <div class="tipo-pedido-icon">🎉</div>
+        <div class="tipo-pedido-name">Campaña</div>
+        <div class="tipo-pedido-desc" id="desc-campana">Productos de campaña activa</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selTipoPedido('evento')">
+        <div class="tipo-pedido-icon">📅</div>
+        <div class="tipo-pedido-name">Evento</div>
+        <div class="tipo-pedido-desc" id="desc-evento">Productos de evento especial</div>
+      </div>
+      <div class="tipo-pedido-card" id="btn-temporada" style="display:none" onclick="selTipoPedido('temporada')">
+        <div class="tipo-pedido-icon" id="icon-temporada">🎄</div>
+        <div class="tipo-pedido-name" id="name-temporada">Temporada</div>
+        <div class="tipo-pedido-desc" id="desc-temporada">Productos de temporada</div>
+      </div>
     </div>
     <div style="font-size:.8rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">¿Desde dónde haces tu pedido?</div>
     <div class="canal-grid">
@@ -262,12 +105,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 1: QUIÉN COMPRA (igual para todos) -->
+<!-- ══ SEC 1: QUIÉN COMPRA ════════════════════════════════ -->
 <div class="section" id="sec-1">
   <div class="card">
     <div class="step-label" id="sl-1">Paso 1</div>
     <div class="section-title">¿Quién <em>compra</em>?</div>
-    <div class="section-sub">Ingresa tu documento — si ya estás registrado, tus datos se cargarán automáticamente. Por favor actualiza cualquier información que haya cambiado.</div>
+    <div class="section-sub">Ingresa tu documento — si ya estás registrado, tus datos se cargarán automáticamente.</div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
       <button onclick="selTipoCliente('Personal')" id="btn-personal" class="btn btn-primary" style="flex:1;font-size:.8rem">👤 Persona</button>
       <button onclick="selTipoCliente('Empresa')" id="btn-empresa" class="btn btn-secondary" style="flex:1;font-size:.8rem">🏢 Empresa</button>
@@ -312,7 +155,6 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
         <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="e_ciudad" placeholder="Medellín"></div>
         <div class="field"><label>Departamento</label><input type="text" id="e_departamento" placeholder="Antioquia"></div>
         <div class="field col-full"><label>Correo para factura electrónica <span class="req">*</span></label><input type="email" id="e_correo_factura" placeholder="facturacion@empresa.com"></div>
-        <hr class="div col-full" style="grid-column:1/-1">
         <div class="field"><label>Nombre de quien hace el pedido <span class="req">*</span></label><input type="text" id="e_contacto" placeholder="Nombre completo"></div>
         <div class="field"><label>Celular / WhatsApp <span class="req">*</span></label><input type="tel" id="e_telefono" placeholder="3001234567"></div>
         <div class="field col-full"><label>Correo de contacto <span class="req">*</span></label><input type="email" id="e_correo_contacto" placeholder="contacto@empresa.com"></div>
@@ -321,13 +163,12 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 2: QUIÉN RECIBE -->
+<!-- ══ SEC 2: QUIÉN RECIBE ════════════════════════════════ -->
 <div class="section" id="sec-2">
   <div class="card">
     <div class="step-label" id="sl-2">Paso 2</div>
     <div class="section-title">¿Quién <em>recibe</em>?</div>
-    <div class="section-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega. Si el destinatario eres tú mismo, marca la casilla de abajo.</div>
-    <div class="virtual-alert" id="aviso-virtual">🌐 <strong>Bono Virtual</strong> — Este bono se envía por email o WhatsApp al destinatario. No requiere dirección física de entrega. Solo necesitas el correo o número de WhatsApp.</div>
+    <div class="section-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega.</div>
     <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;cursor:pointer;background:var(--white)">
       <input type="checkbox" id="mismoComprador" onchange="toggleMismo(this)" style="width:auto;accent-color:var(--pink)">
       <span style="font-size:.85rem;color:var(--ink-mid)">El destinatario soy yo mismo</span>
@@ -337,8 +178,18 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
         <div class="field"><label>Nombres <span class="req">*</span></label><input type="text" id="d_nombres" placeholder="Nombres"></div>
         <div class="field"><label>Apellidos</label><input type="text" id="d_apellidos" placeholder="Apellidos"></div>
         <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="d_celular" placeholder="3001234567"></div>
-        <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="d_ciudad" placeholder="Medellín"></div>
-        <div class="field col-full"><label>Municipio / Barrio <span class="req">*</span></label><input type="text" id="d_municipio" placeholder="El Poblado, Bello..."></div>
+        <div class="field">
+          <label>Departamento <span class="req">*</span></label>
+          <select id="d_departamento" onchange="cargarMunicipios()">
+            <option value="">Selecciona departamento...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ciudad / Municipio <span class="req">*</span></label>
+          <select id="d_ciudad">
+            <option value="">Primero selecciona departamento...</option>
+          </select>
+        </div>
         <div class="field col-full" id="field-dir"><label>Dirección de entrega <span class="req">*</span></label><input type="text" id="d_direccion" placeholder="Cra 45 # 23-10, Apto 301"></div>
         <div class="field col-full" id="field-ref"><label>Referencia o indicaciones</label><input type="text" id="d_referencia" placeholder="Frente al parque, edificio azul..."></div>
       </div>
@@ -346,86 +197,52 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 3A: INFO PÉSAME -->
+<!-- ══ SEC 3A: INFO PÉSAME ════════════════════════════════ -->
 <div class="section" id="sec-3-pesame">
   <div class="card">
     <div class="step-label" id="sl-3">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Pésame</em></div>
-    <div class="section-sub">Completa los datos para personalizar el bono de pésame. El nombre del fallecido y el del destinatario los escribiremos a mano en caligrafía en el bono.</div>
+    <div class="section-sub">El nombre del fallecido y el del destinatario los escribiremos a mano en caligrafía en el bono.</div>
     <div class="grid-2">
       <div class="field"><label>Nombre del fallecido <span class="req">*</span></label><input type="text" id="p_fallecido" placeholder="Nombre completo"></div>
       <div class="field"><label>Para quién va dirigido el bono <span class="req">*</span></label><input type="text" id="p_dirigido" placeholder="Familia García, la señora Ana..."></div>
-
     </div>
     <hr class="div">
-    <div class="sub-title">Color de tarjeta preimpresa</div>
-    <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Cada color lleva una frase preimpresa diferente.</div>
-    <div class="tarjeta-grid">
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Rosa Profundo - Un abrazo de corazón','pesame')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-rosa-profundo.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Un abrazo de corazón</div><div class="tarjeta-color">Rosa Profundo</div></div>
-      </div>
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Amarillo Trigo - Todo el afecto en un abrazo','pesame')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-amarillo-trigo.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Todo el afecto en un abrazo</div><div class="tarjeta-color">Amarillo Trigo</div></div>
-      </div>
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Verde Oliva - Y luego del invierno llegará la primavera','pesame')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-verde-oliva.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Y luego del invierno llegará la primavera</div><div class="tarjeta-color">Verde Oliva</div></div>
-      </div>
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Azul Índigo - Sentidas condolencias','pesame')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-azul-indigo.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Sentidas condolencias</div><div class="tarjeta-color">Azul Índigo</div></div>
-      </div>
-    </div>
+    <div class="sub-title">Selecciona el color de tu tarjeta ↓</div>
+    <div class="tarjeta-grid" id="tarjeta-grid-pesame"></div>
     <hr class="div">
-    <div class="field"><label>¿Quién(es) envía(n) el bono?</label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
-    <div class="sub-title">📝 Notas adicionales a tu pedido</div>
-    <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
-      <textarea id="p_mensaje_pesame" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
+    <div class="field"><label>¿Quién(es) envía(n) el bono? <span class="req">*</span></label><input type="text" id="p_firma_pesame" placeholder="Tu amigo Carlos, La empresa XYZ..."></div>
+    <div class="sub-title">📝 Notas adicionales</div>
+    <div class="field">
+      <textarea id="p_mensaje_pesame" placeholder="Instrucciones especiales, indicaciones de entrega..." maxlength="170" oninput="cc(this,'cnt_mp')"></textarea>
       <div class="char-count"><span id="cnt_mp">0</span>/170</div>
     </div>
   </div>
 </div>
 
-<!-- SEC 3B: INFO TODA OCASIÓN -->
+<!-- ══ SEC 3B: INFO TODA OCASIÓN ═════════════════════════ -->
 <div class="section" id="sec-3-toda">
   <div class="card">
     <div class="step-label">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Toda Ocasión</em></div>
-    <div class="section-sub">Completa los datos para personalizar el bono. El nombre del destinatario se escribe a mano en caligrafía en la tarjeta.</div>
+    <div class="section-sub">El nombre del destinatario se escribe a mano en caligrafía en la tarjeta.</div>
     <div class="grid-2">
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="t_dirigido" placeholder="María, el equipo de ventas..."></div>
-
     </div>
     <hr class="div">
-    <div class="sub-title">Color de tarjeta preimpresa</div>
-    <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Cada color lleva una frase preimpresa diferente.</div>
-    <div class="tarjeta-grid">
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Esmeralda','toda')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-esmeralda.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Esmeralda</div></div>
-      </div>
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Marfil','toda')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-marfil.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Marfil</div></div>
-      </div>
-      <div class="tarjeta-card" onclick="selTarjeta(this,'Salmón','toda')">
-        <img src="https://santiagocorazon.github.io/FormularioPedidos/tarjeta-salmon.jpg" onerror="this.style.display='none'">
-        <div class="tarjeta-info"><div class="tarjeta-frase">Salmón</div></div>
-      </div>
-    </div>
+    <div class="sub-title">Selecciona el color de tu tarjeta ↓</div>
+    <div class="tarjeta-grid" id="tarjeta-grid-toda"></div>
     <hr class="div">
-    <div class="field"><label>¿Quién(es) envía(n) el bono?</label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
-    <div class="sub-title">📝 Notas adicionales a tu pedido</div>
-    <div class="field"><label>Notas <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(instrucciones especiales, indicaciones de entrega, etc.)</span></label>
-      <textarea id="t_mensaje" placeholder="Escribe aquí cualquier instrucción adicional para tu pedido..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
+    <div class="field"><label>¿Quién(es) envía(n) el bono? <span class="req">*</span></label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
+    <div class="sub-title">📝 Notas adicionales</div>
+    <div class="field">
+      <textarea id="t_mensaje" placeholder="Instrucciones especiales..." maxlength="170" oninput="cc(this,'cnt_mt')"></textarea>
       <div class="char-count"><span id="cnt_mt">0</span>/170</div>
     </div>
   </div>
 </div>
 
-<!-- SEC 3C: INFO PRODUCTO SOLO -->
+<!-- ══ SEC 3C: INFO PRODUCTO ══════════════════════════════ -->
 <div class="section" id="sec-3-producto">
   <div class="card">
     <div class="step-label">Paso 3</div>
@@ -447,7 +264,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 3D: DONACIÓN -->
+<!-- ══ SEC 3D: DONACIÓN ═══════════════════════════════════ -->
 <div class="section" id="sec-3-donacion">
   <div class="card">
     <div class="step-label">Paso 3</div>
@@ -459,18 +276,14 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
         <option value="">— Cargando campañas... —</option>
       </select>
     </div>
-    <!-- Sección dinero -->
     <div id="sec-donacion-dinero" class="field">
       <label>Valor de la donación <span class="req">*</span></label>
       <input type="number" id="p_valor_donacion" placeholder="Ej: 50000" min="0" oninput="actualizarTotal()">
     </div>
-
-    <!-- Sección productos de campaña -->
     <div id="sec-donacion-productos" style="display:none">
       <div style="font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:10px">Elige los productos que deseas donar:</div>
       <div class="prod-grid" id="grid-donacion-productos"></div>
     </div>
-
     <div class="field"><label>Notas (opcional)</label>
       <textarea id="p_notas_donacion" placeholder="¿Hay algo que quieras indicarnos?" maxlength="170" oninput="cc(this,'cnt_nd')"></textarea>
       <div class="char-count"><span id="cnt_nd">0</span>/170</div>
@@ -478,37 +291,29 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC 4: BONO + EMPAQUE en una sola pantalla -->
+<!-- ══ SEC 4: PRESENTACIÓN ════════════════════════════════ -->
 <div class="section" id="sec-4-bono">
   <div class="card">
     <div class="step-label" id="sl-4b">Paso 4</div>
-    <div class="section-title">Elige el <em>tipo de bono</em></div>
-    <div class="section-sub" id="sec4b-sub">El bono <strong>Virtual</strong> ($78.000) se envía por email o WhatsApp. El bono <strong>Plegable</strong> es físico — más abajo encontrarás dónde elegir su empaque y si deseas, con qué acompañarlo.</div>
+    <div class="section-title">Elige la <em>presentación</em></div>
+    <div class="section-sub" id="sec4b-sub">Elige cómo quieres presentar tu bono: Plegable Con Moño (sin costo adicional), Bolsa Tela De Organza o Caja.</div>
     <div class="prod-grid" id="bonoGrid"></div>
     <div class="sel-resumen" id="bono-sel-resumen">✓ Seleccionado: <strong id="bono-sel-nombre"></strong> — <span id="bono-sel-precio"></span></div>
   </div>
-  <!-- Empaque aparece debajo cuando elige bono plegable -->
   <div class="card" id="card-empaque" style="display:none;margin-top:16px">
-    <div class="section-title">Elige el <em>empaque</em></div>
-    <div class="section-sub">Elige cómo quieres presentar tu bono: Plegable Con Moño (sin costo adicional), Bolsa Tela De Organza o Caja. El Virtual se envía por email o WhatsApp.</div>
+    <div class="section-title">Elige la <em>presentación</em></div>
+    <div class="section-sub">Elige cómo quieres presentar tu bono: Plegable Con Moño (sin costo adicional), Bolsa Tela De Organza o Caja.</div>
     <div class="prod-grid" id="empaqueGrid"></div>
     <div class="sel-resumen" id="emp-sel-resumen">✓ Seleccionado: <strong id="emp-sel-nombre"></strong> — <span id="emp-sel-precio"></span></div>
   </div>
 </div>
 
-<!-- SEC 5: EMPAQUE — ya no se usa como pantalla separada -->
-<div class="section" id="sec-5-empaque" style="display:none!important">
-  <div class="card">
-    <div class="prod-grid" id="empaqueGridOld"></div>
-  </div>
-</div>
-
-<!-- SEC 4/5/6: PRODUCTOS (para producto solo y empresarial) -->
+<!-- ══ SEC PRODUCTOS ══════════════════════════════════════ -->
 <div class="section" id="sec-productos">
   <div class="card">
     <div class="step-label" id="sl-prod">Paso 4</div>
     <div class="section-title">Elige tus <em>productos</em></div>
-    <div class="section-sub">Elige uno o varios artículos. Al seleccionar un producto puedes ingresar la cantidad directamente.</div>
+    <div class="section-sub">Elige uno o varios artículos. Al seleccionar un producto puedes ingresar la cantidad.</div>
     <div class="cat-tabs" id="prodTabs"></div>
     <div class="prod-grid" id="prodGrid"></div>
     <div class="sel-resumen" id="prod-sel-resumen" style="display:block;margin-top:8px">
@@ -517,39 +322,89 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<!-- SEC ACOMPAÑANTE (opcional) -->
+<!-- ══ SEC ACOMPAÑANTE ════════════════════════════════════ -->
 <div class="section" id="sec-acompanante">
   <div class="card">
     <div class="step-label" id="sl-ac">Paso 5</div>
     <div class="section-title">¿Quieres un <em>acompañante</em>? <span style="font-size:.75rem;color:var(--ink-lt);font-weight:400">(opcional)</span></div>
-    <div class="section-sub">Complementa el bono con un detalle especial. Puedes elegir uno o varios. Este paso es opcional — si no quieres acompañante presiona <strong>Saltar este paso</strong>.</div>
+    <div class="section-sub">Complementa el bono con un detalle especial. Este paso es opcional — si no quieres acompañante presiona <strong>Saltar este paso</strong>.</div>
     <div class="cat-tabs" id="acompTabs"></div>
     <div class="prod-grid" id="acompGrid"></div>
     <div class="sel-resumen" id="acomp-sel-resumen">✓ Seleccionados: <strong id="acomp-sel-nombres"></strong> — <span id="acomp-sel-total"></span></div>
   </div>
 </div>
 
-<!-- SEC ENVÍO -->
+<!-- ══ SEC CAMPAÑA ════════════════════════════════════════ -->
+<div class="section" id="sec-productos-campana">
+  <div class="card">
+    <div class="step-label">Paso 3</div>
+    <div class="section-title">Elige tu <em>Campaña</em></div>
+    <div class="section-sub">Selecciona la campaña a la que quieres contribuir.</div>
+    <div id="sec-prod-campana-content"><div style="color:var(--ink-lt)">Cargando campañas...</div></div>
+  </div>
+</div>
+
+<!-- ══ SEC EVENTO ═════════════════════════════════════════ -->
+<div class="section" id="sec-productos-evento">
+  <div class="card">
+    <div class="step-label">Paso 3</div>
+    <div class="section-title">Elige tu <em>Evento</em></div>
+    <div class="section-sub">Selecciona el evento al que deseas asistir o comprar.</div>
+    <div id="sec-prod-evento-content"><div style="color:var(--ink-lt)">Cargando eventos...</div></div>
+  </div>
+</div>
+
+<!-- ══ SEC TEMPORADA ══════════════════════════════════════ -->
+<div class="section" id="sec-productos-temporada">
+  <div class="card">
+    <div class="step-label">Paso 3</div>
+    <div class="section-title" id="temporada-sec-title">Productos de <em>Temporada</em></div>
+    <div class="section-sub">Elige uno o varios productos de esta temporada especial.</div>
+    <div id="sec-prod-temporada-content"><div style="color:var(--ink-lt)">Cargando productos...</div></div>
+    <div class="sel-resumen" id="temp-sel-resumen" style="display:block;margin-top:8px">
+      <span id="temp-sel-txt">No has seleccionado ningún producto todavía.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEC ENVÍO ══════════════════════════════════════════ -->
 <div class="section" id="sec-envio">
   <div class="card">
     <div class="step-label" id="sl-env">Paso 6</div>
     <div class="section-title">Método de <em>envío</em></div>
-    <div class="section-sub">Selecciona el método de envío según la zona del destinatario. Los tiempos indicados son días hábiles. Nuestra tienda está abierta de lunes a jueves de 8:00 a.m. a 6:00 p.m. y los viernes de 8:00 a.m. a 5:00 p.m. Los pedidos recibidos fuera de estas horas se gestionan una vez abramos.</div>
+    <div class="section-sub">Selecciona el método de envío según la zona del destinatario. Nuestra tienda está abierta lunes a jueves 8 a.m.–6 p.m. y viernes 8 a.m.–5 p.m.</div>
     <div id="envioOpts"></div>
   </div>
 </div>
 
-<!-- SEC ORDEN FINAL -->
+<!-- ══ SEC ORDEN FINAL ════════════════════════════════════ -->
 <div class="section" id="sec-orden">
   <div class="card no-print">
     <div class="step-label">Último paso</div>
     <div class="section-title">Revisión <em>final</em></div>
+
+    <!-- DATOS DE PAGO -->
+    <div class="pago-info">
+      <div class="pago-info-title">💳 Cómo pagar</div>
+      <div class="pago-datos">
+        <div class="pago-dato"><strong>Bancolombia Ahorros</strong>Fundación Santiago Corazón</div>
+        <div class="pago-dato"><strong>Cuenta # 10277548904</strong>NIT: 800039776-8</div>
+      </div>
+      <div style="font-size:.82rem;color:var(--ink-mid);margin-bottom:10px">También puedes pagar directamente con tu app de Bancolombia usando nuestra Llave Bre-B:</div>
+      <div class="pago-qr">
+        <img src="https://santiagocorazon.github.io/FormularioPedidos/QR_pago.png" alt="QR Pago Bancolombia" onerror="this.style.display='none'">
+        <div class="pago-llave">Llave: @llavesc</div>
+        <div class="pago-nota">Recuerda compartirnos el comprobante para relacionarlo con tu solicitud.</div>
+      </div>
+    </div>
+
     <div class="grid-2">
       <div class="field"><label>Método de pago</label>
         <select id="metodoPago">
           <option value="">— Selecciona —</option>
           <option>Efectivo en tienda</option>
-          <option>Transferencia / PSE</option>
+          <option>Bancolombia Ahorros</option>
+          <option>Llave Bre-B / @llavesc</option>
           <option>Nequi / Daviplata</option>
           <option>Tarjeta crédito / débito</option>
           <option>Pendiente de pago</option>
@@ -557,6 +412,7 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
       </div>
       <div class="field"><label>Atendido por</label><input type="text" id="atendidoPor" placeholder="Quien registra el pedido"></div>
     </div>
+
     <div class="field" style="margin-top:6px">
       <label>Comprobante de pago <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(opcional)</span></label>
       <label for="comprobanteFile" class="comp-label" id="compLabel">
@@ -570,11 +426,32 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
         <button onclick="quitarComp()" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--ink-lt);font-size:.78rem">✕</button>
       </div>
     </div>
+
+    <!-- AUTORIZACIÓN DE DATOS -->
+    <div class="autorizacion-wrap">
+      <div style="font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:10px">Autorización de datos personales</div>
+      <label>
+        <input type="checkbox" id="cb-autorizo-datos">
+        <span>Autorizo a la <strong>Fundación Infantil Santiago Corazón</strong> para recolectar, almacenar y tratar mis datos personales conforme a la
+        <a href="https://www.santiagocorazon.org/politica-de-privacidad" target="_blank">Política de Tratamiento de Datos Personales</a>
+        (Ley 1581 de 2012). <strong style="color:var(--pink)">*</strong></span>
+      </label>
+      <label>
+        <input type="checkbox" id="cb-autorizo-publi">
+        <span>Acepto recibir información comercial, campañas y comunicaciones de la Fundación por correo electrónico y WhatsApp.</span>
+      </label>
+      <div class="politica-texto">
+        Conforme al Manual de Política de Tratamiento de Datos Personales (Versión 2017.01), sus datos serán usados para gestionar su pedido, enviarle información relevante y mejorar nuestros servicios.
+        Sus datos no serán vendidos ni compartidos con terceros sin su autorización expresa. Puede revocar su autorización en cualquier momento escribiendo a
+        <a href="mailto:comunicaciones@santiagocorazon.org">comunicaciones@santiagocorazon.org</a>.
+        Consulte la política completa en <a href="https://www.santiagocorazon.org" target="_blank">www.santiagocorazon.org</a>.
+      </div>
+    </div>
   </div>
   <div class="orden-wrap" id="ordenPrint"></div>
 </div>
 
-<!-- SUCCESS -->
+<!-- ══ SUCCESS ════════════════════════════════════════════ -->
 <div class="success-section" id="successSection">
   <div class="success-heart">❤️</div>
   <div class="success-title">¡Pedido registrado!</div>
@@ -597,1138 +474,6 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
   </div>
 </div>
 
-<script>
-// ============================================================
-// CONFIGURACIÓN SUPABASE
-// ============================================================
-const SUPABASE_URL = 'https://sbhbcgxmxnxyfuzggegj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNiaGJjZ3hteG54eWZ1emdnZWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTI5MDEsImV4cCI6MjA5NDk2ODkwMX0.VgRnvGvKZzKJdAJ4hS4TzEZ9N79ckgHO_LjhdGgiqsc';
-
-const fmt = n => '$ ' + Math.max(0,Number(n)).toLocaleString('es-CO');
-const $ = id => document.getElementById(id);
-const today = () => new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
-const newOrderNum = () => 'SC-' + Date.now().toString().slice(-7);
-let orderNum = newOrderNum();
-
-// ============================================================
-// CATÁLOGO desde Supabase
-// ============================================================
-let CATALOGO = {};  // se carga al inicio
-
-async function cargarCatalogo() {
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?activo=eq.true&order=orden.asc`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    // Organizar por tipo
-    CATALOGO = {
-      bonos_base:   data.filter(p => p.tipo === 'bono_base' && p.es_bono),
-      empaques:     data.filter(p => p.tipo === 'empaque' && !p.es_bono),
-      acompanantes: data.filter(p => p.tipo === 'acompanante'),
-      productos:    data.filter(p => p.tipo === 'acompanante'),
-      empresarial:  data.filter(p => p.tipo === 'empresarial'),
-    };
-    console.log('✅ Catálogo cargado:', data.length, 'productos');
-    console.log('  Bonos base:', CATALOGO.bonos_base.length);
-    console.log('  Empaques:', CATALOGO.empaques.length);
-    console.log('  Acompañantes:', CATALOGO.acompanantes.length);
-  } catch(e) {
-    console.error('Error cargando catálogo:', e);
-  }
-  // Cargar campañas
-  await cargarCampanas();
-}
-
-async function cargarCampanas() {
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/campanas?activo=eq.true&order=nombre.asc`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    window._campanas = await r.json();
-    const select = $('p_campana');
-    if (select) {
-      select.innerHTML = '<option value="">— Selecciona una campaña —</option>' +
-        window._campanas.map(c => `<option value="${c.id}" data-tipo="${c.tipo_recaudo||'dinero'}">${c.nombre}${c.descripcion?' — '+c.descripcion:''}</option>`).join('');
-    }
-    console.log('✅ Campañas cargadas:', window._campanas.length);
-  } catch(e) {
-    console.error('Error cargando campañas:', e);
-  }
-}
-
-async function onCampanaChange() {
-  const sel = $('p_campana');
-  if (!sel || !sel.value) return;
-  const opt = sel.options[sel.selectedIndex];
-  const tipo = opt.dataset.tipo || 'dinero';
-  const campanaId = sel.value;
-  S.campana_id = campanaId;
-  S.campana = opt.text;
-  S.campana_tipo = tipo;
-
-  // Mostrar/ocultar secciones según tipo
-  const secDinero = $('sec-donacion-dinero');
-  const secProductos = $('sec-donacion-productos');
-  if (secDinero) secDinero.style.display = (tipo === 'dinero' || tipo === 'ambos') ? 'block' : 'none';
-  if (secProductos) secProductos.style.display = (tipo === 'productos' || tipo === 'ambos') ? 'block' : 'none';
-
-  // Si tiene productos, cargarlos
-  if (tipo === 'productos' || tipo === 'ambos') {
-    try {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/campana_productos?campana_id=eq.${campanaId}&activo=eq.true&order=orden.asc`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const prods = await r.json();
-      const grid = $('grid-donacion-productos');
-      if (grid) {
-        S.productosDonacion = [];
-        grid.innerHTML = prods.length ? prods.map(p => `
-          <div class="prod-card" id="dprod-${p.id}" onclick="selProdDonacion(${p.id}, '${p.nombre}', ${p.precio})">
-            ${p.imagen_url ? `<img src="${p.imagen_url}" onerror="this.style.display='none'">` : ''}
-            <div class="prod-info">
-              <div class="prod-nombre">${p.nombre}</div>
-              ${p.descripcion ? `<div style="font-size:.72rem;color:var(--ink-lt)">${p.descripcion}</div>` : ''}
-              <div class="prod-precio">${fmt(p.precio)}</div>
-            </div>
-          </div>`).join('')
-          : '<p style="color:var(--ink-lt);font-size:.83rem">No hay productos configurados para esta campaña.</p>';
-      }
-    } catch(e) { console.warn('Error cargando productos campaña:', e); }
-  }
-  actualizarTotal();
-}
-
-function selProdDonacion(id, nombre, precio) {
-  if (!S.productosDonacion) S.productosDonacion = [];
-  const idx = S.productosDonacion.findIndex(p => p.id === id);
-  const card = $('dprod-' + id);
-  if (idx >= 0) {
-    S.productosDonacion.splice(idx, 1);
-    if (card) card.classList.remove('sel');
-  } else {
-    S.productosDonacion.push({ id, nombre, precio, qty: 1 });
-    if (card) card.classList.add('sel');
-  }
-  actualizarTotal();
-}
-
-// ============================================================
-// ESTADO
-// ============================================================
-const S = {
-  tipoPedido: '',   // pesame | toda_ocasion | producto | empresarial | donacion
-  tipoCliente: 'Personal',
-  canal: '',
-  comprador: {}, destinatario: {},
-  // Info bono pésame
-  fallecido:'', dirigido:'', quienAtiende:'', tarjeta:'', mensaje:'', firma:'', notas:'',
-  // Info bono toda ocasión
-  ocasion:'', 
-  // Selecciones
-  bonos: [],        // lista de bonos elegidos
-  sinBono: false,   // eligió sin bono
-  bono: null,       // primer bono elegido (compatibilidad)
-  empaque: null,    // empaque elegido
-  acompanantes: [], // lista de acompañantes
-  productosElegidos: [], // para pedidos de solo producto
-  envio: null,
-  valorDonacion: 0,
-  campana_id: null,
-  campana: '',
-  metodoPago: '', atendidoPor: '',
-  esNuevo: false,
-  // Flujo dinámico
-  flujo: [],        // lista de secciones a mostrar
-  flujoIdx: 0,      // índice actual en el flujo
-};
-
-// ============================================================
-// FLUJOS por tipo de pedido
-// ============================================================
-const FLUJOS = {
-  pesame:      ['sec-1','sec-2','sec-3-pesame','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
-  toda_ocasion:['sec-1','sec-2','sec-3-toda','sec-4-bono','sec-acompanante','sec-envio','sec-orden'],
-  producto:    ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
-  empresarial: ['sec-1','sec-2','sec-3-producto','sec-productos','sec-envio','sec-orden'],
-  donacion:    ['sec-1','sec-3-donacion','sec-orden'],
-};
-
-const PASOS_LABELS = {
-  pesame:      ['Comprador','Destinatario','Info Bono','Bono y Empaque','Acompañante','Envío','Orden'],
-  toda_ocasion:['Comprador','Destinatario','Info Bono','Bono y Empaque','Acompañante','Envío','Orden'],
-  producto:    ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
-  empresarial: ['Comprador','Destinatario','Ocasión','Productos','Envío','Orden'],
-  donacion:    ['Comprador','Donación','Orden'],
-};
-
-const ENVIOS = [
-  {l:'Medellín, Envigado, Sabaneta, Itagüi — Bonos (1 a 3 días hábiles)',p:0},
-  {l:'Envío nacional — Solo bono (caja, organza, sobre) sin acompañante (3 a 5 días hábiles)',p:15000},
-  {l:'Medellín y Área Metropolitana — Con acompañante (1 a 3 días hábiles)',p:17500},
-  {l:'5 Corregimientos de Medellín (San Cristóbal, San Antonio de Prado, Palmitas, Alta Vista, Santa Elena), Alto Palmas, Caldas y La Estrella (1 a 3 días hábiles)',p:24000},
-  {l:'Abrazadores, velas, kits con bono o solos — Envío nacional (3 a 5 días hábiles)',p:25000},
-  {l:'Guarne, Girardota, El Retiro (1 a 3 días hábiles)',p:36000},
-  {l:'Rionegro, La Ceja, Barbosa (1 a 3 días hábiles)',p:54000},
-  {l:'Bonos con plantas — Nacionales o fuera del área metropolitana (3 a 5 días hábiles)',p:58000},
-];
-
-// ============================================================
-// INIT
-// ============================================================
-document.addEventListener('DOMContentLoaded', async () => {
-  $('headerDate').textContent = today();
-  $('loadingMsg').textContent = 'Cargando catálogo...';
-  $('loadingOverlay').classList.add('show');
-  await cargarCatalogo();
-  $('loadingOverlay').classList.remove('show');
-});
-
-// ============================================================
-// INICIO
-// ============================================================
-function selTipoPedido(tipo) {
-  S.tipoPedido = tipo;
-  document.querySelectorAll('.tipo-pedido-card').forEach(c => c.classList.remove('sel'));
-  event.currentTarget.classList.add('sel');
-}
-
-function selCanal(canal) {
-  S.canal = canal;
-  document.querySelectorAll('.canal-card').forEach(c => c.classList.remove('sel'));
-  $('canal-'+canal).classList.add('sel');
-}
-
-function selTipoCliente(tipo) {
-  S.tipoCliente = tipo;
-  $('campos-personal').style.display = tipo === 'Personal' ? 'block' : 'none';
-  $('campos-empresa').style.display = tipo === 'Empresa' ? 'block' : 'none';
-  $('btn-personal').className = tipo === 'Personal' ? 'btn btn-primary' : 'btn btn-secondary';
-  $('btn-empresa').className = tipo === 'Empresa' ? 'btn btn-primary' : 'btn btn-secondary';
-  $('btn-personal').style.flex = '1';$('btn-personal').style.fontSize = '.8rem';
-  $('btn-empresa').style.flex = '1';$('btn-empresa').style.fontSize = '.8rem';
-  // Auto-seleccionar NIT para empresas
-  if ($('tipoDocInput')) $('tipoDocInput').value = tipo === 'Empresa' ? 'NIT' : 'CC';
-}
-
-function irDesdeInicio() {
-  if (!S.tipoPedido) { alert('Selecciona el tipo de pedido.'); return; }
-  if (!S.canal) { alert('Selecciona desde dónde haces tu pedido.'); return; }
-  S.flujo = FLUJOS[S.tipoPedido];
-  S.flujoIdx = 0;
-  construirProgress();
-  mostrarSeccion(S.flujo[0]);
-}
-
-// ============================================================
-// NAVEGACIÓN
-// ============================================================
-function construirProgress() {
-  const labels = PASOS_LABELS[S.tipoPedido];
-  $('progressSteps').innerHTML = labels.map((l,i) => `
-    <div class="ps${i===0?' active':''}" data-idx="${i}">
-      <div class="ps-dot">${i+1}</div>
-      <div class="ps-label">${l}</div>
-    </div>`).join('');
-}
-
-function actualizarProgress() {
-  document.querySelectorAll('.ps').forEach((el,i) => {
-    el.classList.remove('active','done');
-    if (i === S.flujoIdx) el.classList.add('active');
-    if (i < S.flujoIdx) el.classList.add('done');
-  });
-}
-
-function mostrarSeccion(secId) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  $(secId).classList.add('active');
-  $('progressWrap').style.display = 'block';
-  $('totalBar').style.display = 'flex';
-  $('btnAtras').style.display = S.flujoIdx > 0 ? 'flex' : 'none';
-  const esAcomp = secId === 'sec-acompanante';
-  $('btnSkip').style.display = esAcomp ? 'inline-block' : 'none';
-  const esUltimo = S.flujoIdx === S.flujo.length - 1;
-  $('btnSig').textContent = esUltimo ? '✓ Confirmar y Guardar' : 'Siguiente →';
-  // Preparar contenido según sección
-  if (secId === 'sec-4-bono') renderBonos();
-  if (secId === 'sec-5-empaque') renderEmpaques();
-  if (secId === 'sec-productos') renderProductos();
-  if (secId === 'sec-acompanante') renderAcompanantes('Velas');
-  if (secId === 'sec-envio') renderEnvios();
-  if (secId === 'sec-orden') renderOrden();
-  actualizarProgress();
-  actualizarTotal();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function irSiguiente(skip=false) {
-  const secActual = S.flujo[S.flujoIdx];
-  if (secActual === 'sec-orden') { confirmarPedido(); return; }
-  if (!skip && !validar(secActual)) return;
-  // Avanzar normalmente — empaque ya está en la misma pantalla que bono
-  if (secActual === 'sec-4-bono' && S.sinBono) {
-    S.empaque = {nombre: 'Sin empaque', precio: 0, es_virtual: false};
-  }
-  S.flujoIdx++;
-  mostrarSeccion(S.flujo[S.flujoIdx]);
-}
-
-function irAtras() {
-  if (S.flujoIdx === 0) { 
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    $('sec-0').classList.add('active');
-    $('progressWrap').style.display='none';
-    $('totalBar').style.display='none';
-    return;
-  }
-  S.flujoIdx--;
-  mostrarSeccion(S.flujo[S.flujoIdx]);
-}
-
-// ============================================================
-// VALIDACIONES
-// ============================================================
-function validar(secId) {
-  if (secId === 'sec-1') {
-    if (S.tipoCliente === 'Personal') {
-      if (!$('c_nombres').value.trim()) { alert('Ingresa los nombres.'); return false; }
-      if (!$('c_apellidos').value.trim()) { alert('Ingresa los apellidos.'); return false; }
-      if (!$('c_celular').value.trim()) { alert('Ingresa el celular.'); return false; }
-      if (!$('c_correo_contacto').value.trim()) { alert('Ingresa el correo de contacto.'); return false; }
-      if (!$('c_correo_factura').value.trim()) { alert('Ingresa el correo para factura.'); return false; }
-      if (!$('c_ciudad').value.trim()) { alert('Ingresa la ciudad.'); return false; }
-      S.comprador = {tipo:'Personal', tipodoc:$('tipoDocInput').value, cedula:$('docInput').value.trim(),
-        nombres:$('c_nombres').value.trim(), apellidos:$('c_apellidos').value.trim(),
-        celular:$('c_celular').value.trim(), correo:$('c_correo_contacto').value.trim(),
-        correoFactura:$('c_correo_factura').value.trim(), ciudad:$('c_ciudad').value.trim(),
-        departamento:$('c_departamento').value.trim(), direccion:$('c_direccion').value.trim(),
-        esNuevo:S.esNuevo};
-    } else {
-      if (!$('e_nit').value.trim()) { alert('Ingresa el NIT.'); return false; }
-      if (!$('e_razon').value.trim()) { alert('Ingresa la razón social.'); return false; }
-      if (!$('e_correo_factura').value.trim()) { alert('Ingresa el correo de factura.'); return false; }
-      if (!$('e_contacto').value.trim()) { alert('Ingresa el nombre del contacto.'); return false; }
-      if (!$('e_telefono').value.trim()) { alert('Ingresa el teléfono.'); return false; }
-      if (!$('e_correo_contacto').value.trim()) { alert('Ingresa el correo de contacto.'); return false; }
-      if (!$('e_ciudad').value.trim()) { alert('Ingresa la ciudad.'); return false; }
-      S.comprador = {tipo:'Empresa', nit:$('e_nit').value.trim(), cedula:$('e_nit').value.trim(),
-        razonSocial:$('e_razon').value.trim(), contacto:$('e_contacto').value.trim(),
-        celular:$('e_telefono').value.trim(), correo:$('e_correo_contacto').value.trim(),
-        correoFactura:$('e_correo_factura').value.trim(), ciudad:$('e_ciudad').value.trim(),
-        departamento:$('e_departamento').value.trim(), esNuevo:S.esNuevo};
-    }
-    return true;
-  }
-  if (secId === 'sec-2') {
-    if (!$('mismoComprador').checked) {
-      if (!$('d_nombres').value.trim()) { alert('Ingresa los nombres del destinatario.'); return false; }
-      if (!$('d_celular').value.trim()) { alert('Ingresa el celular del destinatario.'); return false; }
-      if (!$('d_ciudad').value.trim()) { alert('Ingresa la ciudad.'); return false; }
-      if (!$('d_municipio').value.trim()) { alert('Ingresa el municipio o barrio.'); return false; }
-      const esVirt = S.bono && S.bono.es_virtual;
-      if (!esVirt && !$('d_direccion').value.trim()) { alert('Ingresa la dirección de entrega.'); return false; }
-    }
-    S.destinatario = $('mismoComprador').checked ? {...S.comprador, esMismo:true} : {
-      nombres:$('d_nombres').value.trim(), apellidos:$('d_apellidos').value.trim(),
-      celular:$('d_celular').value.trim(), ciudad:$('d_ciudad').value.trim(),
-      municipio:$('d_municipio').value.trim(),
-      direccion:$('d_direccion').value.trim(), referencia:$('d_referencia').value.trim()
-    };
-    return true;
-  }
-  if (secId === 'sec-3-pesame') {
-    if (!$('p_fallecido').value.trim()) { alert('Ingresa el nombre del fallecido.'); return false; }
-    if (!$('p_dirigido').value.trim()) { alert('Indica para quién va dirigido.'); return false; }
-    S.fallecido = $('p_fallecido').value.trim();
-    S.dirigido = $('p_dirigido').value.trim();
-    S.quienAtiende = '';
-    S.mensaje = $('p_mensaje_pesame').value.trim();
-    S.firma = $('p_firma_pesame').value.trim();
-    S.notas = $('p_mensaje_pesame').value.trim();
-    return true;
-  }
-  if (secId === 'sec-3-toda') {
-    if (!$('t_dirigido').value.trim()) { alert('Indica para quién va dirigido.'); return false; }
-    S.dirigido = $('t_dirigido').value.trim();
-    S.quienAtiende = '';
-    S.mensaje = $('t_mensaje').value.trim();
-    S.firma = $('t_firma').value.trim();
-    S.notas = $('t_mensaje').value.trim();
-    return true;
-  }
-  if (secId === 'sec-3-producto') {
-    if (!$('pr_dirigido').value.trim()) { alert('Indica para quién va el pedido.'); return false; }
-    S.dirigido = $('pr_dirigido').value.trim();
-    S.quienAtiende = $('pr_quien').value.trim();
-    S.mensaje = $('pr_mensaje').value.trim();
-    S.notas = $('pr_notas').value.trim();
-    return true;
-  }
-  if (secId === 'sec-3-donacion') {
-    if (!$('p_campana').value) { alert('Selecciona la campaña a la que va tu donación.'); return false; }
-    const tipo = S.campana_tipo || 'dinero';
-    const val = parseInt($('p_valor_donacion').value) || 0;
-    if ((tipo === 'dinero' || tipo === 'ambos') && val <= 0) { alert('Ingresa el valor de la donación en dinero.'); return false; }
-    if ((tipo === 'productos' || tipo === 'ambos') && (!S.productosDonacion || !S.productosDonacion.length)) { alert('Selecciona al menos un producto para donar.'); return false; }
-    S.valorDonacion = val;
-    S.campana_id = $('p_campana').value;
-    S.campana = $('p_campana').options[$('p_campana').selectedIndex].text;
-    S.notas = $('p_notas_donacion').value.trim();
-    // Para donación, destinatario = comprador
-    S.destinatario = {...S.comprador};
-    S.envio = {l:'Donación digital', p:0};
-    return true;
-  }
-  if (secId === 'sec-4-bono') {
-    if (!S.sinBono && (!S.bonos || !S.bonos.length)) { alert('Selecciona al menos un bono o elige "Sin Bono".'); return false; }
-    const tienePlegable = S.bonos && S.bonos.some(b => !b.es_virtual);
-    if (tienePlegable && !S.empaque) { alert('Selecciona el tipo de empaque para el bono.'); return false; }
-    return true;
-  }
-  if (secId === 'sec-5-empaque') {
-    if (!S.empaque) { alert('Selecciona el tipo de empaque.'); return false; }
-    return true;
-  }
-  if (secId === 'sec-productos') {
-    if (!S.productosElegidos.length) { alert('Selecciona al menos un producto.'); return false; }
-    return true;
-  }
-  if (secId === 'sec-acompanante') return true;
-  if (secId === 'sec-envio') {
-    if (!S.envio) { alert('Selecciona el método de envío.'); return false; }
-    return true;
-  }
-  return true;
-}
-
-// ============================================================
-// BUSCAR TERCERO
-// ============================================================
-async function buscarTercero() {
-  const doc = $('docInput').value.trim();
-  const tipodoc = $('tipoDocInput').value;
-  if (!doc) { alert('Ingresa el número de documento.'); return; }
-  $('searchTxt').textContent = '...';
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${encodeURIComponent(doc)}&tipodoc=eq.${tipodoc}&limit=1`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const rows = await r.json();
-    if (rows.length > 0) {
-      const t = rows[0];
-      S.esNuevo = false;
-      if (S.tipoCliente === 'Personal') {
-        $('c_nombres').value = t.nombres||'';
-        $('c_apellidos').value = t.apellidos||'';
-        $('c_celular').value = t.telefono1||'';
-        $('c_correo_contacto').value = t.correo_principal||'';
-        $('c_correo_factura').value = t.correoelectronica||t.correo_principal||'';
-        $('c_ciudad').value = t.ciudad||'';
-        $('c_departamento').value = t.departamento||'';
-        $('c_direccion').value = t.direccion||'';
-      } else {
-        $('e_nit').value = t.nitempresa||t.numerodoc||'';
-        $('e_razon').value = t.razonsocial||'';
-        $('e_correo_factura').value = t.correoelectronica||'';
-        $('e_contacto').value = t.contactoempresa||'';
-        $('e_telefono').value = t.telefono1||'';
-        $('e_correo_contacto').value = t.correo_principal||'';
-        $('e_ciudad').value = t.ciudad||'';
-        $('e_departamento').value = t.departamento||'';
-      }
-      mostrarStatus('found','✓','¡Encontrado! Datos cargados. Puedes corregir si es necesario.');
-    } else {
-      S.esNuevo = true;
-      mostrarStatus('notfound','⚠','No encontramos tus datos. Por favor complétalos.');
-    }
-  } catch(e) {
-    S.esNuevo = true;
-    mostrarStatus('notfound','⚠','Sin conexión. Completa los datos manualmente.');
-  }
-  $('searchTxt').textContent = 'Buscar';
-}
-
-function mostrarStatus(tipo, icon, msg) {
-  const el = $('searchStatus');
-  el.className = 'status '+tipo;
-  $('statusIcon').textContent = icon;
-  $('statusMsg').textContent = msg;
-}
-
-function toggleMismo(cb) {
-  $('campos-dest').style.display = cb.checked ? 'none' : 'block';
-}
-
-// ============================================================
-// TARJETAS COLOR
-// ============================================================
-function selTarjeta(card, val, scope) {
-  S.tarjeta = val;
-  const contenedor = scope === 'pesame' ? 'sec-3-pesame' : 'sec-3-toda';
-  document.querySelectorAll(`#${contenedor} .tarjeta-card`).forEach(c => c.classList.remove('sel'));
-  card.classList.add('sel');
-}
-
-// ============================================================
-// RENDER BONOS (desde Supabase)
-// ============================================================
-function renderBonos() {
-  const lista = CATALOGO.bonos_base || [];
-  if (!lista.length) {
-    $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando bonos...</p>';
-    return;
-  }
-  // Opción "Sin Bono"
-  const sinBonoSel = S.sinBono;
-  let html = `<div class="prod-card${sinBonoSel?' sel':''}" onclick="selSinBono()" style="border-style:dashed">
-    <div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:2rem">🛍</div>
-    <div class="prod-info">
-      <div class="prod-nombre">Sin Bono</div>
-      <div class="prod-precio" style="color:var(--ink-lt)">Solo productos</div>
-    </div>
-  </div>`;
-  html += lista.map((p,i) => `
-    <div class="prod-card${S.bonos&&S.bonos.some(b=>b.id===p.id)?' sel':''}" onclick="selBono(${i})">
-      <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
-      <div class="prod-info">
-        <div class="prod-nombre">${p.nombre}${p.es_virtual?' 🌐':''}</div>
-        <div class="prod-precio">${fmt(p.precio)}</div>
-      </div>
-    </div>`).join('');
-  $('bonoGrid').innerHTML = html;
-}
-
-function selSinBono() {
-  S.sinBono = !S.sinBono;
-  if (S.sinBono) {
-    S.bonos = [];
-    S.bono = null;
-    $('bono-sel-resumen').style.display = 'block';
-    $('bono-sel-nombre').textContent = 'Sin bono — solo productos';
-    $('bono-sel-precio').textContent = '$ 0';
-  } else {
-    $('bono-sel-resumen').style.display = 'none';
-  }
-  renderBonos();
-  actualizarTotal();
-}
-
-function selBono(idx) {
-  const lista = CATALOGO.bonos_base || [];
-  const p = lista[idx];
-  if (!S.bonos) S.bonos = [];
-  S.sinBono = false;
-  const existeIdx = S.bonos.findIndex(b => b.id === p.id);
-  if (existeIdx >= 0) {
-    S.bonos.splice(existeIdx, 1);
-  } else {
-    S.bonos.push(p);
-  }
-  // Mantener S.bono como referencia al primero (para compatibilidad con virtual)
-  S.bono = S.bonos.length > 0 ? S.bonos[0] : null;
-  renderBonos();
-  if (S.bonos.length > 0) {
-    $('bono-sel-nombre').textContent = S.bonos.map(b=>b.nombre).join(', ');
-    $('bono-sel-precio').textContent = fmt(S.bonos.reduce((s,b)=>s+b.precio,0));
-    $('bono-sel-resumen').style.display = 'block';
-  } else {
-    $('bono-sel-resumen').style.display = 'none';
-  }
-  // Si alguno es virtual, ocultar empaque
-  const tieneVirtual = S.bonos.some(b => b.es_virtual);
-  const todoVirtual = S.bonos.length > 0 && S.bonos.every(b => b.es_virtual);
-  if ($('aviso-virtual')) $('aviso-virtual').style.display = tieneVirtual ? 'block' : 'none';
-  // Mostrar/ocultar sección de empaque
-  const cardEmpaque = $('card-empaque');
-  if (cardEmpaque) {
-    if (S.bonos.length > 0 && !todoVirtual) {
-      cardEmpaque.style.display = 'block';
-      renderEmpaques();
-    } else {
-      cardEmpaque.style.display = 'none';
-      if (todoVirtual) {
-        S.empaque = {id:'virtual', nombre:'Virtual', precio:-4000, es_virtual:true};
-      }
-    }
-  }
-  actualizarTotal();
-}
-
-// ============================================================
-// RENDER EMPAQUES (desde Supabase)
-// ============================================================
-function renderEmpaques() {
-  const lista = CATALOGO.empaques || [];
-  if (!lista.length) {
-    $('empaqueGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando empaques...</p>';
-    return;
-  }
-  // Opción virtual al inicio
-  const virSel = S.empaque && S.empaque.es_virtual;
-  let html = `<div class="prod-card${virSel?' sel':''}" onclick="selEmpaqueVirtual()" style="border-style:dashed">
-    <div style="height:120px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🌐</div>
-    <div class="prod-info">
-      <div class="prod-nombre">Virtual</div>
-      <div class="prod-precio" style="color:#2e7d32">− ${fmt(4000)}</div>
-      <div style="font-size:.7rem;color:var(--ink-lt);margin-top:2px">Se envía por email o WhatsApp</div>
-    </div>
-  </div>`;
-  html += lista.map((p,i) => `
-    <div class="prod-card${S.empaque&&S.empaque.id===p.id?' sel':''}" onclick="selEmpaque(${i})">
-      <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
-      <div class="prod-info">
-        <div class="prod-nombre">${p.nombre}</div>
-        <div class="prod-precio">${p.precio===0?'Sin costo adicional':p.precio>0?'+ '+fmt(p.precio):'- '+fmt(Math.abs(p.precio))}</div>
-      </div>
-    </div>`).join('');
-  $('empaqueGrid').innerHTML = html;
-}
-
-function selEmpaqueVirtual() {
-  S.empaque = {id: 'virtual', nombre: 'Virtual', precio: -4000, es_virtual: true};
-  S.esVirtual = true;
-  if ($('aviso-virtual')) $('aviso-virtual').style.display = 'block';
-  if ($('field-dir')) $('field-dir').style.display = 'none';
-  if ($('field-ref')) $('field-ref').style.display = 'none';
-  $('emp-sel-nombre').textContent = 'Virtual';
-  $('emp-sel-precio').textContent = '− ' + fmt(4000);
-  $('emp-sel-resumen').style.display = 'block';
-  renderEmpaques();
-  actualizarTotal();
-}
-
-function selEmpaque(idx) {
-  const lista = CATALOGO.empaques || [];
-  S.empaque = lista[idx];
-  renderEmpaques();
-  $('emp-sel-nombre').textContent = S.empaque.nombre;
-  $('emp-sel-precio').textContent = S.empaque.precio === 0 ? 'Sin costo adicional' : fmt(S.empaque.precio);
-  $('emp-sel-resumen').style.display = 'block';
-  actualizarTotal();
-}
-
-// ============================================================
-// RENDER PRODUCTOS (producto solo y empresarial)
-// ============================================================
-function renderProductos(cat) {
-  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
-  // Obtener categorías únicas
-  const cats = [...new Set(lista.map(p => p.subcategoria).filter(Boolean))];
-  const catActiva = cat || cats[0] || '';
-  $('prodTabs').innerHTML = cats.map(c => `
-    <button class="cat-tab${c===catActiva?' active':''}" onclick="renderProductos('${c}')">${c}</button>`).join('');
-  const filtrados = catActiva ? lista.filter(p => p.subcategoria === catActiva) : lista;
-  $('prodGrid').innerHTML = filtrados.map((p,i) => {
-    const sel = S.productosElegidos.some(x => x.id === p.id);
-    const qty = S.productosElegidos.find(x=>x.id===p.id)?.qty || 1;
-    return `<div class="prod-card${sel?' sel':''}" onclick="selProductoPorId(${p.id})" style="position:relative">
-      <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
-      <div class="prod-info">
-        <div class="prod-nombre">${p.nombre}</div>
-        <div class="prod-precio">${fmt(p.precio)}</div>
-        ${sel?`<div style="display:flex;align-items:center;gap:6px;margin-top:8px">
-          <label style="font-size:.7rem;color:var(--ink-lt);text-transform:uppercase;letter-spacing:.05em">Cant.</label>
-          <input type="number" value="${qty}" min="1" max="9999"
-            onclick="event.stopPropagation()"
-            onchange="event.stopPropagation();editarQtyPorId(${p.id}, this.value)"
-            oninput="event.stopPropagation()"
-            style="width:60px;padding:4px 8px;border:1.5px solid var(--pink);border-radius:6px;font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--ink);text-align:center">
-        </div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-  actualizarResumenProductos();
-}
-
-function selProducto(idx) {
-  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
-  const p = lista[idx];
-  if (!p) return;
-  selProductoPorId(p.id);
-}
-
-function selProductoPorId(id) {
-  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
-  const p = lista.find(x => x.id === id);
-  if (!p) return;
-  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
-  if (existeIdx >= 0) S.productosElegidos.splice(existeIdx, 1);
-  else S.productosElegidos.push({...p, qty: 1});
-  const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
-  renderProductos(catActiva);
-  actualizarTotal();
-}
-
-function cambiarQty(idx, delta) {
-  const lista = S.tipoPedido === 'empresarial' ? CATALOGO.empresarial : CATALOGO.productos;
-  const p = lista[idx];
-  if (p) cambiarQtyPorId(p.id, delta);
-}
-
-function cambiarQtyPorId(id, delta) {
-  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
-  if (existeIdx >= 0) {
-    const nuevaQty = Math.max(1, (S.productosElegidos[existeIdx].qty || 1) + delta);
-    S.productosElegidos[existeIdx].qty = nuevaQty;
-  }
-  const catActiva = document.querySelector('.cat-tab.active')?.textContent || '';
-  renderProductos(catActiva);
-  actualizarTotal();
-}
-
-function editarQtyPorId(id, valor) {
-  const qty = Math.max(1, parseInt(valor) || 1);
-  const existeIdx = S.productosElegidos.findIndex(x => x.id === id);
-  if (existeIdx >= 0) {
-    S.productosElegidos[existeIdx].qty = qty;
-  }
-  actualizarTotal();
-  actualizarResumenProductos();
-}
-
-function actualizarResumenProductos() {
-  const txt = $('prod-sel-txt');
-  if (S.productosElegidos.length === 0) {
-    txt.textContent = 'No has seleccionado ningún producto todavía.';
-    $('prod-sel-resumen').style.background = 'var(--cream)';
-  } else {
-    txt.innerHTML = `✓ <strong>${S.productosElegidos.length} producto(s):</strong> ${S.productosElegidos.map(p=>p.nombre).join(', ')} — <strong>${fmt(S.productosElegidos.reduce((s,p)=>s+p.precio,0))}</strong>`;
-    $('prod-sel-resumen').style.background = 'var(--pink-lt)';
-  }
-}
-
-// ============================================================
-// RENDER ACOMPAÑANTES
-// ============================================================
-function renderAcompanantes(cat) {
-  const lista = CATALOGO.acompanantes || [];
-  const cats = [...new Set(lista.map(p => p.subcategoria).filter(Boolean))];
-  const catActiva = cat || cats[0] || '';
-  $('acompTabs').innerHTML = cats.map(c => `
-    <button class="cat-tab${c===catActiva?' active':''}" onclick="renderAcompanantes('${c}')">${c}</button>`).join('');
-  const filtrados = catActiva ? lista.filter(p => p.subcategoria === catActiva) : lista;
-  $('acompGrid').innerHTML = filtrados.map(p => {
-    const sel = S.acompanantes.some(x => x.id === p.id);
-    return `<div class="prod-card${sel?' sel':''}" onclick="selAcompanante(${lista.indexOf(p)})">
-      <img src="${p.imagen_url||p.imagen_url_shopify||''}" onerror="this.style.display='none'">
-      <div class="prod-info">
-        <div class="prod-nombre">${p.nombre}</div>
-        <div class="prod-precio">+ ${fmt(p.precio)}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function selAcompanante(idx) {
-  const lista = CATALOGO.acompanantes || [];
-  const p = lista[idx];
-  const existeIdx = S.acompanantes.findIndex(x => x.id === p.id);
-  if (existeIdx >= 0) S.acompanantes.splice(existeIdx, 1);
-  else S.acompanantes.push(p);
-  const catActiva = document.querySelector('#acompTabs .cat-tab.active')?.textContent || '';
-  renderAcompanantes(catActiva);
-  if (S.acompanantes.length > 0) {
-    $('acomp-sel-nombres').textContent = S.acompanantes.map(a=>a.nombre).join(', ');
-    $('acomp-sel-total').textContent = fmt(S.acompanantes.reduce((s,a)=>s+a.precio,0));
-    $('acomp-sel-resumen').style.display = 'block';
-  } else {
-    $('acomp-sel-resumen').style.display = 'none';
-  }
-  actualizarTotal();
-}
-
-// ============================================================
-// RENDER ENVÍOS
-// ============================================================
-function renderEnvios() {
-  $('envioOpts').innerHTML = ENVIOS.map(e => `
-    <div class="envio-item${S.envio&&S.envio.l===e.l?' sel':''}" onclick="selEnvio('${e.l}',${e.p})">
-      <span class="envio-label">${e.l}</span>
-      <span class="envio-precio" style="color:${e.p===0?'#2e7d32':'var(--pink)'}">${e.p===0?'GRATIS':fmt(e.p)}</span>
-    </div>`).join('');
-}
-
-function selEnvio(label, precio) {
-  S.envio = {l:label, p:precio};
-  renderEnvios();
-  actualizarTotal();
-}
-
-// ============================================================
-// TOTAL
-// ============================================================
-function getTotal() {
-  if (S.tipoPedido === 'donacion') {
-    let t = S.valorDonacion || 0;
-    if (S.productosDonacion) t += S.productosDonacion.reduce((s,p)=>s+(p.precio*(p.qty||1)),0);
-    return Math.max(0, t);
-  }
-  let t = 0;
-  if (S.bonos && S.bonos.length) t += S.bonos.reduce((s,b)=>s+b.precio,0);
-  else if (S.bono) t += S.bono.precio;
-  if (S.empaque && S.empaque.precio) t += S.empaque.precio;
-  t += S.acompanantes.reduce((s,a)=>s+a.precio,0);
-  t += S.productosElegidos.reduce((s,p)=>s+(p.precio*(p.qty||1)),0);
-  if (S.envio) t += S.envio.p;
-  return Math.max(0, t);
-}
-
-function actualizarTotal() {
-  $('totalAmount').textContent = fmt(getTotal());
-}
-
-// ============================================================
-// RENDER ORDEN
-// ============================================================
-function renderOrden() {
-  const total = getTotal();
-  const c = S.comprador;
-  const d = S.destinatario;
-  const items = [];
-  if (S.bono) items.push({desc: S.bono.nombre, precio: S.bono.precio});
-  if (S.empaque && S.empaque.precio) items.push({desc:'Empaque: '+S.empaque.nombre, precio: S.empaque.precio});
-  S.acompanantes.forEach(a => items.push({desc:'Acompañante: '+a.nombre, precio: a.precio}));
-  S.productosElegidos.forEach(p => items.push({desc: p.nombre, precio: p.precio}));
-  if (S.tipoPedido === 'donacion') items.push({desc:'Donación', precio: S.valorDonacion});
-  if (S.envio && S.envio.p > 0) items.push({desc:'Envío: '+S.envio.l, precio: S.envio.p});
-
-  $('ordenPrint').innerHTML = `
-    <div class="orden-header">
-      <img src="https://santiagocorazon.org/cdn/shop/files/logo_2x_bbc620f1-38c8-4061-b2f2-1f87b357546e.png?v=1614736127&width=200" class="orden-logo" alt="Santiago Corazón" onerror="this.style.display='none'">
-      <div class="orden-num"><strong>${orderNum}</strong>${today()}<br><span style="font-size:.68rem;color:var(--pink);font-weight:600">ORDEN DE DESPACHO</span></div>
-    </div>
-    <div class="orden-grid">
-      <div class="orden-block"><h4>📦 Comprador / Pagador</h4>
-        <p><strong>${c.tipo==='Empresa'?(c.razonSocial||''):((c.nombres||'')+' '+(c.apellidos||'')).trim()}</strong><br>
-        ${c.tipo==='Empresa'?'NIT: '+(c.nit||'—'):'CC: '+(c.cedula||'—')}<br>
-        Tel: ${c.celular||'—'}<br>Email: ${c.correo||'—'}</p>
-      </div>
-      <div class="orden-block"><h4>🚚 Destinatario y entrega</h4>
-        <p><strong>${d.nombres||''} ${d.apellidos||''}</strong><br>
-        Tel: ${d.celular||'—'}<br>Ciudad: ${d.ciudad||'—'}<br>
-        ${S.bono&&S.bono.es_virtual?'🌐 Envío Virtual':'Dir: '+(d.direccion||'—')}</p>
-      </div>
-      <div class="orden-block"><h4>✨ Detalle</h4>
-        <p>${S.fallecido?'<strong>Fallecido: '+S.fallecido+'</strong><br>':''}
-        ${S.dirigido?'Para: <strong>'+S.dirigido+'</strong><br>':''}
-        ${S.quienAtiende?'De parte de: '+S.quienAtiende+'<br>':''}
-        ${S.tarjeta?'Tarjeta: '+S.tarjeta:''}
-        ${S.tipoPedido?'Tipo: '+S.tipoPedido:''}</p>
-      </div>
-      <div class="orden-block"><h4>📋 Pago</h4>
-        <p>Canal: ${S.canal||'—'}<br>
-        Pago: <span id="od-pago">—</span><br>
-        Atendido: <span id="od-atend">—</span></p>
-      </div>
-    </div>
-    ${S.mensaje?`<div class="mensaje-box">✉ "${S.mensaje}"${S.firma?'<br><span style="font-size:.8rem">— '+S.firma+'</span>':''}</div>`:''}
-    ${S.notas?`<div class="notas-box">📝 ${S.notas}</div>`:''}
-    <table class="orden-table">
-      <thead><tr><th>Producto / Servicio</th><th style="text-align:right">Precio</th></tr></thead>
-      <tbody>${items.map(it=>`<tr><td>${it.desc}</td><td style="text-align:right">${fmt(it.precio)}</td></tr>`).join('')}</tbody>
-    </table>
-    <div class="orden-totals">
-      <div class="orden-total-row grand"><span>TOTAL</span><span>${fmt(total)}</span></div>
-    </div>
-    <div style="margin-top:28px;padding-top:18px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:36px;font-size:.78rem;color:#8a7d72">
-      <div><div style="border-top:1px solid #ccc;margin-top:36px;padding-top:7px;text-align:center">Firma del cliente</div></div>
-      <div><div style="border-top:1px solid #ccc;margin-top:36px;padding-top:7px;text-align:center">Firma y sello Fundación</div></div>
-    </div>`;
-
-  ['metodoPago','atendidoPor'].forEach(id => {
-    const el = $(id);
-    if(el) el.oninput = () => {
-      const op = $('od-pago'); if(op) op.textContent = $('metodoPago').value||'—';
-      const oa = $('od-atend'); if(oa) oa.textContent = $('atendidoPor').value||'—';
-    };
-  });
-}
-
-// ============================================================
-// CONFIRMAR Y GUARDAR
-// ============================================================
-async function confirmarPedido() {
-  S.metodoPago = $('metodoPago').value;
-  S.atendidoPor = $('atendidoPor').value;
-  $('loadingMsg').textContent = 'Guardando tu pedido...';
-  $('loadingOverlay').classList.add('show');
-
-  try {
-    const fecha = new Date();
-    const fechaStr = fecha.toISOString().split('T')[0];
-    const horaStr = fecha.toTimeString().slice(0,8);
-    const c = S.comprador;
-    const docNum = (c.cedula || c.nit || '').replace(/\D/g,'');
-
-    // 1. Buscar o crear tercero (y actualizar si existe)
-    let terceroId = null;
-    if (docNum) {
-      const tRes = await fetch(`${SUPABASE_URL}/rest/v1/terceros?numerodoc=eq.${docNum}&select=id&limit=1`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const tRows = await tRes.json();
-      if (tRows.length > 0) {
-        terceroId = tRows[0].id;
-        // PATCH: actualizar tercero — solo campos que el usuario llenó
-        const camposActualizar = { updated_at: new Date().toISOString() };
-        const setIfVal = (key, val) => { if (val && val.trim()) camposActualizar[key] = val.trim(); };
-
-        setIfVal('direccion',    c.direccion);
-        setIfVal('departamento', c.departamento);
-        setIfVal('ciudad',       c.ciudad);
-        setIfVal('telefono1',    c.celular || c.telefono);
-
-        if (c.tipo === 'Personal') {
-          setIfVal('nombres',          c.nombres);
-          setIfVal('apellidos',        c.apellidos);
-          setIfVal('correo_principal', c.correo);
-          setIfVal('correoelectronica',c.correoFactura);
-          if (c.nombres && c.apellidos)
-            camposActualizar.nombrecompleto = (c.nombres + ' ' + c.apellidos).trim();
-        } else {
-          setIfVal('razonsocial',      c.razonSocial);
-          setIfVal('nitempresa',       c.nit);
-          setIfVal('contactoempresa',  c.contacto);
-          setIfVal('correoelectronica',c.correoFactura);
-        }
-
-        await fetch(`${SUPABASE_URL}/rest/v1/terceros?id=eq.${terceroId}`, {
-          method: 'PATCH',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify(camposActualizar)
-        });
-      } else {
-        const tNew = await fetch(`${SUPABASE_URL}/rest/v1/terceros`, {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-                     'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            tipodoc: c.tipodoc || (c.tipo === 'Empresa' ? 'NIT' : 'CC'), numerodoc: docNum,
-            tipocliente: c.tipo || 'Personal', nombres: c.nombres || '', apellidos: c.apellidos || '',
-            nombrecompleto: c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'') + ' ' + (c.apellidos||'')).trim(),
-            razonsocial: c.razonSocial || '', nitempresa: c.nit || '',
-            contactoempresa: c.contacto || '', direccion: c.direccion || '',
-            departamento: c.departamento || '', ciudad: c.ciudad || '',
-            telefono1: c.celular || '', correo_principal: c.correo || '',
-            correoelectronica: c.correoFactura || '', fuente: 'Formulario Web'
-          })
-        });
-        const tNewData = await tNew.json();
-        if (tNewData && tNewData[0]) terceroId = tNewData[0].id;
-      }
-    }
-
-    // 2. Insertar pedido
-    const nombreComprador = c.tipo === 'Empresa' ? (c.razonSocial||'') : ((c.nombres||'') + ' ' + (c.apellidos||'')).trim();
-    const d = S.destinatario;
-    const pedidoRes = await fetch(`${SUPABASE_URL}/rest/v1/pedidos`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-                 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        nro_pedido: orderNum, fecha: fechaStr, hora: horaStr,
-        canal: S.canal || 'Formulario Web', tipo_cliente: c.tipo || 'Personal',
-        tercero_id: terceroId, id_nit_comprador: docNum,
-        nombre_razon_social: nombreComprador,
-        direccion_comprador: c.direccion || '', departamento: c.departamento || '',
-        ciudad_comprador: c.ciudad || '', telefono_comprador: c.celular || '',
-        correo_comprador: c.correo || '', correo_factura: c.correoFactura || '',
-        nombres_destinatario: d.nombres || '', apellidos_destinatario: d.apellidos || '',
-        telefono_destinatario: d.celular || '', ciudad_entrega: d.ciudad || '',
-        direccion_entrega: d.direccion || '', referencia_entrega: d.referencia || '',
-        ocasion: S.tipoPedido || '', protagonista: S.dirigido || '',
-        detalle_protagonista: S.fallecido || '', mensaje: S.mensaje || '',
-        firma_mensaje: S.firma || '', observaciones: S.notas || '',
-        envio_descripcion: S.envio ? S.envio.l : '',
-        costo_envio: S.envio ? S.envio.p : 0,
-        subtotal_productos: getTotal() - (S.envio ? S.envio.p : 0),
-        total_pedido: getTotal(),
-        metodo_pago: S.metodoPago || '', atendido_por: S.atendidoPor || '',
-        estado: 'Pendiente',
-        campana_id: S.campana_id ? parseInt(S.campana_id) : null,
-        comprobante_pago: null
-      })
-    });
-    const pedidoData = await pedidoRes.json();
-    const pedidoId = pedidoData && pedidoData[0] ? pedidoData[0].id : null;
-
-    // 3. Insertar detalle
-    if (pedidoId) {
-      const lineas = [];
-      if (S.bonos && S.bonos.length) {
-        S.bonos.forEach(b => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Bono',subcategoria:S.tipoPedido,producto:b.nombre,cantidad:1,precio_unitario:b.precio,subtotal_linea:b.precio}));
-      } else if (S.bono) {
-        lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Bono',subcategoria:S.tipoPedido,producto:S.bono.nombre,cantidad:1,precio_unitario:S.bono.precio,subtotal_linea:S.bono.precio});
-      }
-      if (S.empaque && S.empaque.precio) lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Empaque',subcategoria:'Empaque',producto:S.empaque.nombre,cantidad:1,precio_unitario:S.empaque.precio,subtotal_linea:S.empaque.precio});
-      S.acompanantes.forEach(a => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Acompañante',subcategoria:a.subcategoria||'',producto:a.nombre,cantidad:1,precio_unitario:a.precio,subtotal_linea:a.precio}));
-      S.productosElegidos.forEach(p => lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Producto',subcategoria:p.subcategoria||'',producto:p.nombre,cantidad:p.qty||1,precio_unitario:p.precio,subtotal_linea:p.precio*(p.qty||1)}));
-      if (S.tipoPedido === 'donacion') lineas.push({pedido_id:pedidoId,nro_pedido:orderNum,fecha:fechaStr,categoria:'Donación',subcategoria:'Donación',producto:'Donación',cantidad:1,precio_unitario:S.valorDonacion,subtotal_linea:S.valorDonacion});
-      for (const linea of lineas) {
-        await fetch(`${SUPABASE_URL}/rest/v1/pedido_detalle`, {
-          method:'POST',
-          headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-          body: JSON.stringify(linea)
-        });
-      }
-    }
-    // Subir comprobante a Supabase Storage
-    const fi = $('comprobanteFile');
-    if (fi && fi.files && fi.files[0]) {
-      try {
-        const file = fi.files[0];
-        const comprimido = await comprimirImagen(file, 200);
-        const ext = file.name.split('.').pop() || 'jpg';
-        const nombreArchivo = orderNum + '_comprobante.' + ext;
-        const uploadRes = await fetch(
-          'https://sbhbcgxmxnxyfuzggegj.supabase.co/storage/v1/object/comprobantes/' + nombreArchivo,
-          {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
-              'Content-Type': file.type || 'image/jpeg',
-              'x-upsert': 'true'
-            },
-            body: comprimido
-          }
-        );
-        if (uploadRes.ok) {
-          const urlComprobante = 'https://sbhbcgxmxnxyfuzggegj.supabase.co/storage/v1/object/public/comprobantes/' + nombreArchivo;
-          await fetch(`${SUPABASE_URL}/rest/v1/pedidos?nro_pedido=eq.${orderNum}`, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comprobante_pago: urlComprobante })
-          });
-        }
-      } catch(eComp) { console.warn('Error subiendo comprobante:', eComp); }
-    }
-
-  } catch(e) { console.warn('Error guardando:', e); }
-
-  $('loadingOverlay').classList.remove('show');
-  mostrarExito();
-}
-
-function mostrarExito() {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  $('totalBar').style.display='none';
-  $('progressWrap').style.display='none';
-  $('successSection').classList.add('show');
-  $('successNum').textContent = orderNum;
-  // Generar PDF automáticamente
-  setTimeout(() => generarPDF(), 1000);
-}
-
-function generarPDF() {
-  try {
-    const ordenEl = $('ordenPrint');
-    if (!ordenEl) return;
-    const contenido = ordenEl.innerHTML;
-    const ventana = window.open('', '_blank');
-    ventana.document.write(`
-      <!DOCTYPE html><html><head>
-      <meta charset="UTF-8">
-      <title>PEDIDO_${orderNum}</title>
-      <style>
-        body{font-family:'Helvetica',Arial,sans-serif;color:#1A0A10;padding:30px;font-size:12px}
-        h1{color:#E8176B;font-size:18px;margin-bottom:4px}
-        .header{display:flex;justify-content:space-between;border-bottom:2px solid #F0D8E4;padding-bottom:12px;margin-bottom:16px}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-        .block h4{font-size:9px;text-transform:uppercase;color:#E8176B;margin-bottom:6px;letter-spacing:.08em}
-        .block p{line-height:1.7;color:#5A3A48}
-        table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
-        th{background:#FDF8FB;padding:7px 10px;text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #F0D8E4;color:#5A3A48}
-        td{padding:8px 10px;border-bottom:1px solid #F0D8E4}
-        .total{text-align:right;font-weight:700;color:#E8176B;font-size:14px}
-        .badge{display:inline-block;background:#FDE8F2;color:#E8176B;padding:2px 10px;border-radius:10px;font-weight:600}
-        .msg{background:#FDE8F2;border-left:3px solid #E8176B;padding:10px 14px;font-style:italic;margin:12px 0}
-      </style>
-      </head><body>
-      <div class="header">
-        <div><h1>Santiago Corazón</h1><div style="font-size:10px;color:#9A7A88">Fundación Infantil</div></div>
-        <div style="text-align:right"><div class="badge">PEDIDO_${orderNum}</div><div style="font-size:10px;color:#9A7A88;margin-top:4px">${new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'})}</div></div>
-      </div>
-      ${contenido}
-      <div style="margin-top:30px;padding-top:16px;border-top:1px solid #F0D8E4;font-size:10px;color:#9A7A88;text-align:center">
-        Este documento es tu comprobante de pedido. Nuestro equipo te contactará por WhatsApp para confirmar.<br>
-        www.santiagocorazon.org | 311 724 9887
-      </div>
-      </body></html>`);
-    ventana.document.close();
-    setTimeout(() => {
-      ventana.document.title = `PEDIDO_${orderNum}`;
-      ventana.print();
-    }, 500);
-  } catch(e) {
-    console.warn('Error generando PDF:', e);
-  }
-}
-
-function nuevoPedido() { location.reload(); }
-
-// ============================================================
-// COMPRIMIR IMAGEN (máximo maxKB kilobytes)
-// ============================================================
-function comprimirImagen(file, maxKB) {
-  return new Promise((resolve) => {
-    // Si no es imagen o ya es pequeño, devolver tal cual
-    if (!file.type.startsWith('image/') || file.size <= maxKB * 1024) {
-      resolve(file);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height;
-        // Reducir dimensiones si es muy grande
-        const maxDim = 1200;
-        if (w > maxDim || h > maxDim) {
-          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        // Comprimir con calidad variable hasta alcanzar el tamaño
-        let calidad = 0.8;
-        const intentar = () => {
-          canvas.toBlob((blob) => {
-            if (blob.size <= maxKB * 1024 || calidad <= 0.3) {
-              resolve(blob);
-            } else {
-              calidad -= 0.1;
-              intentar();
-            }
-          }, 'image/jpeg', calidad);
-        };
-        intentar();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// UTILS
-function cc(el, cntId) {
-  const c=$(cntId); if(c){c.textContent=el.value.length;c.style.color=el.value.length>=160?'var(--pink)':'var(--ink-lt)';}
-}
-function mostrarComp(input){
-  if(!input.files||!input.files[0])return;
-  $('compNombre').textContent=input.files[0].name;
-  $('compPreview').style.display='flex';
-  $('compLabel').style.borderColor='var(--pink)';
-}
-function quitarComp(){
-  $('comprobanteFile').value='';
-  $('compPreview').style.display='none';
-  $('compLabel').style.borderColor='var(--border)';
-}
-</script>
+<script src="app.js"></script>
 </body>
 </html>
