@@ -100,18 +100,45 @@
         <div class="canal-icon">🌐</div>
         <div class="canal-name">Sitio web /<br>link</div>
       </div>
+      <div class="canal-card" id="canal-Correo" onclick="selCanal('Correo')">
+        <div class="canal-icon">✉️</div>
+        <div class="canal-name">Por<br>Correo</div>
+      </div>
     </div>
+
+    <!-- COMBOS: solo visible para pésame y toda ocasión -->
+    <div id="sec-0-combos" style="display:none;margin:14px 0 6px">
+      <div style="border:2px dashed var(--pink);border-radius:12px;padding:14px 16px;background:var(--pink-lt,#FDE8F2)">
+        <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--pink);margin-bottom:6px">✨ ¿Quieres un combo prearmado?</div>
+        <div style="font-size:.82rem;color:var(--ink-mid);margin-bottom:10px">Bono + acompañante ya combinados con precio especial. También puedes armar tu pedido a tu gusto.</div>
+        <button id="btnVerCombos" class="btn btn-secondary" onclick="abrirModalCombos()" style="font-size:.83rem">✨ Ver combos disponibles</button>
+        <!-- Chip del combo seleccionado -->
+        <div id="comboSelChip" style="display:none;margin-top:10px;padding:10px 12px;background:var(--white);border-radius:8px;border:1.5px solid var(--pink);align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:.8rem;color:var(--pink);font-weight:700">✓ Combo elegido:</span>
+          <span id="comboSelNombre" style="font-size:.83rem;font-weight:600;flex:1"></span>
+          <span id="comboSelPrecio" style="font-size:.83rem;font-weight:700;color:var(--pink)"></span>
+          <button onclick="quitarCombo()" style="border:none;background:none;cursor:pointer;color:var(--ink-lt);font-size:.8rem;padding:0">✕ Quitar</button>
+        </div>
+      </div>
+    </div>
+
     <button class="btn btn-primary" onclick="irDesdeInicio()" style="margin-top:8px">Continuar →</button>
   </div>
 </div>
 
-<!-- ══ SEC COMBOS ═════════════════════════════════════════ -->
-<div class="section" id="sec-combos">
-  <div class="card">
-    <div class="step-label">Paso 1</div>
-    <div class="section-title">¿Quieres un <em>combo</em>?</div>
-    <div class="section-sub">Tenemos combos prearmados con bono y acompañante incluidos — o arma tu pedido a tu gusto eligiendo cada pieza por separado.</div>
-    <div id="comboGrid"><div style="color:var(--ink-lt);padding:20px;text-align:center">Cargando...</div></div>
+<!-- ══ MODAL COMBOS ════════════════════════════════════════ -->
+<div id="modalCombosForm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--white);border-radius:16px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;padding:24px;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:1.1rem;font-weight:700;color:var(--ink)">✨ Combos disponibles</div>
+      <button onclick="cerrarModalCombos()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px">✕</button>
+    </div>
+    <div style="font-size:.83rem;color:var(--ink-mid);margin-bottom:16px">Bono + acompañante ya combinados con precio especial. Selecciona uno o cierra para armar tu pedido por separado.</div>
+    <div class="prod-grid" id="combosModalGrid"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="confirmarCombo()" style="flex:1">Confirmar selección →</button>
+      <button class="btn btn-secondary" onclick="quitarCombo()">Armar por separado</button>
+    </div>
   </div>
 </div>
 

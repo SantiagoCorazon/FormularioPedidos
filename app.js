@@ -36,12 +36,11 @@ const S = {
 };
 
 // ── FLUJOS ACTUALIZADOS ─────────────────────────────────────
-// Nuevo orden pésame y toda ocasión:
-//   sec-combos → sec-4-bono → sec-acompanante → sec-3-pesame/toda → sec-envio → sec-1 → sec-2 → sec-orden
-// Los combos: si elige combo salta a sec-3-pesame/toda directamente (omite sec-4-bono y sec-acompanante)
+// Combos ya NO son un paso del flujo — son un botón en la pantalla inicial
+// Pésame y toda ocasión: presentación → acompañante → datos bono → envío → comprador → destinatario → pago
 const FLUJOS = {
-  pesame:      ['sec-combos','sec-4-bono','sec-acompanante','sec-3-pesame','sec-envio','sec-1','sec-2','sec-orden'],
-  toda_ocasion:['sec-combos','sec-4-bono','sec-acompanante','sec-3-toda','sec-envio','sec-1','sec-2','sec-orden'],
+  pesame:      ['sec-4-bono','sec-acompanante','sec-3-pesame','sec-envio','sec-1','sec-2','sec-orden'],
+  toda_ocasion:['sec-4-bono','sec-acompanante','sec-3-toda','sec-envio','sec-1','sec-2','sec-orden'],
   producto:    ['sec-3-producto','sec-productos','sec-envio','sec-1','sec-2','sec-orden'],
   empresarial: ['sec-3-producto','sec-productos','sec-envio','sec-1','sec-2','sec-orden'],
   donacion:    ['sec-1','sec-3-donacion','sec-orden'],
@@ -51,8 +50,8 @@ const FLUJOS = {
 };
 
 const PASOS_LABELS = {
-  pesame:      ['Combos','Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
-  toda_ocasion:['Combos','Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
+  pesame:      ['Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
+  toda_ocasion:['Presentación','Acompañante','Info Bono','Envío','Comprador','Destinatario','Pago'],
   producto:    ['Ocasión','Productos','Envío','Comprador','Destinatario','Pago'],
   empresarial: ['Ocasión','Productos','Envío','Comprador','Destinatario','Pago'],
   donacion:    ['Comprador','Donación','Pago'],
@@ -260,8 +259,18 @@ function cargarMunicipios() {
 // ── Pantalla de inicio ───────────────────────────────────────
 function selTipoPedido(tipo) {
   S.tipoPedido = tipo;
+  // Resetear combo si cambia de tipo
+  if (S.combo && S.combo.subcategoria && S.combo.subcategoria !== tipo && S.combo.subcategoria !== 'ambos') {
+    S.combo = null; S.eligioCombo = false;
+  }
   document.querySelectorAll('.tipo-pedido-card').forEach(c => c.classList.remove('sel'));
   event.currentTarget.classList.add('sel');
+  // Mostrar u ocultar sección de combos
+  var secCombos = $('sec-0-combos');
+  if (secCombos) {
+    secCombos.style.display = (tipo === 'pesame' || tipo === 'toda_ocasion') ? 'block' : 'none';
+  }
+  actualizarBtnCombos();
 }
 
 function selCanal(canal) {
@@ -284,13 +293,129 @@ function selTipoCliente(tipo) {
 function irDesdeInicio() {
   if (!S.tipoPedido) { alert('Selecciona el tipo de pedido.'); return; }
   if (!S.canal)      { alert('Selecciona desde dónde haces tu pedido.'); return; }
-  // Resetear estado de combo
-  S.combo = null;
-  S.eligioCombo = false;
-  S.flujo = FLUJOS[S.tipoPedido].slice(); // copia
+  cerrarModalCombos();
+  S.flujo = FLUJOS[S.tipoPedido].slice();
+  // Si eligió combo, saltar presentación y acompañante → directo a datos del bono
+  if (S.eligioCombo && S.combo) {
+    var idxDatos = S.flujo.findIndex(s => s === 'sec-3-pesame' || s === 'sec-3-toda');
+    if (idxDatos > -1) {
+      S.flujoIdx = idxDatos;
+      construirProgress();
+      // Actualizar progress para que muestre los pasos correctos pero active el correcto
+      mostrarSeccion(S.flujo[S.flujoIdx]);
+      return;
+    }
+  }
   S.flujoIdx = 0;
   construirProgress();
   mostrarSeccion(S.flujo[0]);
+}
+
+// ── Modal de combos ──────────────────────────────────────────
+function abrirModalCombos() {
+  var tipo = S.tipoPedido;
+  if (!tipo || (tipo !== 'pesame' && tipo !== 'toda_ocasion')) {
+    alert('Primero selecciona Bono de Pésame o Bono de Toda Ocasión.'); return;
+  }
+  var modal = $('modalCombosForm');
+  if (!modal) return;
+  renderCombosModal(tipo);
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalCombos() {
+  var modal = $('modalCombosForm');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderCombosModal(tipo) {
+  var grid = $('combosModalGrid');
+  if (!grid) return;
+  var lista = (CATALOGO.combos || []).filter(function(c) {
+    if (!c.subcategoria) return true;
+    if (tipo === 'pesame')       return c.subcategoria === 'pesame'       || c.subcategoria === 'ambos';
+    if (tipo === 'toda_ocasion') return c.subcategoria === 'toda_ocasion' || c.subcategoria === 'ambos';
+    return false;
+  });
+
+  if (!lista.length) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--ink-lt);padding:30px">No hay combos disponibles en este momento.</div>';
+    return;
+  }
+
+  grid.innerHTML = lista.map(function(p) {
+    var esSel = S.combo && S.combo.id === p.id;
+    var img = (p.imagen_url || p.imagen_url_shopify)
+      ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
+      : '';
+    var desc = p.descripcion ? '<div style="font-size:.75rem;color:var(--ink-lt);margin:4px 0 8px">' + p.descripcion + '</div>' : '';
+    return '<div class="prod-card' + (esSel?' sel':'') + '" onclick="selComboModal(' + p.id + ')" style="cursor:pointer">' +
+      img +
+      '<div class="prod-info">' +
+      '<div class="prod-nombre">' + p.nombre + '</div>' +
+      desc +
+      '<div class="prod-precio">' + fmt(p.precio) + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function selComboModal(id) {
+  var lista = CATALOGO.combos || [];
+  var p = lista.find(function(x) { return x.id === id; });
+  if (!p) return;
+  if (S.combo && S.combo.id === id) {
+    // Deseleccionar
+    S.combo = null;
+    S.eligioCombo = false;
+    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  } else {
+    S.combo = p;
+    S.eligioCombo = true;
+    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  }
+  actualizarTotal();
+  renderCombosModal(S.tipoPedido);
+  // Actualizar el botón de combos en sec-0
+  actualizarBtnCombos();
+}
+
+function confirmarCombo() {
+  cerrarModalCombos();
+  actualizarBtnCombos();
+}
+
+function quitarCombo() {
+  S.combo = null;
+  S.eligioCombo = false;
+  S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  actualizarTotal();
+  actualizarBtnCombos();
+  cerrarModalCombos();
+}
+
+function actualizarBtnCombos() {
+  var btn  = $('btnVerCombos');
+  var chip = $('comboSelChip');
+  if (!btn || !chip) return;
+  if (S.eligioCombo && S.combo) {
+    chip.style.display = 'flex';
+    var txt = $('comboSelNombre');
+    var pre = $('comboSelPrecio');
+    if (txt) txt.textContent = S.combo.nombre;
+    if (pre) pre.textContent = fmt(S.combo.precio);
+    btn.textContent = '✏️ Cambiar combo';
+    btn.style.background = 'var(--pink)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--pink)';
+  } else {
+    chip.style.display = 'none';
+    btn.textContent = '✨ Ver combos disponibles';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }
 }
 
 // ── Navegación ───────────────────────────────────────────────
@@ -321,7 +446,6 @@ function mostrarSeccion(secId) {
   var esUltimo = S.flujoIdx === S.flujo.length - 1;
   $('btnSkip').style.display  = esAcomp ? 'inline-block' : 'none';
   $('btnSig').textContent     = esUltimo ? '✓ Confirmar y Guardar' : 'Siguiente →';
-  if (secId === 'sec-combos')              renderCombos();
   if (secId === 'sec-4-bono')              renderBonos();
   if (secId === 'sec-productos')           renderProductos();
   if (secId === 'sec-acompanante')         renderAcompanantes('Velas');
@@ -339,22 +463,8 @@ function irSiguiente(skip) {
   var secActual = S.flujo[S.flujoIdx];
   if (secActual === 'sec-orden') { confirmarPedido(); return; }
   if (!skip && !validar(secActual)) return;
-
-  // Si elige combo en sec-combos, saltar sec-4-bono y sec-acompanante
-  if (secActual === 'sec-combos' && S.eligioCombo) {
-    // Buscar el índice de sec-3-pesame o sec-3-toda (siguiente después de sec-acompanante)
-    var idxDestino = S.flujo.findIndex(s => s === 'sec-3-pesame' || s === 'sec-3-toda');
-    if (idxDestino > -1) {
-      S.flujoIdx = idxDestino;
-      mostrarSeccion(S.flujo[S.flujoIdx]);
-      return;
-    }
-  }
-
-  // Si elige combo y vuelve atrás desde sec-3, debe ir a sec-combos directamente
   if (secActual === 'sec-4-bono' && S.sinBono)
     S.empaque = { nombre:'Sin empaque', precio:0, es_virtual:false };
-
   S.flujoIdx++;
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
@@ -367,92 +477,14 @@ function irAtras() {
     $('totalBar').style.display     = 'none';
     return;
   }
-  // Si venía de combo (eligioCombo) y está en sec-3, volver a sec-combos
-  var secActual = S.flujo[S.flujoIdx];
-  if (S.eligioCombo && (secActual === 'sec-3-pesame' || secActual === 'sec-3-toda')) {
-    var idxCombos = S.flujo.findIndex(s => s === 'sec-combos');
-    if (idxCombos > -1) { S.flujoIdx = idxCombos; mostrarSeccion(S.flujo[S.flujoIdx]); return; }
-  }
   S.flujoIdx--;
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
 
-// ── COMBOS ───────────────────────────────────────────────────
-function renderCombos() {
-  var el = $('comboGrid');
-  if (!el) return;
-  // Filtrar combos por tipo de pedido
-  var lista = (CATALOGO.combos || []).filter(c => {
-    if (!c.subcategoria) return true;
-    if (S.tipoPedido === 'pesame')       return c.subcategoria === 'pesame'       || c.subcategoria === 'ambos';
-    if (S.tipoPedido === 'toda_ocasion') return c.subcategoria === 'toda_ocasion' || c.subcategoria === 'ambos';
-    return true;
-  });
-  var noComboSel = !S.eligioCombo && !S.combo;
-  var sinComboClass = noComboSel ? ' sel' : '';
-  var html = '<div class="combo-sin' + sinComboClass + '" onclick="elegirSinCombo()" style="border:2px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;cursor:pointer;text-align:center;background:var(--white);transition:all .2s">' +
-    '<div style="font-size:1.2rem">🛍</div>' +
-    '<div style="font-weight:600;margin-top:6px">Armar mi propio pedido</div>' +
-    '<div style="font-size:.82rem;color:var(--ink-lt);margin-top:4px">Elige el bono, empaque y acompañantes por separado</div>' +
-    '</div>';
-  if (lista.length) {
-    html += '<div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-mid);margin-bottom:10px">✨ O elige un combo prearmado</div>';
-    html += '<div class="prod-grid">' + lista.map(function(p) {
-      var sel = S.combo && S.combo.id === p.id ? ' sel' : '';
-      var img = (p.imagen_url || p.imagen_url_shopify)
-        ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" onerror="this.style.display=\'none\'">'
-        : '';
-      var desc = p.descripcion ? '<div style="font-size:.75rem;color:var(--ink-lt);margin-top:3px">' + p.descripcion + '</div>' : '';
-      return '<div class="prod-card' + sel + '" onclick="selCombo(' + p.id + ')">' +
-        img + '<div class="prod-info">' +
-        '<div class="prod-nombre">' + p.nombre + '</div>' + desc +
-        '<div class="prod-precio">' + fmt(p.precio) + '</div>' +
-        '</div></div>';
-    }).join('') + '</div>';
-  } else {
-    html += '<div style="color:var(--ink-lt);font-size:.83rem;padding:12px;text-align:center">No hay combos disponibles para este tipo de pedido.</div>';
-  }
-  el.innerHTML = html;
-}
-
-function elegirSinCombo() {
-  S.combo = null;
-  S.eligioCombo = false;
-  // Limpiar lo que se pudo haber llenado con combo
-  S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
-  // Resaltar opción sin combo
-  document.querySelectorAll('.combo-sin').forEach(c => c.style.borderColor = 'var(--pink)');
-  document.querySelectorAll('.prod-card').forEach(c => c.classList.remove('sel'));
-  actualizarTotal();
-}
-
-function selCombo(id) {
-  var lista = CATALOGO.combos || [];
-  var p = lista.find(x => x.id === id);
-  if (!p) return;
-  if (S.combo && S.combo.id === id) {
-    // Deseleccionar
-    S.combo = null;
-    S.eligioCombo = false;
-    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
-  } else {
-    S.combo = p;
-    S.eligioCombo = true;
-    // El combo reemplaza bonos, empaque y acompañantes
-    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
-    // Quitar selección en opción "sin combo"
-    document.querySelectorAll('.combo-sin').forEach(c => c.style.borderColor = 'var(--border)');
-  }
-  renderCombos();
-  actualizarTotal();
-}
+// (Combos manejados via modal desde sec-0 — ver abrirModalCombos/selComboModal)
 
 // ── Validaciones ─────────────────────────────────────────────
 function validar(secId) {
-  if (secId === 'sec-combos') {
-    // Esta sección siempre es válida — el usuario puede ir sin combo o con combo
-    return true;
-  }
   if (secId === 'sec-1') {
     if (S.tipoCliente === 'Personal') {
       if (!$('c_nombres').value.trim())          { alert('Ingresa los nombres.'); return false; }
@@ -788,12 +820,16 @@ function renderEnvios() {
   if (!el) return;
   if (!ENVIOS_DB.length) { el.innerHTML = '<p style="color:var(--ink-lt)">Cargando opciones de envío...</p>'; return; }
   el.innerHTML = ENVIOS_DB.map(function(e, i) {
-    var sel = S.envio && S.envio.id === e.id ? ' checked' : '';
-    var precio = e.precio === 0 ? '<strong style="color:#2e7d32">GRATIS</strong>' : '$ ' + Number(e.precio).toLocaleString('es-CO');
-    return '<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:2px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;background:var(--white)">' +
-      '<input type="radio" name="envio" value="' + i + '"' + sel + ' onchange="selEnvio(' + i + ')" style="margin-top:3px;accent-color:var(--pink)">' +
-      '<div style="flex:1"><div style="font-size:.87rem;color:var(--ink)">' + e.descripcion + '</div></div>' +
-      '<div style="font-weight:700;white-space:nowrap">' + precio + '</div></label>';
+    var esSel  = S.envio && S.envio.id === e.id;
+    var precio = e.precio === 0
+      ? '<span style="color:#2e7d32;font-weight:700;font-size:.9rem">GRATIS</span>'
+      : '<span style="font-weight:700;font-size:.9rem">$ ' + Number(e.precio).toLocaleString('es-CO') + '</span>';
+    var borde  = esSel ? 'var(--pink)' : 'var(--border)';
+    var fondo  = esSel ? 'var(--pink-lt,#FDE8F2)' : 'var(--white)';
+    return '<label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:2px solid ' + borde + ';border-radius:10px;margin-bottom:10px;cursor:pointer;background:' + fondo + ';transition:all .15s">' +
+      '<input type="radio" name="envio" value="' + i + '"' + (esSel?' checked':'') + ' onchange="selEnvio(' + i + ')" style="flex-shrink:0;width:18px;height:18px;accent-color:var(--pink);cursor:pointer">' +
+      '<div style="flex:1;font-size:.84rem;color:var(--ink);line-height:1.4">' + e.descripcion + '</div>' +
+      '<div style="flex-shrink:0;text-align:right;min-width:70px">' + precio + '</div></label>';
   }).join('');
 }
 
