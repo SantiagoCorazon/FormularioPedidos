@@ -952,14 +952,23 @@ tr:hover td{background:var(--pink-lt)}
     <div class="form-grid">
       <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="prod_nombre" placeholder="Nombre del producto"></div>
       <div class="form-field"><label>Tipo <span style="color:var(--pink)">*</span></label>
-        <select id="prod_tipo">
+        <select id="prod_tipo" onchange="toggleCamposCombo()">
           <option value="bono_base">Bono Base</option>
           <option value="empaque">Empaque</option>
           <option value="acompanante">Acompañante</option>
           <option value="empresarial">Empresarial</option>
+          <option value="combo">Combo</option>
         </select>
       </div>
-      <div class="form-field"><label>Subcategoría</label><input type="text" id="prod_sub" placeholder="Ej: Plantas, Velas, Línea de Corazón"></div>
+      <div class="form-field" id="campo_sub_normal"><label>Subcategoría</label><input type="text" id="prod_sub" placeholder="Ej: Plantas, Velas, Línea de Corazón"></div>
+      <div class="form-field" id="campo_sub_combo" style="display:none">
+        <label>Tipo de combo <span style="color:var(--pink)">*</span></label>
+        <select id="prod_sub_combo">
+          <option value="pesame">Pésame</option>
+          <option value="toda_ocasion">Toda Ocasión</option>
+          <option value="ambos">Ambos (Pésame y Toda Ocasión)</option>
+        </select>
+      </div>
       <div class="form-field"><label>Precio (COP) <span style="color:var(--pink)">*</span></label><input type="number" id="prod_precio" placeholder="82000" min="0"></div>
       <div class="form-field"><label>Orden</label><input type="number" id="prod_orden" placeholder="1" min="1"></div>
       <div class="form-field col-full">
@@ -2418,16 +2427,24 @@ function previewImgProd() {
   }
 }
 
+function toggleCamposCombo() {
+  const esCombo = $('prod_tipo').value === 'combo';
+  $('campo_sub_normal').style.display = esCombo ? 'none' : '';
+  $('campo_sub_combo').style.display  = esCombo ? '' : 'none';
+}
+
 function abrirModalProducto() {
   $('prod_id').value = '';
   $('prod_nombre').value = '';
   $('prod_tipo').value = 'acompanante';
   $('prod_sub').value = '';
+  $('prod_sub_combo').value = 'pesame';
   $('prod_precio').value = '';
   $('prod_orden').value = '';
   $('prod_img').value = '';
   $('prod_virtual').checked = false;
   $('prod_img_preview').style.display = 'none';
+  toggleCamposCombo();
   $('modalProdTitle').textContent = 'Nuevo Producto';
   abrirModal('modalProducto');
 }
@@ -2438,7 +2455,14 @@ function editarProducto(id) {
   $('prod_id').value = p.id;
   $('prod_nombre').value = p.nombre||'';
   $('prod_tipo').value = p.tipo||'acompanante';
-  $('prod_sub').value = p.subcategoria||'';
+  // Subcategoría: si es combo usa el select, si no el input texto
+  if (p.tipo === 'combo') {
+    $('prod_sub_combo').value = p.subcategoria||'pesame';
+    $('prod_sub').value = '';
+  } else {
+    $('prod_sub').value = p.subcategoria||'';
+    $('prod_sub_combo').value = 'pesame';
+  }
   $('prod_precio').value = p.precio||0;
   $('prod_orden').value = p.orden||1;
   $('prod_img').value = p.imagen_url||'';
@@ -2447,16 +2471,18 @@ function editarProducto(id) {
     $('prod_img_thumb').src = p.imagen_url;
     $('prod_img_preview').style.display = 'block';
   }
+  toggleCamposCombo();
   $('modalProdTitle').textContent = 'Editar Producto';
   abrirModal('modalProducto');
 }
 
 async function guardarProducto() {
   const id = $('prod_id').value;
+  const esCombo = $('prod_tipo').value === 'combo';
   const datos = {
     nombre:       $('prod_nombre').value.trim(),
     tipo:         $('prod_tipo').value,
-    subcategoria: $('prod_sub').value.trim(),
+    subcategoria: esCombo ? $('prod_sub_combo').value : $('prod_sub').value.trim(),
     precio:       parseFloat($('prod_precio').value)||0,
     orden:        parseInt($('prod_orden').value)||1,
     imagen_url:   convertirUrlDrive($('prod_img').value.trim()),
