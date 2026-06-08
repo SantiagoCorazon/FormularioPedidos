@@ -988,9 +988,6 @@ tr:hover td{background:var(--pink-lt)}
         </label>
       </div>
     </div>
-    <div id="prod_img_preview" style="margin-top:12px;display:none">
-      <img id="prod_img_thumb" style="height:100px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border)">
-    </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalProducto')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
@@ -2468,7 +2465,7 @@ function editarProducto(id) {
   $('prod_img').value = p.imagen_url||'';
   $('prod_virtual').checked = p.es_virtual||false;
   if (p.imagen_url) {
-    $('prod_img_thumb').src = p.imagen_url;
+    $('prod_img_thumb').src = convertirUrlDrive(p.imagen_url);
     $('prod_img_preview').style.display = 'block';
   }
   toggleCamposCombo();
@@ -3108,20 +3105,33 @@ function convertirUrlDrive(url) {
   if (!url) return url;
   url = url.trim();
 
-  // Ya es una URL de imagen directa de Drive — ok
-  if (url.includes('lh3.googleusercontent.com')) return url;
+  // Extraer ID de Drive de cualquier formato conocido
+  let driveId = null;
 
-  // Formato: drive.google.com/file/d/ID/view
-  const match1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (match1) return `https://lh3.googleusercontent.com/d/${match1[1]}`;
+  // Formato: drive.google.com/file/d/ID/view  <- el mas comun al compartir
+  const m1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) driveId = m1[1];
 
   // Formato: drive.google.com/open?id=ID
-  const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (match2) return `https://lh3.googleusercontent.com/d/${match2[1]}`;
+  if (!driveId) {
+    const m2 = url.match(/drive\.google\.com\/open\?.*id=([a-zA-Z0-9_-]+)/);
+    if (m2) driveId = m2[1];
+  }
 
   // Formato: drive.google.com/uc?export=view&id=ID
-  const match3 = url.match(/uc\?export=view&id=([a-zA-Z0-9_-]+)/);
-  if (match3) return `https://lh3.googleusercontent.com/d/${match3[1]}`;
+  if (!driveId) {
+    const m3 = url.match(/drive\.google\.com\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+    if (m3) driveId = m3[1];
+  }
+
+  // Era lh3 (formato viejo guardado antes) — convertir al nuevo
+  if (!driveId) {
+    const m4 = url.match(/lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/);
+    if (m4) driveId = m4[1];
+  }
+
+  // thumbnail es el unico formato que permite embed externo sin bloqueo de Google
+  if (driveId) return `https://drive.google.com/thumbnail?id=${driveId}&sz=w400`;
 
   // No es Drive — devolver tal cual (Shopify, GitHub, etc.)
   return url;
