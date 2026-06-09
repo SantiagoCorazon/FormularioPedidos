@@ -955,7 +955,7 @@ tr:hover td{background:var(--pink-lt)}
     <div class="form-grid">
       <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="prod_nombre" placeholder="Nombre del producto"></div>
       <div class="form-field"><label>Tipo <span style="color:var(--pink)">*</span></label>
-        <select id="prod_tipo" onchange="onCambioCategoria()">
+        <select id="prod_tipo" onchange="onCambioCategoriaProd()" onchange="onCambioCategoria()">
           <option value="bono_base">Bono Base</option>
           <option value="empaque">Empaque</option>
           <option value="acompanante">Acompañante</option>
@@ -1336,8 +1336,8 @@ function iniciarApp() {
   } else {
     if ($('nav-envios')) $('nav-envios').style.display = 'none';
   }
-  // Precargar categorias y catalogo
-  cargarCategoriasYSubs().then(() => { cargarCatalogo(); });
+  cargarCatalogo();
+  cargarCategoriasYSubs();
   cargarInicio();
 }
 
@@ -1361,7 +1361,7 @@ function irA(pagina) {
   if (pagina === 'inicio')    cargarInicio();
   if (pagina === 'pedidos')   cargarPedidos();
   if (pagina === 'terceros')  cargarTerceros();
-  if (pagina === 'catalogo')  cargarCategoriasYSubs().then(() => cargarCatalogo());
+  if (pagina === 'catalogo')  { cargarCatalogo(); cargarCategoriasYSubs(); }
   if (pagina === 'campanas')  cargarCampanas();
   if (pagina === 'bonos')     cargarBonos();
   if (pagina === 'eventos')   cargarEventos();
@@ -1439,12 +1439,20 @@ function editarBono(id) {
 
 async function guardarBono() {
   const id = $('bono_id').value;
+  const esCombo = $('prod_tipo') && $('prod_tipo').value === 'combo';
+  const subTexto = esCombo
+    ? ($('prod_sub_combo') ? $('prod_sub_combo').value : '')
+    : ($('prod_sub') ? $('prod_sub').value : '');
+  const catObj = CATEGORIAS.find(c => c.tipo_interno === ($('prod_tipo')?$('prod_tipo').value:''));
+  const subObj = subTexto && catObj ? SUBCATEGORIAS.find(s => s.nombre===subTexto && s.categoria_id===catObj.id) : null;
   const datos = {
-    nombre:     $('bono_nombre').value.trim(),
-    tipo_bono:  $('bono_tipo').value,
-    frase:      $('bono_frase').value.trim(),
-    imagen_url: convertirUrlDrive($('bono_img').value.trim()),
-    orden:      parseInt($('bono_orden').value)||1,
+    nombre:          $('prod_nombre').value.trim(),
+    descripcion:     $('prod_descripcion') ? ($('prod_descripcion').value.trim()||null) : null,
+    tipo:            $('prod_tipo') ? $('prod_tipo').value : 'acompanante',
+    subcategoria:    subTexto||null,
+    categoria_id:    catObj ? catObj.id : null,
+    subcategoria_id: subObj ? subObj.id : null,
+    orden:           parseInt($('prod_orden').value)||1,
     activo:     true,
   };
   if (!datos.nombre) { alert('El nombre del color es obligatorio.'); return; }
@@ -2486,12 +2494,10 @@ function previewImgProd() {
 function abrirModalProducto() {
   $('prod_id').value = '';
   $('prod_nombre').value = '';
-  $('prod_descripcion').value = '';
-  $('prod_tipo').value = 'acompanante';
-  $('prod_sub_combo').value = 'pesame';
-  cargarSubcatEnModal('acompanante', '');
-  $('campo_sub_normal').style.display = '';
-  $('campo_sub_combo').style.display = 'none';
+  if ($('prod_descripcion')) $('prod_descripcion').value = '';
+  if (CATEGORIAS.length && $('prod_tipo')) $('prod_tipo').value = CATEGORIAS[0].tipo_interno;
+  if ($('prod_sub_combo')) $('prod_sub_combo').value = 'pesame';
+  onCambioCategoriaProd();
   $('prod_precio').value = '';
   $('prod_orden').value = '';
   $('prod_img').value = '';
@@ -2506,16 +2512,16 @@ function editarProducto(id) {
   if (!p) return;
   $('prod_id').value = p.id;
   $('prod_nombre').value = p.nombre||'';
-  $('prod_descripcion').value = p.descripcion||'';
-  $('prod_tipo').value = p.tipo||'acompanante';
+  if ($('prod_descripcion')) $('prod_descripcion').value = p.descripcion||'';
+  if ($('prod_tipo')) $('prod_tipo').value = p.tipo||'acompanante';
   if (p.tipo === 'combo') {
-    $('prod_sub_combo').value = p.subcategoria||'pesame';
-    $('campo_sub_normal').style.display = 'none';
-    $('campo_sub_combo').style.display = '';
+    if ($('campo_sub_combo')) $('campo_sub_combo').style.display = '';
+    if ($('campo_sub_normal')) $('campo_sub_normal').style.display = 'none';
+    if ($('prod_sub_combo')) $('prod_sub_combo').value = p.subcategoria||'pesame';
   } else {
+    if ($('campo_sub_combo')) $('campo_sub_combo').style.display = 'none';
+    if ($('campo_sub_normal')) $('campo_sub_normal').style.display = '';
     cargarSubcatEnModal(p.tipo||'acompanante', p.subcategoria||'');
-    $('campo_sub_normal').style.display = '';
-    $('campo_sub_combo').style.display = 'none';
   }
   $('prod_precio').value = p.precio||0;
   $('prod_orden').value = p.orden||1;
@@ -3159,37 +3165,40 @@ function badgeClass(estado) {
 // CONVERTIR URL DE GOOGLE DRIVE A URL DE IMAGEN
 // ============================================================
 
+
+
 // ============================================================
-// CATEGORIAS Y SUBCATEGORIAS
+// CATEGORÍAS Y SUBCATEGORÍAS — dinámicas desde Supabase
 // ============================================================
 
 async function cargarCategoriasYSubs() {
   const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK };
   try {
     const rCat = await fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: H });
-    if (rCat.ok) CATEGORIAS = await rCat.json();
+    if (rCat.ok) { const d = await rCat.json(); if (Array.isArray(d)) CATEGORIAS = d; }
     const rSub = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: H });
-    if (rSub.ok) SUBCATEGORIAS = await rSub.json();
-  } catch(e) { console.error('Error categorias:', e); }
-  poblarSelectsCategorias();
+    if (rSub.ok) { const d = await rSub.json(); if (Array.isArray(d)) SUBCATEGORIAS = d; }
+  } catch(e) { console.error('Error cargando categorias:', e); }
+  if (CATEGORIAS.length) poblarSelectsCategorias();
 }
 
 function poblarSelectsCategorias() {
-  const optsFiltrTipo = '<option value="">Todos los tipos</option>' +
-    CATEGORIAS.map(c => '<option value="' + c.tipo_interno + '">' + c.nombre + '</option>').join('');
+  const optsConTodos = '<option value="">Todos los tipos</option>' +
+    CATEGORIAS.map(c => '<option value="'+c.tipo_interno+'">'+c.nombre+'</option>').join('');
   const optsModal = '<option value="">Todas</option>' +
-    CATEGORIAS.map(c => '<option value="' + c.tipo_interno + '">' + c.nombre + '</option>').join('');
-  const optsProd = CATEGORIAS.map(c => '<option value="' + c.tipo_interno + '">' + c.nombre + '</option>').join('');
-  if ($('filtrTipo'))           $('filtrTipo').innerHTML           = optsFiltrTipo;
-  if ($('filtroCategoriaSub'))  $('filtroCategoriaSub').innerHTML  = optsModal;
-  if ($('prod_tipo'))           $('prod_tipo').innerHTML           = optsProd;
+    CATEGORIAS.map(c => '<option value="'+c.tipo_interno+'">'+c.nombre+'</option>').join('');
+  const optsProd = CATEGORIAS.map(c => '<option value="'+c.tipo_interno+'">'+c.nombre+'</option>').join('');
+  if ($('filtrTipo'))          $('filtrTipo').innerHTML          = optsConTodos;
+  if ($('filtroCategoriaSub')) $('filtroCategoriaSub').innerHTML = optsModal;
+  if ($('prod_tipo'))          $('prod_tipo').innerHTML          = optsProd;
   actualizarFiltrSub();
 }
 
 function getSubsDeCat(tipo_interno) {
   const cat = CATEGORIAS.find(c => c.tipo_interno === tipo_interno);
   if (!cat) return [];
-  return SUBCATEGORIAS.filter(s => s.categoria_id === cat.id && s.activo !== false)
+  return SUBCATEGORIAS
+    .filter(s => s.categoria_id === cat.id && s.activo !== false)
     .sort((a,b) => (a.orden||99)-(b.orden||99));
 }
 
@@ -3198,15 +3207,15 @@ function actualizarFiltrSub() {
   const subs = tipo ? getSubsDeCat(tipo) : SUBCATEGORIAS.filter(s => s.activo !== false);
   if ($('filtrSub')) {
     $('filtrSub').innerHTML = '<option value="">Todas las subcategorias</option>' +
-      subs.map(s => '<option value="' + s.nombre + '">' + s.nombre + '</option>').join('');
+      subs.map(s => '<option value="'+s.nombre+'">'+s.nombre+'</option>').join('');
   }
 }
 
-function onCambioCategoria() {
+function onCambioCategoriaProd() {
   const tipo = $('prod_tipo') ? $('prod_tipo').value : '';
   const esCombo = tipo === 'combo';
-  $('campo_sub_normal').style.display = esCombo ? 'none' : '';
-  $('campo_sub_combo').style.display  = esCombo ? '' : 'none';
+  if ($('campo_sub_combo')) $('campo_sub_combo').style.display = esCombo ? '' : 'none';
+  if ($('campo_sub_normal')) $('campo_sub_normal').style.display = esCombo ? 'none' : '';
   if (!esCombo) cargarSubcatEnModal(tipo, '');
 }
 
@@ -3215,18 +3224,17 @@ function cargarSubcatEnModal(tipo_interno, valorActual) {
   if (!sel) return;
   const subs = getSubsDeCat(tipo_interno);
   sel.innerHTML = '<option value="">— Sin subcategoria —</option>' +
-    subs.map(s => '<option value="' + s.nombre + '"' + (s.nombre===valorActual?' selected':'') + '>' + s.nombre + '</option>').join('');
+    subs.map(s => '<option value="'+s.nombre+'"'+(s.nombre===valorActual?' selected':'')+'>'+s.nombre+'</option>').join('');
 }
 
 async function actualizarOrdenProducto(id, valor) {
+  const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
   await fetch(SUPABASE_URL + '/rest/v1/catalogo?id=eq.' + id, {
-    method: 'PATCH',
-    headers: { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ orden: parseInt(valor)||1 })
+    method: 'PATCH', headers: H, body: JSON.stringify({ orden: parseInt(valor)||1 })
   });
 }
 
-// ── Modal categorias ─────────────────────────────────────────
+// ── Modal gestión de categorías ──────────────────────────────
 async function abrirModalCategorias() {
   await cargarCategoriasYSubs();
   mostrarTabCat('cats');
@@ -3236,12 +3244,12 @@ async function abrirModalCategorias() {
 }
 
 function mostrarTabCat(tab) {
-  $('tabCats').style.display = tab==='cats' ? '' : 'none';
-  $('tabSubs').style.display = tab==='subs' ? '' : 'none';
+  if ($('tabCats')) $('tabCats').style.display = tab==='cats' ? '' : 'none';
+  if ($('tabSubs')) $('tabSubs').style.display = tab==='subs' ? '' : 'none';
   const act   = 'padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--pink);border-bottom:2px solid var(--pink);margin-bottom:-2px';
   const inact = 'padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--ink-lt);border-bottom:2px solid transparent;margin-bottom:-2px';
-  $('tabBtnCats').style.cssText = tab==='cats' ? act : inact;
-  $('tabBtnSubs').style.cssText = tab==='subs' ? act : inact;
+  if ($('tabBtnCats')) $('tabBtnCats').style.cssText = tab==='cats' ? act : inact;
+  if ($('tabBtnSubs')) $('tabBtnSubs').style.cssText = tab==='subs' ? act : inact;
 }
 
 function renderCatsCat() {
@@ -3249,11 +3257,11 @@ function renderCatsCat() {
   if (!tbody) return;
   tbody.innerHTML = CATEGORIAS.map((c,i) =>
     '<tr>' +
-    '<td><input type="text" value="' + c.nombre + '" data-id="' + c.id + '" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:.83rem;width:150px" onchange="editarNombreCat(this)"></td>' +
-    '<td><code style="font-size:.75rem;background:var(--bg);padding:2px 6px;border-radius:4px">' + c.tipo_interno + '</code></td>' +
-    '<td style="text-align:center"><input type="number" value="' + (c.orden||i+1) + '" min="1" style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem" onchange="editarOrdenCat(this,' + c.id + ')"></td>' +
-    '<td style="text-align:center"><label class="toggle"><input type="checkbox" ' + (c.activo!==false?'checked':'') + ' onchange="toggleActivoCat(' + c.id + ',this.checked)"><span class="toggle-slider"></span></label></td>' +
-    '<td><button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;font-size:.72rem" onclick="eliminarCat(' + c.id + ',&quot;' + c.nombre + '&quot;)">🗑</button></td>' +
+    '<td><input type="text" value="'+c.nombre+'" data-id="'+c.id+'" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:.83rem;width:150px" onchange="editarNombreCat(this)"></td>' +
+    '<td><code style="font-size:.75rem;background:var(--bg);padding:2px 6px;border-radius:4px">'+c.tipo_interno+'</code></td>' +
+    '<td style="text-align:center"><input type="number" value="'+(c.orden||i+1)+'" min="1" style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem" onchange="editarOrdenCat(this,'+c.id+')"></td>' +
+    '<td style="text-align:center"><label class="toggle"><input type="checkbox" '+(c.activo!==false?'checked':'')+' onchange="toggleActivoCat('+c.id+',this.checked)"><span class="toggle-slider"></span></label></td>' +
+    '<td><button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;font-size:.72rem" onclick="eliminarCat('+c.id+')">🗑</button></td>' +
     '</tr>'
   ).join('');
 }
@@ -3270,18 +3278,20 @@ function toggleActivoCat(id, activo) {
   const c = CATEGORIAS.find(x => x.id === id);
   if (c) c.activo = activo;
 }
-function eliminarCat(id, nombre) {
+function eliminarCat(id) {
+  const c = CATEGORIAS.find(x => x.id === id);
+  if (!c) return;
   if (SUBCATEGORIAS.some(s => s.categoria_id === id)) {
-    alert('Elimina primero las subcategorias de "' + nombre + '"'); return;
+    alert('Elimina primero las subcategorias de "' + c.nombre + '"'); return;
   }
-  if (!confirm('Eliminar categoria "' + nombre + '"?')) return;
-  CATEGORIAS = CATEGORIAS.filter(c => c.id !== id);
+  if (!confirm('Eliminar la categoria "' + c.nombre + '"?')) return;
+  CATEGORIAS = CATEGORIAS.filter(x => x.id !== id);
   renderCatsCat();
 }
 function agregarCategoria() {
   const nombre  = prompt('Nombre visible (Ej: Mascotas):');
   if (!nombre || !nombre.trim()) return;
-  const interno = prompt('Codigo interno sin espacios ni tildes (Ej: mascotas):');
+  const interno = prompt('Codigo interno, sin espacios ni tildes (Ej: mascotas):');
   if (!interno || !interno.trim()) return;
   if (CATEGORIAS.find(c => c.tipo_interno === interno.trim())) { alert('Ya existe ese codigo interno.'); return; }
   const max = Math.max(0, ...CATEGORIAS.map(c => c.orden||0));
@@ -3292,18 +3302,18 @@ function agregarCategoria() {
 function renderSubsCat() {
   const tbody = $('bodySubsCat');
   if (!tbody) return;
-  if ($('filtroCategoriaSub')) poblarSelectsCategorias();
+  if ($('filtroCategoriaSub') && $('filtroCategoriaSub').options.length <= 1) poblarSelectsCategorias();
   const filtro = $('filtroCategoriaSub') ? $('filtroCategoriaSub').value : '';
-  const cat = filtro ? CATEGORIAS.find(c => c.tipo_interno === filtro) : null;
-  const lista = SUBCATEGORIAS.filter(s => !cat || s.categoria_id === cat.id);
+  const cat    = filtro ? CATEGORIAS.find(c => c.tipo_interno === filtro) : null;
+  const lista  = SUBCATEGORIAS.filter(s => !cat || s.categoria_id === cat.id);
   tbody.innerHTML = lista.length ? lista.map((s,i) => {
     const catNom = (CATEGORIAS.find(c => c.id === s.categoria_id)||{}).nombre||'—';
     return '<tr>' +
-      '<td><input type="text" value="' + s.nombre + '" data-id="' + (s.id||'') + '" data-catid="' + s.categoria_id + '" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:.83rem;width:150px" onchange="editarNombreSub(this)"></td>' +
-      '<td><span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">' + catNom + '</span></td>' +
-      '<td style="text-align:center"><input type="number" value="' + (s.orden||i+1) + '" min="1" style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem" onchange="editarOrdenSub(this,' + (s.id||'null') + ')"></td>' +
-      '<td style="text-align:center"><label class="toggle"><input type="checkbox" ' + (s.activo!==false?'checked':'') + ' onchange="toggleActivoSub(' + (s.id||'null') + ',this.checked)"><span class="toggle-slider"></span></label></td>' +
-      '<td><button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;font-size:.72rem" onclick="eliminarSub(' + (s.id||'null') + ',' + s.categoria_id + ')">🗑</button></td>' +
+      '<td><input type="text" value="'+s.nombre+'" data-id="'+(s.id||'')+'" data-catid="'+s.categoria_id+'" style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:.83rem;width:150px" onchange="editarNombreSub(this)"></td>' +
+      '<td><span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">'+catNom+'</span></td>' +
+      '<td style="text-align:center"><input type="number" value="'+(s.orden||i+1)+'" min="1" style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem" onchange="editarOrdenSub(this,'+(s.id||'null')+')"></td>' +
+      '<td style="text-align:center"><label class="toggle"><input type="checkbox" '+(s.activo!==false?'checked':'')+' onchange="toggleActivoSub('+(s.id||'null')+',this.checked)"><span class="toggle-slider"></span></label></td>' +
+      '<td><button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;font-size:.72rem" onclick="eliminarSub('+(s.id||'null')+','+s.categoria_id+')">🗑</button></td>' +
       '</tr>';
   }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:16px">No hay subcategorias</td></tr>';
 }
@@ -3347,26 +3357,38 @@ async function guardarCategorias() {
     try {
       let r;
       if (c.id) {
-        r = await fetch(SUPABASE_URL + '/rest/v1/categorias?id=eq.' + c.id, { method:'PATCH', headers: Object.assign({'Prefer':'return=minimal'}, H), body: JSON.stringify({nombre:c.nombre,orden:c.orden,activo:c.activo}) });
+        r = await fetch(SUPABASE_URL + '/rest/v1/categorias?id=eq.'+c.id, {
+          method:'PATCH', headers: Object.assign({'Prefer':'return=minimal'},H),
+          body: JSON.stringify({nombre:c.nombre, orden:c.orden, activo:c.activo})
+        });
       } else {
-        r = await fetch(SUPABASE_URL + '/rest/v1/categorias', { method:'POST', headers: Object.assign({'Prefer':'return=representation'}, H), body: JSON.stringify({nombre:c.nombre,tipo_interno:c.tipo_interno,orden:c.orden,activo:c.activo}) });
+        r = await fetch(SUPABASE_URL + '/rest/v1/categorias', {
+          method:'POST', headers: Object.assign({'Prefer':'return=representation'},H),
+          body: JSON.stringify({nombre:c.nombre, tipo_interno:c.tipo_interno, orden:c.orden, activo:c.activo})
+        });
         if (r.ok) { const d=await r.json(); if(d[0]) c.id=d[0].id; }
       }
-      if (!r.ok) err++;
-    } catch(e) { err++; }
+      if (r && !r.ok) err++;
+    } catch(e) { err++; console.error(e); }
   }
   for (const s of SUBCATEGORIAS) {
     if (!s.categoria_id) continue;
     try {
       let r;
       if (s.id) {
-        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?id=eq.' + s.id, { method:'PATCH', headers: Object.assign({'Prefer':'return=minimal'}, H), body: JSON.stringify({nombre:s.nombre,orden:s.orden,activo:s.activo}) });
+        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?id=eq.'+s.id, {
+          method:'PATCH', headers: Object.assign({'Prefer':'return=minimal'},H),
+          body: JSON.stringify({nombre:s.nombre, orden:s.orden, activo:s.activo})
+        });
       } else {
-        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias', { method:'POST', headers: Object.assign({'Prefer':'return=representation'}, H), body: JSON.stringify({nombre:s.nombre,categoria_id:s.categoria_id,orden:s.orden,activo:s.activo!==false}) });
+        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias', {
+          method:'POST', headers: Object.assign({'Prefer':'return=representation'},H),
+          body: JSON.stringify({nombre:s.nombre, categoria_id:s.categoria_id, orden:s.orden, activo:s.activo!==false})
+        });
         if (r.ok) { const d=await r.json(); if(d[0]) s.id=d[0].id; }
       }
-      if (!r.ok) err++;
-    } catch(e) { err++; }
+      if (r && !r.ok) err++;
+    } catch(e) { err++; console.error(e); }
   }
   if (btn) { btn.disabled=false; btn.textContent='Guardar cambios'; }
   if (err===0) {
@@ -3375,7 +3397,7 @@ async function guardarCategorias() {
     await cargarCategoriasYSubs();
     filtrarCatalogo();
   } else {
-    alert('Hubo ' + err + ' error(es) al guardar.');
+    alert('Hubo '+err+' error(es) al guardar.');
   }
 }
 
