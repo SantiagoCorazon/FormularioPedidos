@@ -1341,8 +1341,8 @@ function iniciarApp() {
   } else {
     if ($('nav-envios')) $('nav-envios').style.display = 'none';
   }
-  // Precargar catálogo para que esté disponible en eventos y temporada
-  cargarCatalogo();
+  // Precargar categorias y catálogo
+  cargarCategoriasYSubs().then(() => cargarCatalogo());
   cargarInicio();
 }
 
@@ -1366,7 +1366,7 @@ function irA(pagina) {
   if (pagina === 'inicio')    cargarInicio();
   if (pagina === 'pedidos')   cargarPedidos();
   if (pagina === 'terceros')  cargarTerceros();
-  if (pagina === 'catalogo')  cargarCatalogo();
+  if (pagina === 'catalogo')  cargarCategoriasYSubs().then(() => cargarCatalogo());
   if (pagina === 'campanas')  cargarCampanas();
   if (pagina === 'bonos')     cargarBonos();
   if (pagina === 'eventos')   cargarEventos();
@@ -2422,7 +2422,7 @@ async function cargarCatalogo() {
 
   const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrs() });
   todoElCatalogo = await r.json();
-  try { await cargarSubcategorias(); } catch(e) { console.warn('subcategorias no disponibles:', e); }
+  await cargarCategoriasYSubs();
 
   // Restaurar filtros
   if ($('filtrTipo') && tipoActivo) {
