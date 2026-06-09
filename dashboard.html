@@ -1004,7 +1004,7 @@ tr:hover td{background:var(--pink-lt)}
 
     <!-- Tabs -->
     <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px">
-      <button id="tabBtnTipos" onclick="mostrarTabCat('tipos')"
+      <button id="tabBtnTipos" onclick="mostrarTabCat('categorias')"
         style="padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--pink);border-bottom:2px solid var(--pink);margin-bottom:-2px">
         Tipos (categorías)
       </button>
@@ -3249,7 +3249,8 @@ function cargarSubcatEnModal(tipo_interno, valorActual) {
 }
 
 // ── Modal Gestión de Categorías ───────────────────────────────
-function abrirModalCategorias() {
+async function abrirModalCategorias() {
+  await cargarCategoriasYSubs();
   mostrarTabCat('categorias');
   renderCategoriasCat();
   renderSubsCat();
