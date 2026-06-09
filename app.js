@@ -350,12 +350,10 @@ function renderCombosModal(tipo) {
     var img = (p.imagen_url || p.imagen_url_shopify)
       ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
       : '';
-    var desc = p.descripcion ? '<div style="font-size:.75rem;color:var(--ink-lt);margin:4px 0 8px">' + p.descripcion + '</div>' : '';
     return '<div class="prod-card' + (esSel?' sel':'') + '" onclick="selComboModal(' + p.id + ')" style="cursor:pointer">' +
       img +
       '<div class="prod-info">' +
       '<div class="prod-nombre">' + p.nombre + '</div>' +
-      desc +
       '<div class="prod-precio">' + fmt(p.precio) + '</div>' +
       '</div></div>';
   }).join('');

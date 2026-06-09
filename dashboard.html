@@ -349,18 +349,16 @@ tr:hover td{background:var(--pink-lt)}
       <div class="card">
         <div class="card-header">
           <div class="card-title">Productos activos</div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalProducto()">+ Nuevo producto</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="abrirModalCategorias()">⚙️ Categorías y orden</button>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalProducto()">+ Nuevo producto</button>
+          </div>
         </div>
         <div class="card-body">
           <div class="search-bar">
             <input class="search-input" id="searchCatalogo" placeholder="Buscar producto..." oninput="filtrarCatalogo()">
             <select id="filtrTipo" onchange="filtrarCatalogo();actualizarFiltrSub()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todos los tipos</option>
-              <option value="bono_base">Bonos Base</option>
-              <option value="empaque">Empaques</option>
-              <option value="acompanante">Acompañantes</option>
-              <option value="empresarial">Empresarial</option>
-              <option value="combo">Combos</option>
             </select>
             <select id="filtrSub" onchange="filtrarCatalogo()" style="padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;outline:none">
               <option value="">Todas las subcategorías</option>
@@ -369,7 +367,7 @@ tr:hover td{background:var(--pink-lt)}
           <div class="table-wrap"><table>
             <thead><tr>
               <th>Imagen</th><th>Nombre</th><th>Tipo</th><th>Subcategoría</th>
-              <th>Precio</th><th>Activo</th><th>Acciones</th>
+              <th>Precio</th><th style="text-align:center">Orden</th><th>Activo</th><th>Acciones</th>
             </tr></thead>
             <tbody id="bodyCatalogo"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
@@ -951,16 +949,18 @@ tr:hover td{background:var(--pink-lt)}
     <input type="hidden" id="prod_id">
     <div class="form-grid">
       <div class="form-field col-full"><label>Nombre <span style="color:var(--pink)">*</span></label><input type="text" id="prod_nombre" placeholder="Nombre del producto"></div>
-      <div class="form-field"><label>Tipo <span style="color:var(--pink)">*</span></label>
-        <select id="prod_tipo" onchange="toggleCamposCombo()">
-          <option value="bono_base">Bono Base</option>
-          <option value="empaque">Empaque</option>
-          <option value="acompanante">Acompañante</option>
-          <option value="empresarial">Empresarial</option>
-          <option value="combo">Combo</option>
+      <div class="form-field col-full"><label>Descripción adicional <span style="font-size:.7rem;font-weight:400;text-transform:none;color:var(--ink-lt)">(se muestra al cliente si hay algo escrito)</span></label><input type="text" id="prod_descripcion" placeholder="Ej: Bono plegable + sobre organza + vela cerámica"></div>
+      <div class="form-field"><label>Categoría <span style="color:var(--pink)">*</span></label>
+        <select id="prod_tipo" onchange="onCambioCategoria()">
+          <option value="">Cargando...</option>
         </select>
       </div>
-      <div class="form-field" id="campo_sub_normal"><label>Subcategoría</label><input type="text" id="prod_sub" placeholder="Ej: Plantas, Velas, Línea de Corazón"></div>
+      <div class="form-field" id="campo_sub_normal">
+        <label>Subcategoría</label>
+        <select id="prod_sub">
+          <option value="">— Sin subcategoría —</option>
+        </select>
+      </div>
       <div class="form-field" id="campo_sub_combo" style="display:none">
         <label>Tipo de combo <span style="color:var(--pink)">*</span></label>
         <select id="prod_sub_combo">
@@ -991,6 +991,58 @@ tr:hover td{background:var(--pink-lt)}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalProducto')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Gestión de Categorías -->
+<div class="modal-overlay" id="modalCategorias">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-title">Categorías y Subcategorías</div>
+    <div class="modal-sub">Define el orden en que aparecen los tipos y subcategorías en el formulario y en el catálogo</div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px">
+      <button id="tabBtnTipos" onclick="mostrarTabCat('tipos')"
+        style="padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--pink);border-bottom:2px solid var(--pink);margin-bottom:-2px">
+        Tipos (categorías)
+      </button>
+      <button id="tabBtnSubs" onclick="mostrarTabCat('subs')"
+        style="padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--ink-lt);border-bottom:2px solid transparent;margin-bottom:-2px">
+        Subcategorías
+      </button>
+    </div>
+
+    <!-- Tab Tipos -->
+    <div id="tabTipos">
+      <div style="background:#fff8e1;border:1.5px solid #ffe082;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.82rem;color:#795548">
+        ⚠️ Las <strong>categorías</strong> (Bono Base, Empaque, Acompañante, Empresarial, Combo) son fijas del sistema — definen cómo se comporta el formulario y no se pueden renombrar ni eliminar. Gestiona las <strong>subcategorías</strong> en la pestaña de al lado.
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Código interno</th><th>Nombre visible</th><th>Subcategorías</th></tr></thead>
+        <tbody id="bodyTiposCat"></tbody>
+      </table></div>
+    </div>
+
+    <!-- Tab Subcategorías -->
+    <div id="tabSubs" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <label style="font-size:.83rem;font-weight:600;color:var(--ink-lt)">Filtrar por tipo:</label>
+        <select id="filtroTipoCat" onchange="renderSubsCat()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.83rem">
+          <option value="">Todos</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="agregarSubcategoria()" style="margin-left:auto">+ Nueva subcategoría</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>☰</th><th>Subcategoría</th><th>Tipo</th><th style="text-align:center;width:80px">Orden</th><th>Acciones</th></tr></thead>
+        <tbody id="bodySubsCat"></tbody>
+      </table></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalCategorias')">Cerrar</button>
+      <button class="btn btn-primary" onclick="guardarOrdenCategorias()">💾 Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -2359,6 +2411,7 @@ async function cargarCatalogo() {
 
   const r = await fetch(`${SUPABASE_URL}/rest/v1/catalogo?order=tipo.asc,orden.asc`, { headers: hdrs() });
   todoElCatalogo = await r.json();
+  await cargarSubcategorias(); // Actualizar subcats cada vez que recarga el catálogo
 
   // Restaurar filtros
   if ($('filtrTipo') && tipoActivo) {
@@ -2397,11 +2450,15 @@ function actualizarFiltrSub() {
 
 function renderCatalogo(lista) {
   $('bodyCatalogo').innerHTML = lista.length ? lista.map(p => `<tr>
-    <td><img src="${p.imagen_url||''}" style="height:50px;width:50px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'"></td>
-    <td><strong>${p.nombre||'—'}</strong></td>
+    <td><img src="${convertirUrlDrive(p.imagen_url||'')}" style="height:50px;width:50px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'"></td>
+    <td><strong>${p.nombre||'—'}</strong>${p.descripcion?`<div style="font-size:.72rem;color:var(--ink-lt);margin-top:2px">${p.descripcion}</div>`:''}</td>
     <td><span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">${p.tipo||'—'}</span></td>
     <td>${p.subcategoria||'—'}</td>
     <td>${fmt(p.precio)}</td>
+    <td style="text-align:center">
+      <input type="number" value="${p.orden||1}" min="1" style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem"
+        onchange="actualizarOrdenProducto(${p.id}, this.value)">
+    </td>
     <td>
       <label class="toggle"><input type="checkbox" ${p.activo?'checked':''} onchange="toggleActivo(${p.id}, this.checked)"><span class="toggle-slider"></span></label>
     </td>
@@ -2409,7 +2466,7 @@ function renderCatalogo(lista) {
       <button class="btn btn-secondary btn-sm" onclick="editarProducto(${p.id})">✏️</button>
       <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b" onclick="eliminarProducto(${p.id})">🗑</button>
     </td>
-  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron productos</td></tr>';
+  </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron productos</td></tr>';
 }
 
 function previewImgProd() {
@@ -2433,9 +2490,10 @@ function toggleCamposCombo() {
 function abrirModalProducto() {
   $('prod_id').value = '';
   $('prod_nombre').value = '';
+  $('prod_descripcion').value = '';
   $('prod_tipo').value = 'acompanante';
-  $('prod_sub').value = '';
   $('prod_sub_combo').value = 'pesame';
+  cargarSubcatEnModal('acompanante', '');
   $('prod_precio').value = '';
   $('prod_orden').value = '';
   $('prod_img').value = '';
@@ -2451,14 +2509,16 @@ function editarProducto(id) {
   if (!p) return;
   $('prod_id').value = p.id;
   $('prod_nombre').value = p.nombre||'';
+  $('prod_descripcion').value = p.descripcion||'';
   $('prod_tipo').value = p.tipo||'acompanante';
-  // Subcategoría: si es combo usa el select, si no el input texto
   if (p.tipo === 'combo') {
     $('prod_sub_combo').value = p.subcategoria||'pesame';
-    $('prod_sub').value = '';
+    $('campo_sub_normal').style.display = 'none';
+    $('campo_sub_combo').style.display  = '';
   } else {
-    $('prod_sub').value = p.subcategoria||'';
-    $('prod_sub_combo').value = 'pesame';
+    cargarSubcatEnModal(p.tipo||'acompanante', p.subcategoria||'');
+    $('campo_sub_normal').style.display = '';
+    $('campo_sub_combo').style.display  = 'none';
   }
   $('prod_precio').value = p.precio||0;
   $('prod_orden').value = p.orden||1;
@@ -2478,8 +2538,9 @@ async function guardarProducto() {
   const esCombo = $('prod_tipo').value === 'combo';
   const datos = {
     nombre:       $('prod_nombre').value.trim(),
+    descripcion:  $('prod_descripcion').value.trim()||null,
     tipo:         $('prod_tipo').value,
-    subcategoria: esCombo ? $('prod_sub_combo').value : $('prod_sub').value.trim(),
+    subcategoria: esCombo ? $('prod_sub_combo').value : ($('prod_sub').value||'').trim(),
     precio:       parseFloat($('prod_precio').value)||0,
     orden:        parseInt($('prod_orden').value)||1,
     imagen_url:   convertirUrlDrive($('prod_img').value.trim()),
@@ -3101,6 +3162,262 @@ function badgeClass(estado) {
 // ============================================================
 // CONVERTIR URL DE GOOGLE DRIVE A URL DE IMAGEN
 // ============================================================
+
+// ============================================================
+// CATEGORÍAS Y SUBCATEGORÍAS — dinámicas desde Supabase
+// ============================================================
+
+// Tipos del sistema: fijos en código (definen comportamiento)
+// nombre_interno → etiqueta visible
+const TIPOS_SISTEMA = [
+  { valor:'bono_base',   label:'Bono Base'    },
+  { valor:'empaque',     label:'Empaque'      },
+  { valor:'acompanante', label:'Acompañante'  },
+  { valor:'empresarial', label:'Empresarial'  },
+  { valor:'combo',       label:'Combo'        }
+];
+
+// Cache global de subcategorías cargadas desde Supabase
+// [{id, nombre, tipo, orden, activo}]
+let SUBCATS = [];
+
+// ── Carga inicial ─────────────────────────────────────────────
+async function cargarSubcategorias() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc,nombre.asc', { headers: hdrs() });
+    if (r.ok) {
+      SUBCATS = await r.json();
+    } else {
+      // Si la tabla no existe aún, construir desde el catálogo
+      SUBCATS = construirSubcatsDesdeProductos();
+    }
+  } catch(e) {
+    SUBCATS = construirSubcatsDesdeProductos();
+  }
+  poblarSelectsTipo();
+  actualizarFiltrSub();
+}
+
+function construirSubcatsDesdeProductos() {
+  const map = {};
+  (todoElCatalogo||[]).forEach(p => {
+    if (!p.subcategoria) return;
+    const key = p.tipo + '|' + p.subcategoria;
+    if (!map[key]) map[key] = { id: null, nombre: p.subcategoria, tipo: p.tipo, orden: p.orden||99, activo: true };
+  });
+  return Object.values(map).sort((a,b) => a.orden - b.orden);
+}
+
+// ── Poblar selects de tipo en filtros y modal ─────────────────
+function poblarSelectsTipo() {
+  const opts = '<option value="">Todos los tipos</option>' +
+    TIPOS_SISTEMA.map(t => `<option value="${t.valor}">${t.label}</option>`).join('');
+  const optsModal = '<option value="">Todos</option>' +
+    TIPOS_SISTEMA.map(t => `<option value="${t.valor}">${t.label}</option>`).join('');
+
+  if ($('filtrTipo'))    $('filtrTipo').innerHTML    = opts;
+  if ($('filtroTipoCat')) $('filtroTipoCat').innerHTML = optsModal;
+
+  // Modal de producto: sin "Todos"
+  if ($('prod_tipo')) {
+    $('prod_tipo').innerHTML = TIPOS_SISTEMA.map(t =>
+      `<option value="${t.valor}">${t.label}</option>`).join('');
+  }
+}
+
+// ── Subcategorías filtradas por tipo ─────────────────────────
+function getSubcatsDeTipo(tipo) {
+  return SUBCATS.filter(s => s.activo !== false && (!tipo || s.tipo === tipo))
+    .sort((a,b) => (a.orden||99) - (b.orden||99) || a.nombre.localeCompare(b.nombre));
+}
+
+function actualizarFiltrSub() {
+  const tipo = $('filtrTipo') ? $('filtrTipo').value : '';
+  const subs = getSubcatsDeTipo(tipo);
+  if ($('filtrSub')) {
+    $('filtrSub').innerHTML = '<option value="">Todas las subcategorías</option>' +
+      subs.map(s => `<option value="${s.nombre}">${s.nombre}</option>`).join('');
+  }
+}
+
+// ── Modal de producto: cambio de categoría recarga subcats ────
+function onCambioCategoria() {
+  const tipo = $('prod_tipo').value;
+  const esCombo = tipo === 'combo';
+  $('campo_sub_normal').style.display = esCombo ? 'none' : '';
+  $('campo_sub_combo').style.display  = esCombo ? '' : 'none';
+  if (!esCombo) cargarSubcatEnModal(tipo, '');
+}
+
+function toggleCamposCombo() { onCambioCategoria(); }
+
+function cargarSubcatEnModal(tipo, valorActual) {
+  const sel = $('prod_sub');
+  if (!sel) return;
+  const subs = getSubcatsDeTipo(tipo);
+  sel.innerHTML = '<option value="">— Sin subcategoría —</option>' +
+    subs.map(s => `<option value="${s.nombre}" ${s.nombre===valorActual?'selected':''}>${s.nombre}</option>`).join('');
+}
+
+// ── Modal de Gestión de Categorías ───────────────────────────
+function abrirModalCategorias() {
+  renderTiposCat();
+  renderSubsCat();
+  mostrarTabCat('tipos');
+  abrirModal('modalCategorias');
+}
+
+function mostrarTabCat(tab) {
+  $('tabTipos').style.display = tab==='tipos' ? '' : 'none';
+  $('tabSubs').style.display  = tab==='subs'  ? '' : 'none';
+  const act   = 'padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--pink);border-bottom:2px solid var(--pink);margin-bottom:-2px';
+  const inact = 'padding:8px 20px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:.85rem;font-weight:600;color:var(--ink-lt);border-bottom:2px solid transparent;margin-bottom:-2px';
+  $('tabBtnTipos').style.cssText = tab==='tipos' ? act : inact;
+  $('tabBtnSubs').style.cssText  = tab==='subs'  ? act : inact;
+}
+
+// Tab Tipos: solo muestra — no se pueden editar (son del sistema)
+function renderTiposCat() {
+  const tbody = $('bodyTiposCat');
+  if (!tbody) return;
+  tbody.innerHTML = TIPOS_SISTEMA.map((t, i) => `
+    <tr>
+      <td><code style="font-size:.78rem;background:var(--bg);padding:2px 6px;border-radius:4px">${t.valor}</code></td>
+      <td><strong>${t.label}</strong></td>
+      <td style="font-size:.75rem;color:var(--ink-lt)">
+        ${getSubcatsDeTipo(t.valor).length} subcategorías
+      </td>
+    </tr>`).join('');
+}
+
+// Tab Subcategorías: CRUD completo
+function renderSubsCat() {
+  const tbody = $('bodySubsCat');
+  if (!tbody) return;
+  const filtro = $('filtroTipoCat') ? $('filtroTipoCat').value : '';
+  // Poblar el select del filtro
+  if ($('filtroTipoCat') && $('filtroTipoCat').options.length <= 1) poblarSelectsTipo();
+  const lista = SUBCATS.filter(s => !filtro || s.tipo === filtro);
+  tbody.innerHTML = lista.length ? lista.map((s, idx) => `
+    <tr>
+      <td>
+        <input type="text" value="${s.nombre}" data-id="${s.id||''}" data-tipo="${s.tipo}" data-original="${s.nombre}"
+          style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:.83rem;width:160px"
+          onchange="editarNombreSub(this)">
+      </td>
+      <td>
+        <span style="font-size:.72rem;background:var(--pink-lt);color:var(--pink);padding:2px 8px;border-radius:10px;font-weight:600">
+          ${TIPOS_SISTEMA.find(t=>t.valor===s.tipo)?.label||s.tipo}
+        </span>
+      </td>
+      <td style="text-align:center">
+        <input type="number" value="${s.orden||idx+1}" min="1"
+          style="width:52px;padding:4px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:var(--font);font-size:.83rem"
+          onchange="editarOrdenSub(this,'${s.tipo}','${s.nombre}')">
+      </td>
+      <td>
+        <label class="toggle" title="Activo/Inactivo">
+          <input type="checkbox" ${s.activo!==false?'checked':''} onchange="toggleActivoSub('${s.tipo}','${s.nombre}',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td>
+        <button class="btn btn-sm" style="background:#fde8e8;color:#c0392b;font-size:.72rem"
+          onclick="eliminarSubcat('${s.tipo}','${s.nombre}')">🗑</button>
+      </td>
+    </tr>`).join('')
+  : '<tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:16px">No hay subcategorías</td></tr>';
+}
+
+function editarNombreSub(input) {
+  const tipo     = input.dataset.tipo;
+  const original = input.dataset.original;
+  const nuevo    = input.value.trim();
+  const s = SUBCATS.find(x => x.tipo===tipo && x.nombre===original);
+  if (s) { s.nombre = nuevo; input.dataset.original = nuevo; }
+}
+
+function editarOrdenSub(input, tipo, nombre) {
+  const s = SUBCATS.find(x => x.tipo===tipo && x.nombre===nombre);
+  if (s) s.orden = parseInt(input.value)||1;
+}
+
+function toggleActivoSub(tipo, nombre, activo) {
+  const s = SUBCATS.find(x => x.tipo===tipo && x.nombre===nombre);
+  if (s) s.activo = activo;
+}
+
+function eliminarSubcat(tipo, nombre) {
+  if (!confirm('¿Eliminar la subcategoría "' + nombre + '"?\nLos productos con esa subcategoría quedarán sin subcategoría asignada.')) return;
+  SUBCATS = SUBCATS.filter(s => !(s.tipo===tipo && s.nombre===nombre));
+  renderSubsCat();
+}
+
+function agregarSubcategoria() {
+  const nombre = prompt('Nombre de la nueva subcategoría:');
+  if (!nombre || !nombre.trim()) return;
+  const tipo = ($('filtroTipoCat') && $('filtroTipoCat').value) || 'acompanante';
+  if (SUBCATS.find(s => s.tipo===tipo && s.nombre===nombre.trim())) {
+    alert('Esa subcategoría ya existe para ese tipo.'); return;
+  }
+  const maxOrden = Math.max(0, ...SUBCATS.filter(s=>s.tipo===tipo).map(s=>s.orden||0));
+  SUBCATS.push({ id: null, nombre: nombre.trim(), tipo, orden: maxOrden + 1, activo: true });
+  renderSubsCat();
+}
+
+// ── Guardar todo en Supabase ──────────────────────────────────
+async function guardarOrdenCategorias() {
+  const btn = document.querySelector('#modalCategorias .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  let errores = 0;
+  for (const s of SUBCATS) {
+    try {
+      let r;
+      if (s.id) {
+        // Actualizar existente
+        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?id=eq.' + s.id, {
+          method: 'PATCH',
+          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=minimal'}),
+          body: JSON.stringify({ nombre: s.nombre, tipo: s.tipo, orden: s.orden, activo: s.activo })
+        });
+      } else {
+        // Insertar nueva
+        r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias', {
+          method: 'POST',
+          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=representation'}),
+          body: JSON.stringify({ nombre: s.nombre, tipo: s.tipo, orden: s.orden, activo: s.activo !== false })
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (data[0]) s.id = data[0].id;
+        }
+      }
+      if (!r.ok) errores++;
+    } catch(e) { errores++; console.error(e); }
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }
+
+  if (errores === 0) {
+    alert('Categorías guardadas correctamente ✅');
+    cerrarModal('modalCategorias');
+    await cargarSubcategorias();
+    filtrarCatalogo();
+  } else {
+    alert('Hubo ' + errores + ' error(es) al guardar. Revisa la consola.');
+  }
+}
+
+async function actualizarOrdenProducto(id, valor) {
+  await fetch(SUPABASE_URL + '/rest/v1/catalogo?id=eq.' + id, {
+    method: 'PATCH',
+    headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=minimal'}),
+    body: JSON.stringify({ orden: parseInt(valor)||1 })
+  });
+}
+
+
 function convertirUrlDrive(url) {
   if (!url) return url;
   url = url.trim();
