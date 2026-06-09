@@ -3172,14 +3172,13 @@ function badgeClass(estado) {
 // ============================================================
 
 async function cargarCategoriasYSubs() {
-  const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK };
   try {
-    const rCat = await fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: H });
+    const rCat = await fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: hdrs() });
     if (rCat.ok) { const d = await rCat.json(); if (Array.isArray(d)) CATEGORIAS = d; }
-    const rSub = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: H });
+    const rSub = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: hdrs() });
     if (rSub.ok) { const d = await rSub.json(); if (Array.isArray(d)) SUBCATEGORIAS = d; }
   } catch(e) { console.error('Error cargando categorias:', e); }
-  if (CATEGORIAS.length) poblarSelectsCategorias();
+  poblarSelectsCategorias();
 }
 
 function poblarSelectsCategorias() {
@@ -3228,9 +3227,10 @@ function cargarSubcatEnModal(tipo_interno, valorActual) {
 }
 
 async function actualizarOrdenProducto(id, valor) {
-  const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
   await fetch(SUPABASE_URL + '/rest/v1/catalogo?id=eq.' + id, {
-    method: 'PATCH', headers: H, body: JSON.stringify({ orden: parseInt(valor)||1 })
+    method: 'PATCH',
+    headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, hdrs()),
+    body: JSON.stringify({ orden: parseInt(valor)||1 })
   });
 }
 
@@ -3351,7 +3351,7 @@ function agregarSubcategoria() {
 async function guardarCategorias() {
   const btn = document.querySelector('#modalCategorias .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-  const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK, 'Content-Type': 'application/json' };
+  const H = Object.assign({ 'Content-Type': 'application/json' }, hdrs());
   let err = 0;
   for (const c of CATEGORIAS) {
     try {
