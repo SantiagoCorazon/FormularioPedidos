@@ -26,8 +26,8 @@ const S = {
   ocasion:'',
   bonos:[], sinBono:false, bono:null, empaque:null,
   acompanantes:[], productosElegidos:[],
-  combo:null,           // combo elegido (si aplica)
-  eligioCombo:false,    // true si eligió un combo y saltó armado individual
+  combos:[],            // combos elegidos (puede ser más de uno)
+  eligioCombo:false,    // true si eligió al menos un combo
   envio:null, valorDonacion:0, campana_id:null, campana:'', campana_tipo:'',
   productosDonacion:[],
   metodoPago:'', atendidoPor:'', esNuevo:false,
@@ -192,7 +192,7 @@ async function cargarTemporadaActiva() {
       var t = data[0];
       var btn = $('btn-temporada');
       if (btn) {
-        btn.style.display = 'flex';
+        btn.style.display = 'flex'; btn.style.flexDirection = 'column'; btn.style.alignItems = 'center';
         var ic = $('icon-temporada'); if (ic) ic.textContent = t.emoji || '🎁';
         var nm = $('name-temporada'); if (nm) nm.textContent = t.nombre_boton || 'Temporada';
         var dc = $('desc-temporada'); if (dc) dc.textContent = t.descripcion || '';
@@ -260,8 +260,8 @@ function cargarMunicipios() {
 function selTipoPedido(tipo) {
   S.tipoPedido = tipo;
   // Resetear combo si cambia de tipo
-  if (S.combo && S.combo.subcategoria && S.combo.subcategoria !== tipo && S.combo.subcategoria !== 'ambos') {
-    S.combo = null; S.eligioCombo = false;
+  if (S.combos && S.combos.length && S.combos.some(c => c.subcategoria && c.subcategoria !== tipo && c.subcategoria !== 'ambos')) {
+    S.combos = []; S.eligioCombo = false;
   }
   document.querySelectorAll('.tipo-pedido-card').forEach(c => c.classList.remove('sel'));
   event.currentTarget.classList.add('sel');
@@ -296,7 +296,7 @@ function irDesdeInicio() {
   cerrarModalCombos();
   S.flujo = FLUJOS[S.tipoPedido].slice();
   // Si eligió combo, saltar presentación y acompañante → directo a datos del bono
-  if (S.eligioCombo && S.combo) {
+  if (S.eligioCombo && S.combos && S.combos.length) {
     var idxDatos = S.flujo.findIndex(s => s === 'sec-3-pesame' || s === 'sec-3-toda');
     if (idxDatos > -1) {
       S.flujoIdx = idxDatos;
@@ -346,7 +346,7 @@ function renderCombosModal(tipo) {
   }
 
   grid.innerHTML = lista.map(function(p) {
-    var esSel = S.combo && S.combo.id === p.id;
+    var esSel = S.combos && S.combos.some(function(c){return c.id===p.id;});
     var img = (p.imagen_url || p.imagen_url_shopify)
       ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
       : '';
@@ -363,19 +363,19 @@ function selComboModal(id) {
   var lista = CATALOGO.combos || [];
   var p = lista.find(function(x) { return x.id === id; });
   if (!p) return;
-  if (S.combo && S.combo.id === id) {
-    // Deseleccionar
-    S.combo = null;
-    S.eligioCombo = false;
-    S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
+  if (!S.combos) S.combos = [];
+  var idx = S.combos.findIndex(function(c){ return c.id === id; });
+  if (idx >= 0) {
+    // Deseleccionar este combo
+    S.combos.splice(idx, 1);
   } else {
-    S.combo = p;
-    S.eligioCombo = true;
+    // Agregar al array
+    S.combos.push(p);
     S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
   }
+  S.eligioCombo = S.combos.length > 0;
   actualizarTotal();
   renderCombosModal(S.tipoPedido);
-  // Actualizar el botón de combos en sec-0
   actualizarBtnCombos();
 }
 
@@ -385,8 +385,7 @@ function confirmarCombo() {
 }
 
 function quitarCombo() {
-  S.combo = null;
-  S.eligioCombo = false;
+  S.combos = []; S.eligioCombo = false;
   S.bonos = []; S.bono = null; S.empaque = null; S.acompanantes = [];
   actualizarTotal();
   actualizarBtnCombos();
@@ -397,13 +396,14 @@ function actualizarBtnCombos() {
   var btn  = $('btnVerCombos');
   var chip = $('comboSelChip');
   if (!btn || !chip) return;
-  if (S.eligioCombo && S.combo) {
+  if (S.eligioCombo && S.combos && S.combos.length) {
     chip.style.display = 'flex';
     var txt = $('comboSelNombre');
     var pre = $('comboSelPrecio');
-    if (txt) txt.textContent = S.combo.nombre;
-    if (pre) pre.textContent = fmt(S.combo.precio);
-    btn.textContent = '✏️ Cambiar combo';
+    var totalCombos = S.combos.reduce(function(s,c){return s+c.precio;},0);
+    if (txt) txt.textContent = S.combos.length === 1 ? S.combos[0].nombre : S.combos.length + ' combos seleccionados';
+    if (pre) pre.textContent = fmt(totalCombos);
+    btn.textContent = '✏️ Editar combos';
     btn.style.background = 'var(--pink)';
     btn.style.color = '#fff';
     btn.style.borderColor = 'var(--pink)';
@@ -918,8 +918,8 @@ function getTotal() {
   }
   var total = 0;
   // Si eligió combo, el precio del combo es la base
-  if (S.eligioCombo && S.combo) {
-    total += S.combo.precio;
+  if (S.eligioCombo && S.combos && S.combos.length) {
+    total += S.combos.reduce(function(s,c){return s+c.precio;},0);
   } else {
     if (S.bonos && S.bonos.length) total += S.bonos.reduce((s, b) => s + b.precio, 0);
     else if (S.bono) total += S.bono.precio;
@@ -940,8 +940,8 @@ function renderOrden() {
   var total = getTotal();
   var c = S.comprador, d = S.destinatario;
   var items = [];
-  if (S.eligioCombo && S.combo) {
-    items.push({ desc:'Combo: ' + S.combo.nombre, precio:S.combo.precio });
+  if (S.eligioCombo && S.combos && S.combos.length) {
+    S.combos.forEach(function(c){ items.push({ desc:'Combo: ' + c.nombre, precio:c.precio }); });
   } else {
     if (S.bonos && S.bonos.length) S.bonos.forEach(b => items.push({ desc:b.nombre, precio:b.precio }));
     else if (S.bono) items.push({ desc:S.bono.nombre, precio:S.bono.precio });
@@ -965,7 +965,7 @@ function renderOrden() {
     ((d.nombres||'')+' '+(d.apellidos||'')).trim() + '</strong><br>Tel: ' + (d.celular||'—') +
     '<br>Ciudad: ' + (d.ciudad||'—') + '<br>Dir: ' + (d.direccion||'—') + '</p></div>' +
     '<div class="orden-block"><h4>✨ Detalle</h4><p>' +
-    (S.combo ? '<strong>Combo: '+S.combo.nombre+'</strong><br>' : '') +
+    (S.combos&&S.combos.length ? S.combos.map(function(c){return '<strong>Combo: '+c.nombre+'</strong>';}).join('<br>')+'<br>' : '') +
     (S.fallecido ? '<strong>Fallecido: '+S.fallecido+'</strong><br>' : '') +
     (S.dirigido ? 'Para: <strong>'+S.dirigido+'</strong><br>' : '') +
     (S.firma ? 'De parte de: '+S.firma+'<br>' : '') +
@@ -1095,11 +1095,13 @@ async function confirmarPedido() {
     // 3. Detalle
     if (pedidoId) {
       var lineas = [];
-      // Si fue combo, registrarlo como una línea
-      if (S.eligioCombo && S.combo) {
-        lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr,
-          categoria:'Combo', subcategoria:S.tipoPedido, producto:S.combo.nombre,
-          cantidad:1, precio_unitario:S.combo.precio, subtotal_linea:S.combo.precio });
+      // Si fue combo, registrar cada combo como línea
+      if (S.eligioCombo && S.combos && S.combos.length) {
+        S.combos.forEach(function(c) {
+          lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr,
+            categoria:'Combo', subcategoria:S.tipoPedido, producto:c.nombre,
+            cantidad:1, precio_unitario:c.precio, subtotal_linea:c.precio });
+        });
       } else {
         if (S.bonos && S.bonos.length) S.bonos.forEach(b => lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:b.nombre, cantidad:1, precio_unitario:b.precio, subtotal_linea:b.precio }));
         else if (S.bono) lineas.push({ pedido_id:pedidoId, nro_pedido:orderNum, fecha:fechaStr, categoria:'Bono', subcategoria:S.tipoPedido, producto:S.bono.nombre, cantidad:1, precio_unitario:S.bono.precio, subtotal_linea:S.bono.precio });
