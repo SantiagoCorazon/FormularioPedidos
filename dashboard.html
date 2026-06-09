@@ -3186,14 +3186,26 @@ let SUBCATEGORIAS = []; // [{id, nombre, categoria_id, orden, activo}]
 
 // ── Carga desde Supabase ──────────────────────────────────────
 async function cargarCategoriasYSubs() {
+  const H = { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
   try {
     const [rCat, rSub] = await Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: hdrs() }),
-      fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: hdrs() })
+      fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: H }),
+      fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: H })
     ]);
-    if (rCat.ok) CATEGORIAS    = await rCat.json();
-    if (rSub.ok) SUBCATEGORIAS = await rSub.json();
+    if (rCat.ok) {
+      CATEGORIAS = await rCat.json();
+    } else {
+      const err = await rCat.text();
+      console.error('Error categorias:', rCat.status, err);
+    }
+    if (rSub.ok) {
+      SUBCATEGORIAS = await rSub.json();
+    } else {
+      const err = await rSub.text();
+      console.error('Error subcategorias:', rSub.status, err);
+    }
   } catch(e) { console.error('Error cargando categorias/subcategorias:', e); }
+  console.log('CATEGORIAS cargadas:', CATEGORIAS.length, 'SUBCATEGORIAS:', SUBCATEGORIAS.length);
   poblarSelectsTipo();
 }
 
@@ -3435,13 +3447,13 @@ async function guardarOrdenCategorias() {
       if (c.id) {
         r = await fetch(SUPABASE_URL + '/rest/v1/categorias?id=eq.' + c.id, {
           method: 'PATCH',
-          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=minimal'}),
+          headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ nombre: c.nombre, orden: c.orden, activo: c.activo })
         });
       } else {
         r = await fetch(SUPABASE_URL + '/rest/v1/categorias', {
           method: 'POST',
-          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=representation'}),
+          headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
           body: JSON.stringify({ nombre: c.nombre, tipo_interno: c.tipo_interno, orden: c.orden, activo: c.activo })
         });
         if (r.ok) { const d = await r.json(); if (d[0]) c.id = d[0].id; }
@@ -3459,13 +3471,13 @@ async function guardarOrdenCategorias() {
       if (s.id) {
         r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?id=eq.' + s.id, {
           method: 'PATCH',
-          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=minimal'}),
+          headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ nombre: s.nombre, orden: s.orden, activo: s.activo })
         });
       } else {
         r = await fetch(SUPABASE_URL + '/rest/v1/subcategorias', {
           method: 'POST',
-          headers: Object.assign({}, hdrs(), {'Content-Type':'application/json','Prefer':'return=representation'}),
+          headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
           body: JSON.stringify({ nombre: s.nombre, categoria_id: s.categoria_id, orden: s.orden, activo: s.activo !== false })
         });
         if (r.ok) { const d = await r.json(); if (d[0]) s.id = d[0].id; }
