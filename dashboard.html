@@ -1227,6 +1227,8 @@ let pedidoActual = null;
 let todosLosPedidos = [];
 let todosLosTerceros = [];
 let todoElCatalogo = [];
+let CATEGORIAS    = [];
+let SUBCATEGORIAS = [];
 
 // ============================================================
 // AUTENTICACIÓN (simple — hash en cliente)
@@ -3180,32 +3182,21 @@ function badgeClass(estado) {
 // CATEGORÍAS Y SUBCATEGORÍAS — dinámicas desde Supabase
 // ============================================================
 
-// Cache global
-let CATEGORIAS   = [];  // [{id, nombre, tipo_interno, orden, activo}]
-let SUBCATEGORIAS = []; // [{id, nombre, categoria_id, orden, activo}]
+// Cache global (declarado arriba junto a variables globales)
 
 // ── Carga desde Supabase ──────────────────────────────────────
 async function cargarCategoriasYSubs() {
-  const H = { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
+  const H = { 'apikey': SUPABASE_SRK, 'Authorization': 'Bearer ' + SUPABASE_SRK };
   try {
-    const [rCat, rSub] = await Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: H }),
-      fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: H })
-    ]);
-    if (rCat.ok) {
-      CATEGORIAS = await rCat.json();
-    } else {
-      const err = await rCat.text();
-      console.error('Error categorias:', rCat.status, err);
-    }
-    if (rSub.ok) {
-      SUBCATEGORIAS = await rSub.json();
-    } else {
-      const err = await rSub.text();
-      console.error('Error subcategorias:', rSub.status, err);
-    }
-  } catch(e) { console.error('Error cargando categorias/subcategorias:', e); }
-  console.log('CATEGORIAS cargadas:', CATEGORIAS.length, 'SUBCATEGORIAS:', SUBCATEGORIAS.length);
+    const rCat = await fetch(SUPABASE_URL + '/rest/v1/categorias?order=orden.asc', { headers: H });
+    const textCat = await rCat.text();
+    try { CATEGORIAS = JSON.parse(textCat); } catch(e) { console.error('categorias parse error:', textCat); CATEGORIAS = []; }
+
+    const rSub = await fetch(SUPABASE_URL + '/rest/v1/subcategorias?order=orden.asc', { headers: H });
+    const textSub = await rSub.text();
+    try { SUBCATEGORIAS = JSON.parse(textSub); } catch(e) { console.error('subcategorias parse error:', textSub); SUBCATEGORIAS = []; }
+
+  } catch(e) { console.error('fetch error:', e); }
   poblarSelectsTipo();
 }
 
