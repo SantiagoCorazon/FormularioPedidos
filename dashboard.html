@@ -947,11 +947,18 @@ tr:hover td{background:var(--pink-lt)}
 
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
         <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em">Período:</label>
-        <select id="slPeriodo" onchange="cargarSalaLudica()" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
+        <select id="slPeriodo" onchange="onCambioPeriodoSL()" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
           <option value="mes">Este mes</option>
           <option value="anio" selected>Este año</option>
           <option value="todo">Todo el histórico</option>
+          <option value="rango">Rango de fechas...</option>
         </select>
+        <div id="slRangoFechasWrap" style="display:none;gap:10px;align-items:center">
+          <label style="font-size:.72rem;color:var(--ink-mid)">Desde</label>
+          <input type="date" id="slFechaDesde" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
+          <label style="font-size:.72rem;color:var(--ink-mid)">Hasta</label>
+          <input type="date" id="slFechaHasta" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
+        </div>
       </div>
 
       <div class="metrics" id="slMetricsGrid"></div>
@@ -3184,15 +3191,36 @@ function slRangoFechas() {
   if (periodo === 'anio') {
     return { desde: `${hoy.getFullYear()}-01-01`, hasta: null };
   }
+  if (periodo === 'rango') {
+    const desde = ($('slFechaDesde') || { value: '' }).value || `${hoy.getFullYear()}-01-01`;
+    const hasta = ($('slFechaHasta') || { value: '' }).value || hoy.toISOString().slice(0, 10);
+    return { desde, hasta };
+  }
   return { desde: null, hasta: null }; // todo el histórico
+}
+
+function onCambioPeriodoSL() {
+  const periodo = $('slPeriodo').value;
+  const wrap = $('slRangoFechasWrap');
+  if (periodo === 'rango') {
+    wrap.style.display = 'flex';
+    const hoy = new Date();
+    // Por defecto: 1 de enero del año en curso hasta hoy — el usuario puede cambiarlo libremente
+    if (!$('slFechaDesde').value) $('slFechaDesde').value = `${hoy.getFullYear()}-01-01`;
+    if (!$('slFechaHasta').value) $('slFechaHasta').value = hoy.toISOString().slice(0, 10);
+  } else {
+    wrap.style.display = 'none';
+  }
+  cargarSalaLudica();
 }
 
 async function cargarSalaLudica() {
   $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
   try {
-    const { desde } = slRangoFechas();
+    const { desde, hasta } = slRangoFechas();
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=componente,fecha,beneficiario_id,actividad_sala_ludica`;
     if (desde) q += `&fecha=gte.${desde}`;
+    if (hasta) q += `&fecha=lte.${hasta}`;
 
     const [rReg, rBen, rMetas] = await Promise.all([
       fetch(q + '&limit=10000', { headers: hdrs() }),
