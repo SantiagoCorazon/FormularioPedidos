@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro Salas Lúdicas — Santiago Corazón</title>
+<meta name="description" content="Registro de acompañamiento hospitalario: kits de bienvenida, sala lúdica, apoyo alimentario y fortalecimiento a cuidadores.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Extensiones puntuales propias de Salas Lúdicas — el resto del look viene de style.css */
+  .pill-row{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{border:1.5px solid var(--border);border-radius:999px;padding:9px 16px;font-size:.82rem;font-weight:500;color:var(--ink-mid);cursor:pointer;background:var(--white);transition:all .15s}
+  .pill:hover{border-color:var(--pink)}
+  .pill.sel{border-color:var(--pink);background:var(--pink-lt);color:var(--pink-dk);font-weight:600}
+  .ficha-box{background:var(--pink-lt);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.85rem;line-height:1.6}
+  .ficha-box strong{color:var(--pink-dk)}
+  .resumen-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.88rem}
+  .resumen-line:last-child{border-bottom:none}
+  .resumen-line span:first-child{color:var(--ink-lt)}
+  .resumen-line span:last-child{font-weight:600;color:var(--ink)}
+  .btn-row{display:flex;gap:10px;margin-top:24px}
+  .btn-row button{flex:1}
+  .btn-primary{background:var(--pink);color:var(--white);border:none;border-radius:8px;padding:13px;font-family:var(--font);font-size:.92rem;font-weight:600;cursor:pointer;transition:background .2s}
+  .btn-primary:hover{background:var(--pink-dk)}
+  .btn-secondary{background:var(--white);color:var(--ink-mid);border:1.5px solid var(--border);border-radius:8px;padding:13px;font-family:var(--font);font-size:.92rem;font-weight:500;cursor:pointer}
+  .btn-secondary:hover{border-color:var(--pink)}
+  .conteo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .conteo-grid .field{margin-bottom:0}
+  .ok-box{text-align:center;padding:40px 20px}
+  .ok-box .check{font-size:3rem;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="loading-box"><div class="spinner"></div><div id="loadingMsg">Guardando...</div></div>
+</div>
+
+<header>
+  <img src="https://santiagocorazon.org/cdn/shop/files/logo_2x_bbc620f1-38c8-4061-b2f2-1f87b357546e.png?v=1614736127&width=200" alt="Santiago Corazón" class="header-logo" onerror="this.style.display='none'">
+  <div class="header-right"><span id="headerDate"></span><strong>Registro Salas Lúdicas</strong></div>
+</header>
+
+<div class="container">
+
+<!-- ══ SEC 0: COMPONENTE ══════════════════════════════ -->
+<div class="section active" id="sec-componente">
+  <div class="card">
+    <div class="step-label">Paso 1 de 4</div>
+    <div class="section-title">¿Qué vas a <em>registrar</em> hoy?</div>
+    <div class="section-sub">Elige el tipo de acompañamiento que se entregó. Los campos siguientes cambian según tu elección.</div>
+    <div class="tipo-pedido-grid">
+      <div class="tipo-pedido-card" onclick="selComponente('kits_bienvenida')">
+        <div class="tipo-pedido-icon">🎒</div>
+        <div class="tipo-pedido-name">Kit de Bienvenida</div>
+        <div class="tipo-pedido-desc">Entrega de kit al paciente y/o acudiente</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponente('sala_ludica')">
+        <div class="tipo-pedido-icon">🧸</div>
+        <div class="tipo-pedido-name">Sala Lúdica</div>
+        <div class="tipo-pedido-desc">Actividad de estimulación o recreación</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponente('apoyo_alimentario')">
+        <div class="tipo-pedido-icon">🍽</div>
+        <div class="tipo-pedido-name">Apoyo Alimentario</div>
+        <div class="tipo-pedido-desc">Desayuno, almuerzo, merienda o refrigerio</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponente('fortalecimiento_cuidadores')">
+        <div class="tipo-pedido-icon">💛</div>
+        <div class="tipo-pedido-name">Fortalecimiento a Cuidadores</div>
+        <div class="tipo-pedido-desc">Talleres y acompañamiento a la familia</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEC 1: BENEFICIARIO ══════════════════════════════ -->
+<div class="section" id="sec-beneficiario">
+  <div class="card">
+    <div class="step-label">Paso 2 de 4</div>
+    <div class="section-title">Datos del <em>beneficiario</em></div>
+    <div class="section-sub">Busca por documento del paciente. Si ya está registrado, se completa solo.</div>
+
+    <div class="buscar-row">
+      <div class="field">
+        <label>Documento del paciente</label>
+        <input type="text" id="inDocPaciente" placeholder="Ej. 1155718393" inputmode="numeric">
+      </div>
+      <button class="btn-buscar" onclick="buscarBeneficiario()">Buscar</button>
+    </div>
+    <div class="status" id="statusBeneficiario"></div>
+
+    <div id="camposBeneficiario">
+      <div class="grid-2">
+        <div class="field col-full"><label>Nombre del paciente <span class="req">*</span></label><input type="text" id="inNombrePaciente"></div>
+        <div class="field"><label>Género del paciente</label>
+          <select id="inGeneroPaciente"><option value="">Seleccionar</option><option>Masculino</option><option>Femenino</option></select>
+        </div>
+        <div class="field"><label>Régimen de salud</label>
+          <select id="inRegimen"><option value="">Seleccionar</option><option>Subsidiado</option><option>Contributivo</option></select>
+        </div>
+        <div class="field"><label>Edad</label><input type="text" id="inEdad" placeholder="Ej. 4 Años, 8 Meses"></div>
+        <div class="field"><label>Departamento</label><input type="text" id="inDepartamento" placeholder="Ej. Antioquia"></div>
+        <div class="field"><label>Municipio</label><input type="text" id="inMunicipio" placeholder="Ej. Medellín"></div>
+        <div class="field col-full"><label>Comuna</label><input type="text" id="inComuna" placeholder="No aplica si no es de Medellín"></div>
+      </div>
+      <hr class="div">
+      <div class="grid-2">
+        <div class="field"><label>Documento del acudiente</label><input type="text" id="inDocAcudiente" inputmode="numeric"></div>
+        <div class="field"><label>Nombre del acudiente</label><input type="text" id="inNombreAcudiente"></div>
+        <div class="field"><label>Celular del acudiente</label><input type="text" id="inCelular" inputmode="numeric"></div>
+        <div class="field"><label>Género del acudiente</label>
+          <select id="inGeneroAcudiente"><option value="">Seleccionar</option><option>Masculino</option><option>Femenino</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="irA('sec-componente')">Atrás</button>
+      <button class="btn-primary" onclick="irADetalle()">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEC 2: DETALLE POR COMPONENTE ══════════════════════════════ -->
+<div class="section" id="sec-detalle">
+  <div class="card">
+    <div class="step-label">Paso 3 de 4</div>
+    <div class="section-title" id="tituloDetalle">Detalle del <em>registro</em></div>
+    <div class="section-sub" id="subDetalle"></div>
+
+    <div class="grid-2">
+      <div class="field"><label>Fecha</label><input type="date" id="inFecha"></div>
+      <div class="field"><label>Servicio</label>
+        <select id="inServicio"><option value="">Seleccionar</option><option>Pediatria</option><option>Ambulatorio</option><option>UCI</option></select>
+      </div>
+    </div>
+
+    <!-- kits_bienvenida -->
+    <div id="campos-kits_bienvenida" style="display:none">
+      <hr class="div">
+      <div class="field"><label>¿Está en etapa de pañales?</label>
+        <div class="pill-row" id="pillEtapaPanales">
+          <div class="pill" data-val="true" onclick="selPill(this)">Sí</div>
+          <div class="pill" data-val="false" onclick="selPill(this)">No</div>
+        </div>
+      </div>
+      <div class="field"><label>Kit entregado a</label>
+        <div class="pill-row">
+          <div class="pill" data-target="kitPaciente" onclick="togglePill(this)">Paciente</div>
+          <div class="pill" data-target="kitAcudiente" onclick="togglePill(this)">Acudiente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- sala_ludica -->
+    <div id="campos-sala_ludica" style="display:none">
+      <hr class="div">
+      <div class="grid-2">
+        <div class="field"><label>Asistentes</label><input type="number" id="inAsistentesSala" min="1" value="2"></div>
+        <div class="field"><label>Tipo de actividad</label>
+          <select id="inActividadSala">
+            <option value="">Seleccionar</option>
+            <option>Est. Motora</option><option>Est. Sensorial</option>
+            <option>Est. Socioemocional</option><option>Est. Cognitiva</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- apoyo_alimentario -->
+    <div id="campos-apoyo_alimentario" style="display:none">
+      <hr class="div">
+      <label style="margin-bottom:8px;display:block">Raciones entregadas</label>
+      <div class="conteo-grid">
+        <div class="field"><label>Desayuno</label><input type="number" id="inDesayuno" min="0" placeholder="0"></div>
+        <div class="field"><label>Almuerzo</label><input type="number" id="inAlmuerzo" min="0" placeholder="0"></div>
+        <div class="field"><label>Merienda</label><input type="number" id="inMerienda" min="0" placeholder="0"></div>
+        <div class="field"><label>Refrigerio</label><input type="number" id="inRefrigerio" min="0" placeholder="0"></div>
+      </div>
+    </div>
+
+    <!-- fortalecimiento_cuidadores -->
+    <div id="campos-fortalecimiento_cuidadores" style="display:none">
+      <hr class="div">
+      <div class="grid-2">
+        <div class="field"><label>Asistentes</label><input type="number" id="inAsistentesFort" min="1" value="2"></div>
+        <div class="field"><label>Actividad / Taller</label>
+          <input type="text" id="inActividadFort" placeholder="Ej. Salud Oral, Corbeta, Emprendimiento...">
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:14px">
+      <label>Observación (opcional)</label>
+      <textarea id="inObservacion" maxlength="300" placeholder="Cualquier detalle adicional del registro"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="irA('sec-beneficiario')">Atrás</button>
+      <button class="btn-primary" onclick="irAResumen()">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEC 3: RESUMEN Y GUARDADO ══════════════════════════════ -->
+<div class="section" id="sec-resumen">
+  <div class="card">
+    <div class="step-label">Paso 4 de 4</div>
+    <div class="section-title">Confirmar <em>registro</em></div>
+    <div class="section-sub">Revisa que todo esté correcto antes de guardar.</div>
+    <div id="resumenContenido"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="irA('sec-detalle')">Atrás</button>
+      <button class="btn-primary" onclick="guardarRegistro()">Guardar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEC 4: CONFIRMACIÓN ══════════════════════════════ -->
+<div class="section" id="sec-ok">
+  <div class="card ok-box">
+    <div class="check">✅</div>
+    <div class="section-title">¡Registro guardado!</div>
+    <div class="section-sub" id="okMsg"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="nuevoRegistro()">Registrar otro</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="app_sala_ludica.js"></script>
+</body>
+</html>
