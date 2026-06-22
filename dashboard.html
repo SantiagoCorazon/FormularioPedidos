@@ -208,6 +208,7 @@ tr:hover td{background:var(--pink-lt)}
       <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
       <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
       <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
+      <div class="nav-item" id="nav-salaludica" onclick="irA('salaludica')"><span class="nav-icon">🧸</span> Salas Lúdicas</div>
       <div class="nav-item" onclick="irA('manual')"><span class="nav-icon">📖</span> Manual de uso</div>
     </nav>
     <div class="sidebar-footer">
@@ -939,8 +940,98 @@ tr:hover td{background:var(--pink-lt)}
       </div>
     </div>
 
+    <!-- SALAS LÚDICAS -->
+    <div class="page" id="page-salaludica">
+      <div class="page-title">🧸 Salas Lúdicas</div>
+      <div class="page-sub">Acompañamiento hospitalario — kits de bienvenida, sala lúdica, apoyo alimentario y fortalecimiento a cuidadores</div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
+        <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em">Período:</label>
+        <select id="slPeriodo" onchange="cargarSalaLudica()" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
+          <option value="mes">Este mes</option>
+          <option value="anio" selected>Este año</option>
+          <option value="todo">Todo el histórico</option>
+        </select>
+      </div>
+
+      <div class="metrics" id="slMetricsGrid"></div>
+
+      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Distribución por componente</div></div>
+          <div class="card-body" id="slDistribucion">Cargando...</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Avance vs. meta anual 2026</div></div>
+          <div class="card-body" id="slAvanceMeta">Cargando...</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Top municipios de origen</div></div>
+          <div class="card-body" id="slMunicipios">Cargando...</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Actividades de sala lúdica</div></div>
+          <div class="card-body" id="slActividades">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px">
+          <div class="card-title">Buscador de beneficiarios</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <input class="search-input" id="searchSL" placeholder="🔍 Buscar por nombre o documento del paciente..." style="flex:1" oninput="onBuscarSL(this.value)">
+            <span id="sl-hint" style="font-size:.75rem;color:var(--ink-lt);white-space:nowrap">Escribe para buscar</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="bodySL"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
+              <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+              Escribe el nombre o documento del beneficiario
+            </td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- Modal Historial 360 Beneficiario (Salas Lúdicas) -->
+<div class="modal-overlay" id="modalHistorialSL">
+  <div class="modal" style="max-width:760px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="modal-title" id="slHistNombre" style="margin:0">Historial del beneficiario</div>
+      <button onclick="cerrarModal('modalHistorialSL')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px;border-radius:6px;line-height:1" title="Cerrar">✕</button>
+    </div>
+    <div class="modal-sub">Ficha del niño y registro completo de acompañamiento</div>
+    <div id="slFichaResumen" style="background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.85rem;line-height:1.7"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <select id="slHistFiltro" onchange="filtrarHistorialSL()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+        <option value="">Todos los componentes</option>
+        <option value="kits_bienvenida">Kits de bienvenida</option>
+        <option value="sala_ludica">Sala lúdica</option>
+        <option value="apoyo_alimentario">Apoyo alimentario</option>
+        <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Componente</th><th>Servicio</th><th>Detalle</th></tr></thead>
+        <tbody id="bodyHistorialSL"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalHistorialSL')">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════ -->
 <!-- MODALES -->
@@ -1352,7 +1443,8 @@ function irA(pagina) {
   const mapaNav = {
     inicio:'inicio', pedidos:'pedido', terceros:'cliente', catalogo:'catálogo',
     campanas:'campaña', bonos:'bono', eventos:'evento', temporada:'temporada',
-    envios:'envío', usuarios:'usuario', shopify:'shopify', manual:'manual'
+    envios:'envío', usuarios:'usuario', shopify:'shopify', manual:'manual',
+    salaludica:'lúdicas'
   };
   const clave = mapaNav[pagina] || pagina;
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -1370,6 +1462,7 @@ function irA(pagina) {
   if (pagina === 'usuarios')  cargarUsuarios();
   if (pagina === 'manual')    mostrarSeccionManual('m-inicio');
   if (pagina === 'shopify')   iniciarShopify();
+  if (pagina === 'salaludica') cargarSalaLudica();
 }
 
 // ============================================================
@@ -3063,6 +3156,260 @@ async function exportarExcel(desde, hasta, canal) {
 // ============================================================
 function hdrs() {
   return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` };
+}
+
+// ============================================================
+// SALAS LÚDICAS
+// ============================================================
+const SL_LABELS = {
+  kits_bienvenida: 'Kits de bienvenida',
+  sala_ludica: 'Sala lúdica',
+  apoyo_alimentario: 'Apoyo alimentario',
+  fortalecimiento_cuidadores: 'Fortalecimiento a cuidadores',
+};
+const SL_COLORS = {
+  kits_bienvenida: '#E8176B',
+  sala_ludica: '#1565c0',
+  apoyo_alimentario: '#2e7d32',
+  fortalecimiento_cuidadores: '#e65100',
+};
+
+function slRangoFechas() {
+  const periodo = ($('slPeriodo') || { value: 'anio' }).value;
+  const hoy = new Date();
+  if (periodo === 'mes') {
+    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    return { desde: desde.toISOString().slice(0, 10), hasta: null };
+  }
+  if (periodo === 'anio') {
+    return { desde: `${hoy.getFullYear()}-01-01`, hasta: null };
+  }
+  return { desde: null, hasta: null }; // todo el histórico
+}
+
+async function cargarSalaLudica() {
+  $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
+  try {
+    const { desde } = slRangoFechas();
+    let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=componente,fecha,beneficiario_id,actividad_sala_ludica`;
+    if (desde) q += `&fecha=gte.${desde}`;
+
+    const [rReg, rBen, rMetas] = await Promise.all([
+      fetch(q + '&limit=10000', { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
+    ]);
+    const registros = await rReg.json();
+    const beneficiarios = await rBen.json();
+    const metas = await rMetas.json();
+
+    if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
+
+    // ── Métricas principales ──
+    const totalRegistros = registros.length;
+    const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
+    const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
+    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta').length;
+
+    $('slMetricsGrid').innerHTML = `
+      <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
+      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Registros del Período</div><div class="metric-value" style="color:#1565c0">${totalRegistros.toLocaleString()}</div><div class="metric-sub">${benUnicos} niños atendidos</div></div>
+      <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
+      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Beneficiarios Únicos</div><div class="metric-value" style="color:#2e7d32">${beneficiarios.length.toLocaleString()}</div><div class="metric-sub">Registrados en total</div></div>
+    `;
+
+    // ── Distribución por componente ──
+    const conteoComp = {};
+    registros.forEach(r => conteoComp[r.componente] = (conteoComp[r.componente] || 0) + 1);
+    const maxComp = Math.max(1, ...Object.values(conteoComp));
+    $('slDistribucion').innerHTML = Object.keys(SL_LABELS).map(c => {
+      const n = conteoComp[c] || 0;
+      const pct = Math.round((n / maxComp) * 100);
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="color:var(--ink-mid)">${SL_LABELS[c]}</span><strong>${n.toLocaleString()}</strong>
+        </div>
+        <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
+          <div style="background:${SL_COLORS[c]};height:100%;width:${pct}%;border-radius:6px"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // ── Avance vs meta anual ──
+    const metaMap = {};
+    (metas || []).forEach(m => metaMap[m.componente] = m.meta);
+    // Ejecutado anual real (independiente del filtro de período, siempre año en curso)
+    const rAnual = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=componente&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() });
+    const regAnual = await rAnual.json();
+    const conteoAnual = {};
+    (regAnual || []).forEach(r => conteoAnual[r.componente] = (conteoAnual[r.componente] || 0) + 1);
+
+    const conMeta = ['kits_bienvenida', 'apoyo_alimentario', 'sala_ludica'].filter(c => metaMap[c]);
+    $('slAvanceMeta').innerHTML = conMeta.length ? conMeta.map(c => {
+      const meta = metaMap[c] || 0;
+      const ejec = conteoAnual[c] || 0;
+      const pct = meta ? Math.min(100, Math.round((ejec / meta) * 100)) : 0;
+      const color = pct >= 90 ? '#2e7d32' : pct >= 50 ? SL_COLORS[c] : '#e65100';
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="color:var(--ink-mid)">${SL_LABELS[c]}</span><strong>${ejec.toLocaleString()} / ${meta.toLocaleString()} (${pct}%)</strong>
+        </div>
+        <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
+          <div style="background:${color};height:100%;width:${pct}%;border-radius:6px"></div>
+        </div>
+      </div>`;
+    }).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin metas configuradas en sl_metas para 2026.</div>';
+
+    // ── Top municipios ──
+    const conteoMuni = {};
+    (beneficiarios || []).forEach(b => { if (b.municipio) conteoMuni[b.municipio] = (conteoMuni[b.municipio] || 0) + 1; });
+    const topMuni = Object.entries(conteoMuni).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const maxMuni = Math.max(1, ...topMuni.map(m => m[1]));
+    $('slMunicipios').innerHTML = topMuni.length ? topMuni.map(([m, n]) => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="color:var(--ink-mid)">${m}</span><strong>${n}</strong>
+        </div>
+        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+          <div style="background:#1565c0;height:100%;width:${Math.round((n / maxMuni) * 100)}%;border-radius:6px"></div>
+        </div>
+      </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin datos de municipio.</div>';
+
+    // ── Actividades de sala lúdica ──
+    const conteoAct = {};
+    registros.filter(r => r.componente === 'sala_ludica' && r.actividad_sala_ludica).forEach(r => {
+      conteoAct[r.actividad_sala_ludica] = (conteoAct[r.actividad_sala_ludica] || 0) + 1;
+    });
+    const maxAct = Math.max(1, ...Object.values(conteoAct));
+    $('slActividades').innerHTML = Object.keys(conteoAct).length ? Object.entries(conteoAct).sort((a,b)=>b[1]-a[1]).map(([act, n]) => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="color:var(--ink-mid)">${act}</span><strong>${n}</strong>
+        </div>
+        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+          <div style="background:#1565c0;height:100%;width:${Math.round((n / maxAct) * 100)}%;border-radius:6px"></div>
+        </div>
+      </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin actividades registradas en el período.</div>';
+
+  } catch (e) {
+    console.error('Error cargando Salas Lúdicas:', e);
+    $('slMetricsGrid').innerHTML = `<div class="metric-card" style="border-color:#c0392b"><div class="metric-label">Error</div><div class="metric-sub">${e.message}</div></div>`;
+  }
+}
+
+// ── Buscador de beneficiarios ──
+let _slBusqTimer = null;
+function onBuscarSL(q) {
+  clearTimeout(_slBusqTimer);
+  const hint = $('sl-hint');
+  q = (q || '').trim();
+  if (q.length < 3) {
+    if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar';
+    if (q.length === 0) {
+      $('bodySL').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
+        <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
+        Escribe el nombre o documento del beneficiario
+      </td></tr>`;
+    }
+    return;
+  }
+  if (hint) hint.textContent = 'Buscando...';
+  _slBusqTimer = setTimeout(() => buscarSLServidor(q), 350);
+}
+
+async function buscarSLServidor(q) {
+  const hint = $('sl-hint');
+  try {
+    const enc = encodeURIComponent(q);
+    const [r1, r2] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=ilike.${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?nombre_paciente=ilike.%25${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
+    ]);
+    const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+    const vistos = new Set();
+    const todos = [...(d1 || []), ...(d2 || [])].filter(b => {
+      if (vistos.has(b.id)) return false;
+      vistos.add(b.id); return true;
+    });
+    renderSL(todos);
+    if (hint) hint.textContent = `${todos.length} resultado${todos.length !== 1 ? 's' : ''}`;
+  } catch (e) {
+    console.error('Error buscando beneficiarios:', e);
+    if (hint) hint.textContent = 'Error al buscar';
+  }
+}
+
+function renderSL(lista) {
+  $('bodySL').innerHTML = lista.length ? lista.map(b => `<tr>
+    <td>${b.documento_paciente || ''}</td>
+    <td><strong>${b.nombre_paciente || '—'}</strong></td>
+    <td>${b.municipio || '—'}</td>
+    <td>${b.regimen_salud || '—'}</td>
+    <td>${b.nombre_acudiente || '—'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialSL(${b.id})">📋 Historial</button></td>
+  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
+}
+
+// ── Historial 360 del beneficiario ──
+let _slHistorial = [];
+async function verHistorialSL(beneficiarioId) {
+  abrirModal('modalHistorialSL');
+  $('slHistNombre').textContent = '📋 Cargando...';
+  $('slFichaResumen').innerHTML = 'Cargando ficha...';
+  $('bodyHistorialSL').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr>';
+
+  const rB = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${beneficiarioId}`, { headers: hdrs() });
+  const [b] = await rB.json();
+  if (!b) { $('slFichaResumen').innerHTML = 'Beneficiario no encontrado.'; return; }
+
+  $('slHistNombre').textContent = '📋 Historial de ' + b.nombre_paciente;
+  $('slFichaResumen').innerHTML = `
+    <strong>${b.nombre_paciente}</strong> · Doc. ${b.documento_paciente} · ${b.edad_texto || 'Edad no registrada'}<br>
+    ${b.municipio || '—'}${b.comuna && b.comuna !== 'No aplica' ? ' · ' + b.comuna : ''} · Régimen ${b.regimen_salud || '—'}<br>
+    Acudiente: ${b.nombre_acudiente || '—'} · ${b.celular_acudiente || '—'}
+  `;
+
+  const rR = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${beneficiarioId}&order=fecha.desc&limit=500`, { headers: hdrs() });
+  _slHistorial = await rR.json();
+  $('slHistFiltro').value = '';
+  filtrarHistorialSL();
+}
+
+function filtrarHistorialSL() {
+  const comp = $('slHistFiltro').value;
+  const filtrados = comp ? _slHistorial.filter(r => r.componente === comp) : _slHistorial;
+  renderHistorialSL(filtrados);
+}
+
+function detalleRegistroSL(r) {
+  if (r.componente === 'kits_bienvenida') {
+    const entregadoA = [r.kit_paciente && 'Paciente', r.kit_acudiente && 'Acudiente'].filter(Boolean).join(', ') || '—';
+    return `Kit entregado a: ${entregadoA}`;
+  }
+  if (r.componente === 'sala_ludica') {
+    return `${r.actividad_sala_ludica || '—'} · ${r.asistentes_sala_ludica || '—'} asistentes`;
+  }
+  if (r.componente === 'apoyo_alimentario') {
+    const partes = [];
+    if (r.desayuno) partes.push(`Desayuno x${r.desayuno}`);
+    if (r.almuerzo) partes.push(`Almuerzo x${r.almuerzo}`);
+    if (r.merienda) partes.push(`Merienda x${r.merienda}`);
+    if (r.refrigerio) partes.push(`Refrigerio x${r.refrigerio}`);
+    return partes.join(', ') || '—';
+  }
+  if (r.componente === 'fortalecimiento_cuidadores') {
+    return `${r.actividad_fortalecimiento || '—'} · ${r.asistentes_fortalecimiento || '—'} asistentes`;
+  }
+  return r.observacion || '—';
+}
+
+function renderHistorialSL(lista) {
+  $('bodyHistorialSL').innerHTML = lista.length ? lista.map(r => `<tr>
+    <td>${(r.fecha || '').slice(0, 10)}</td>
+    <td>${SL_LABELS[r.componente] || r.componente}</td>
+    <td>${r.servicio || '—'}</td>
+    <td>${detalleRegistroSL(r)}</td>
+  </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Sin registros para este filtro</td></tr>';
 }
 
 async function verificarStorage() {
