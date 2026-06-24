@@ -41,6 +41,19 @@
   .conteo-grid .field{margin-bottom:0}
   .ok-box{text-align:center;padding:40px 20px}
   .ok-box .check{font-size:3rem;margin-bottom:10px}
+  .sugerencias-box{position:absolute;z-index:50;top:100%;left:0;right:0;background:var(--white);border:1.5px solid var(--pink);border-radius:0 0 10px 10px;max-height:220px;overflow-y:auto;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+  .sug-item{padding:10px 14px;font-size:.85rem;cursor:pointer;border-bottom:1px solid var(--border)}
+  .sug-item:last-child{border-bottom:none}
+  .sug-item:hover{background:var(--pink-lt)}
+  .sug-item small{color:var(--ink-lt);display:block;font-size:.72rem}
+  .evidencia-box{border:1.5px dashed var(--border);border-radius:10px;padding:16px;text-align:center;margin-bottom:14px}
+  .evidencia-box img{max-width:100%;max-height:180px;border-radius:8px;margin-top:10px}
+  .btn-foto{background:var(--white);border:1.5px solid var(--pink);color:var(--pink-dk);border-radius:8px;padding:10px 18px;font-family:var(--font);font-weight:600;font-size:.85rem;cursor:pointer}
+  #firmaCanvas{border:1.5px solid var(--border);border-radius:10px;width:100%;height:160px;touch-action:none;background:var(--white)}
+  .firma-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  .check-row{display:flex;align-items:flex-start;gap:10px;background:var(--pink-lt);border-radius:10px;padding:14px;margin-top:6px}
+  .check-row input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--pink)}
+  .check-row label{font-size:.83rem;line-height:1.5;color:var(--ink-mid)}
 </style>
 </head>
 <body>
@@ -113,9 +126,18 @@
           <select id="inRegimen"><option value="">Seleccionar</option><option>Subsidiado</option><option>Contributivo</option></select>
         </div>
         <div class="field"><label>Edad</label><input type="text" id="inEdad" placeholder="Ej. 4 Años, 8 Meses"></div>
-        <div class="field"><label>Departamento</label><input type="text" id="inDepartamento" placeholder="Ej. Antioquia"></div>
-        <div class="field"><label>Municipio</label><input type="text" id="inMunicipio" placeholder="Ej. Medellín"></div>
-        <div class="field col-full"><label>Comuna</label><input type="text" id="inComuna" placeholder="No aplica si no es de Medellín"></div>
+        <div class="field col-full" style="position:relative">
+          <label>Municipio de residencia</label>
+          <input type="text" id="inMunicipioBusq" placeholder="Escribe para buscar el municipio..." autocomplete="off" oninput="filtrarMunicipios(this.value)" onfocus="filtrarMunicipios(this.value)">
+          <div id="sugMunicipios" class="sugerencias-box" style="display:none"></div>
+          <input type="hidden" id="inDepartamento">
+          <input type="hidden" id="inMunicipio">
+          <div id="municipioSel" style="margin-top:6px;font-size:.8rem;color:var(--pink-dk);font-weight:600"></div>
+        </div>
+        <div class="field col-full" id="comunaWrap" style="display:none">
+          <label>Comuna / Corregimiento (Medellín)</label>
+          <select id="inComuna"><option value="">Seleccionar</option></select>
+        </div>
       </div>
       <hr class="div">
       <div class="grid-2">
@@ -204,6 +226,29 @@
       </div>
     </div>
 
+    <hr class="div">
+    <label style="margin-bottom:8px;display:block;font-weight:600;color:var(--ink)">📷 Evidencia (opcional)</label>
+    <div class="evidencia-box">
+      <input type="file" accept="image/*" capture="environment" id="inFoto" style="display:none" onchange="onFotoSeleccionada(event)">
+      <button type="button" class="btn-foto" onclick="document.getElementById('inFoto').click()">📷 Tomar / cargar foto</button>
+      <div id="fotoPreviewWrap" style="display:none">
+        <img id="fotoPreview" alt="Vista previa">
+        <div><button type="button" class="btn-secondary" style="margin-top:8px;padding:7px 14px" onclick="quitarFoto()">Quitar foto</button></div>
+      </div>
+    </div>
+
+    <label style="margin-bottom:8px;display:block;font-weight:600;color:var(--ink)">✍️ Firma de quien recibe (opcional)</label>
+    <canvas id="firmaCanvas"></canvas>
+    <div class="firma-actions">
+      <input type="text" id="inFirmaNombre" placeholder="Nombre de quien firma" style="flex:1;margin-right:10px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem">
+      <button type="button" class="btn-secondary" style="padding:9px 16px" onclick="limpiarFirma()">Borrar firma</button>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="inAutorizaImagen">
+      <label for="inAutorizaImagen">El paciente/acudiente <strong>autoriza el uso de su imagen</strong> (foto y/o firma) por parte de la Fundación Infantil Santiago Corazón para fines de seguimiento, reportes y comunicaciones institucionales.</label>
+    </div>
+
     <div class="field" style="margin-top:14px">
       <label>Observación (opcional)</label>
       <textarea id="inObservacion" maxlength="300" placeholder="Cualquier detalle adicional del registro"></textarea>
@@ -244,6 +289,7 @@
 
 </div>
 
+<script src="data_municipios.js"></script>
 <script src="app_sala_ludica.js"></script>
 </body>
 </html>

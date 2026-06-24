@@ -963,14 +963,29 @@ tr:hover td{background:var(--pink-lt)}
 
       <div class="metrics" id="slMetricsGrid"></div>
 
-      <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente — 2026</div></div>
+        <div class="card-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>Componente</th><th>Meta</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
+            <tbody id="slMetasBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Participantes en Actividades de la Sala Lúdica por Mes</div></div>
+        <div class="card-body" id="slChartSala">Cargando...</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title">Distribución por componente</div></div>
-          <div class="card-body" id="slDistribucion">Cargando...</div>
+          <div class="card-header"><div class="card-title">Kits de Bienvenida Entregados por Mes</div></div>
+          <div class="card-body" id="slChartKits">Cargando...</div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Avance vs. meta anual 2026</div></div>
-          <div class="card-body" id="slAvanceMeta">Cargando...</div>
+          <div class="card-header"><div class="card-title">Beneficiarios de Alimentación por Mes</div></div>
+          <div class="card-body" id="slChartAlimentacion">Cargando...</div>
         </div>
       </div>
 
@@ -3222,18 +3237,24 @@ async function cargarSalaLudica() {
     if (desde) q += `&fecha=gte.${desde}`;
     if (hasta) q += `&fecha=lte.${hasta}`;
 
-    const [rReg, rBen, rMetas] = await Promise.all([
+    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
+
+    const [rReg, rBen, rMetas, rAnual, rTodo] = await Promise.all([
       fetch(q + '&limit=10000', { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&limit=10000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales
     ]);
     const registros = await rReg.json();
     const beneficiarios = await rBen.json();
     const metas = await rMetas.json();
+    const regAnual = await rAnual.json();
+    const regTodo = await rTodo.json();
 
     if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
 
-    // ── Métricas principales ──
+    // ── Métricas principales (sin "Beneficiarios Únicos": queda solo Activos) ──
     const totalRegistros = registros.length;
     const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
     const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
@@ -3243,50 +3264,58 @@ async function cargarSalaLudica() {
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
       <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Registros del Período</div><div class="metric-value" style="color:#1565c0">${totalRegistros.toLocaleString()}</div><div class="metric-sub">${benUnicos} niños atendidos</div></div>
       <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
-      <div class="metric-card" style="border-color:#2e7d32"><div class="metric-label">Beneficiarios Únicos</div><div class="metric-value" style="color:#2e7d32">${beneficiarios.length.toLocaleString()}</div><div class="metric-sub">Registrados en total</div></div>
     `;
 
-    // ── Distribución por componente ──
-    const conteoComp = {};
-    registros.forEach(r => conteoComp[r.componente] = (conteoComp[r.componente] || 0) + 1);
-    const maxComp = Math.max(1, ...Object.values(conteoComp));
-    $('slDistribucion').innerHTML = Object.keys(SL_LABELS).map(c => {
-      const n = conteoComp[c] || 0;
-      const pct = Math.round((n / maxComp) * 100);
-      return `<div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
-          <span style="color:var(--ink-mid)">${SL_LABELS[c]}</span><strong>${n.toLocaleString()}</strong>
-        </div>
-        <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
-          <div style="background:${SL_COLORS[c]};height:100%;width:${pct}%;border-radius:6px"></div>
-        </div>
-      </div>`;
-    }).join('');
-
-    // ── Avance vs meta anual ──
+    // ── Cumplimiento de Metas por Componente (siempre año en curso, igual a tu Data Bricks) ──
     const metaMap = {};
     (metas || []).forEach(m => metaMap[m.componente] = m.meta);
-    // Ejecutado anual real (independiente del filtro de período, siempre año en curso)
-    const rAnual = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=componente&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() });
-    const regAnual = await rAnual.json();
-    const conteoAnual = {};
-    (regAnual || []).forEach(r => conteoAnual[r.componente] = (conteoAnual[r.componente] || 0) + 1);
 
-    const conMeta = ['kits_bienvenida', 'apoyo_alimentario', 'sala_ludica'].filter(c => metaMap[c]);
-    $('slAvanceMeta').innerHTML = conMeta.length ? conMeta.map(c => {
-      const meta = metaMap[c] || 0;
-      const ejec = conteoAnual[c] || 0;
-      const pct = meta ? Math.min(100, Math.round((ejec / meta) * 100)) : 0;
-      const color = pct >= 90 ? '#2e7d32' : pct >= 50 ? SL_COLORS[c] : '#e65100';
-      return `<div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
-          <span style="color:var(--ink-mid)">${SL_LABELS[c]}</span><strong>${ejec.toLocaleString()} / ${meta.toLocaleString()} (${pct}%)</strong>
-        </div>
-        <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
-          <div style="background:${color};height:100%;width:${pct}%;border-radius:6px"></div>
-        </div>
-      </div>`;
-    }).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin metas configuradas en sl_metas para 2026.</div>';
+    function totalBeneficiariosDe(comp, filas) {
+      const f = filas.filter(r => r.componente === comp);
+      if (comp === 'kits_bienvenida') return f.reduce((s, r) => s + (r.kit_paciente ? 1 : 0) + (r.kit_acudiente ? 1 : 0), 0);
+      if (comp === 'sala_ludica') return f.reduce((s, r) => s + (Number(r.asistentes_sala_ludica) || 0), 0);
+      if (comp === 'apoyo_alimentario') return f.reduce((s, r) => s + (Number(r.desayuno)||0) + (Number(r.almuerzo)||0) + (Number(r.merienda)||0) + (Number(r.refrigerio)||0), 0);
+      if (comp === 'fortalecimiento_cuidadores') return f.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0);
+      return 0;
+    }
+
+    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
+    $('slMetasBody').innerHTML = ordenComp.map(c => {
+      const meta = metaMap[c];
+      const total = totalBeneficiariosDe(c, regAnual || []);
+      const pct = meta ? ((total / meta) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
+      return `<tr>
+        <td>${c}</td>
+        <td>${meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>'}</td>
+        <td>${total.toLocaleString()}</td>
+        <td><strong style="color:${meta && total/meta>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
+      </tr>`;
+    }).join('');
+
+    // ── Tendencias mensuales (histórico completo, como en tus gráficos de referencia) ──
+    function agruparPorMes(filas, valorFn) {
+      const acc = {};
+      filas.forEach(r => {
+        if (!r.fecha) return;
+        const clave = r.fecha.slice(0, 7); // YYYY-MM
+        acc[clave] = (acc[clave] || 0) + valorFn(r);
+      });
+      return Object.keys(acc).sort().map(k => ({ mes: k, valor: acc[k] }));
+    }
+
+    const MES_NOMBRE = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    function etiquetaMes(claveYYYYMM) {
+      const [y, m] = claveYYYYMM.split('-');
+      return MES_NOMBRE[parseInt(m, 10) - 1] + ' ' + y.slice(2);
+    }
+
+    const serieSala = agruparPorMes(regTodo.filter(r => r.componente === 'sala_ludica'), r => Number(r.asistentes_sala_ludica) || 0);
+    const serieKits = agruparPorMes(regTodo.filter(r => r.componente === 'kits_bienvenida'), r => (r.kit_paciente ? 1 : 0) + (r.kit_acudiente ? 1 : 0));
+    const serieAlim = agruparPorMes(regTodo.filter(r => r.componente === 'apoyo_alimentario'), r => (Number(r.desayuno)||0)+(Number(r.almuerzo)||0)+(Number(r.merienda)||0)+(Number(r.refrigerio)||0));
+
+    $('slChartSala').innerHTML = svgLineChart(serieSala, etiquetaMes, '#E8176B');
+    $('slChartKits').innerHTML = svgLineChart(serieKits, etiquetaMes, '#1565c0');
+    $('slChartAlimentacion').innerHTML = svgLineChart(serieAlim, etiquetaMes, '#2e7d32');
 
     // ── Top municipios ──
     const conteoMuni = {};
@@ -3325,7 +3354,39 @@ async function cargarSalaLudica() {
   }
 }
 
-// ── Buscador de beneficiarios ──
+// ── Mini gráfico de línea en SVG (sin librerías externas) ──
+function svgLineChart(serie, etiquetaFn, color) {
+  if (!serie.length) return '<div style="color:var(--ink-lt);font-size:.85rem;padding:20px 0">Sin datos suficientes para graficar.</div>';
+  const W = 760, H = 230, padL = 40, padR = 20, padT = 24, padB = 36;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const max = Math.max(1, ...serie.map(p => p.valor));
+  const stepX = serie.length > 1 ? innerW / (serie.length - 1) : 0;
+  const puntos = serie.map((p, i) => {
+    const x = padL + i * stepX;
+    const y = padT + innerH - (p.valor / max) * innerH;
+    return { x, y, ...p };
+  });
+  const path = puntos.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+  const lineasGuia = [0, 0.5, 1].map(f => {
+    const y = padT + innerH * (1 - f);
+    return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+            <text x="${padL-8}" y="${y+4}" font-size="11" fill="var(--ink-lt)" text-anchor="end">${Math.round(max*f)}</text>`;
+  }).join('');
+  const etiquetasX = puntos.map((p, i) => {
+    if (serie.length > 9 && i % 2 !== 0 && i !== serie.length - 1) return '';
+    return `<text x="${p.x}" y="${H-10}" font-size="10.5" fill="var(--ink-lt)" text-anchor="middle">${etiquetaFn(p.mes)}</text>`;
+  }).join('');
+  const etiquetasValor = puntos.map(p => `<text x="${p.x}" y="${p.y-10}" font-size="11" fill="${color}" font-weight="600" text-anchor="middle">${p.valor}</text>`).join('');
+  const circulos = puntos.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${color}"/>`).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    ${lineasGuia}
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"/>
+    ${circulos}
+    ${etiquetasValor}
+    ${etiquetasX}
+  </svg>`;
+}// ── Buscador de beneficiarios ──
 let _slBusqTimer = null;
 function onBuscarSL(q) {
   clearTimeout(_slBusqTimer);
