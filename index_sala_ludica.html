@@ -126,14 +126,15 @@
           <select id="inRegimen"><option value="">Seleccionar</option><option>Subsidiado</option><option>Contributivo</option></select>
         </div>
         <div class="field"><label>Edad</label><input type="text" id="inEdad" placeholder="Ej. 4 Años, 8 Meses"></div>
-        <div class="field col-full" style="position:relative">
-          <label>Municipio de residencia</label>
-          <input type="text" id="inMunicipioBusq" placeholder="Click para elegir o escribe para buscar..." autocomplete="off" style="padding-right:32px" oninput="filtrarMunicipios(this.value)" onfocus="filtrarMunicipios(this.value)">
-          <span style="position:absolute;right:12px;top:38px;color:var(--ink-lt);pointer-events:none;font-size:.8rem">▾</span>
-          <div id="sugMunicipios" class="sugerencias-box" style="display:none"></div>
-          <input type="hidden" id="inDepartamento">
-          <input type="hidden" id="inMunicipio">
-          <div id="municipioSel" style="margin-top:6px;font-size:.8rem;color:var(--pink-dk);font-weight:600"></div>
+        <div class="field"><label>Departamento</label>
+          <select id="inDepartamento" onchange="cargarMunicipiosSL()">
+            <option value="">Seleccionar departamento...</option>
+          </select>
+        </div>
+        <div class="field"><label>Municipio</label>
+          <select id="inMunicipio" onchange="onMunicipioSeleccionadoSL()">
+            <option value="">Primero elige el departamento...</option>
+          </select>
         </div>
         <div class="field col-full" id="comunaWrap" style="display:none">
           <label>Comuna / Corregimiento (Medellín)</label>

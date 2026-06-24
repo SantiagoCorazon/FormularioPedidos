@@ -43,46 +43,35 @@ function selComponente(c) {
   irA('sec-beneficiario');
 }
 
-// ── Autocompletado de Municipio / Departamento / Comuna ─────
-function filtrarMunicipios(q) {
-  const box = $('sugMunicipios');
-  q = (q || '').trim().toLowerCase();
-
-  if (q.length === 0) {
-    // Sin texto aún: mostrar opciones para elegir de inmediato (Antioquia primero, como un selector)
-    const antioquia = MUNICIPIOS_CO.filter(x => x.d === 'Antioquia').slice(0, 30);
-    box.innerHTML = antioquia.map(x =>
-      `<div class="sug-item" onclick="seleccionarMunicipio('${x.d.replace(/'/g, "\\'")}','${x.m.replace(/'/g, "\\'")}')">${x.m}<small>${x.d}</small></div>`
-    ).join('');
-    box.style.display = 'block';
-    return;
-  }
-
-  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const qn = norm(q);
-  const matches = MUNICIPIOS_CO.filter(x => norm(x.m).includes(qn) || norm(x.d).includes(qn)).slice(0, 30);
-
-  if (!matches.length) {
-    box.innerHTML = '<div class="sug-item" style="color:var(--ink-lt)">Sin resultados</div>';
-    box.style.display = 'block';
-    return;
-  }
-  box.innerHTML = matches.map(x =>
-    `<div class="sug-item" onclick="seleccionarMunicipio('${x.d.replace(/'/g, "\\'")}','${x.m.replace(/'/g, "\\'")}')">${x.m}<small>${x.d}</small></div>`
-  ).join('');
-  box.style.display = 'block';
+// ── Selector en cascada: Departamento → Municipio → Comuna ──
+function cargarDepartamentosSL() {
+  const deptos = [...new Set(MUNICIPIOS_CO.map(x => x.d))].sort((a, b) => a.localeCompare(b, 'es'));
+  // Antioquia primero (región principal de la Fundación)
+  deptos.sort((a, b) => (a === 'Antioquia' ? -1 : b === 'Antioquia' ? 1 : 0));
+  $('inDepartamento').innerHTML = '<option value="">Seleccionar departamento...</option>' +
+    deptos.map(d => `<option value="${d}">${d}</option>`).join('');
 }
 
-function seleccionarMunicipio(depto, muni) {
-  $('inDepartamento').value = depto;
-  $('inMunicipio').value = muni;
-  $('inMunicipioBusq').value = muni;
-  $('municipioSel').textContent = '📍 ' + muni + ', ' + depto;
-  $('sugMunicipios').style.display = 'none';
+function cargarMunicipiosSL() {
+  const depto = $('inDepartamento').value;
+  const sel = $('inMunicipio');
+  if (!depto) {
+    sel.innerHTML = '<option value="">Primero elige el departamento...</option>';
+    $('comunaWrap').style.display = 'none';
+    return;
+  }
+  const munis = MUNICIPIOS_CO.filter(x => x.d === depto).map(x => x.m).sort((a, b) => a.localeCompare(b, 'es'));
+  sel.innerHTML = '<option value="">Seleccionar municipio...</option>' +
+    munis.map(m => `<option value="${m}">${m}</option>`).join('');
+  $('comunaWrap').style.display = 'none';
+}
 
+function onMunicipioSeleccionadoSL() {
+  const muni = $('inMunicipio').value;
   const comunaWrap = $('comunaWrap');
   const sel = $('inComuna');
-  if (muni.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === 'medellin') {
+  const esMedellin = muni.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() === 'medellin';
+  if (esMedellin) {
     comunaWrap.style.display = 'block';
     sel.innerHTML = '<option value="">Seleccionar</option>' + COMUNAS_MEDELLIN.map(c => `<option>${c}</option>`).join('');
   } else {
@@ -92,12 +81,12 @@ function seleccionarMunicipio(depto, muni) {
   }
 }
 
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#inMunicipioBusq') && !e.target.closest('#sugMunicipios')) {
-    const box = $('sugMunicipios');
-    if (box) box.style.display = 'none';
-  }
-});
+function setDepartamentoMunicipioSL(depto, muni) {
+  if (depto) $('inDepartamento').value = depto;
+  cargarMunicipiosSL();
+  if (muni) $('inMunicipio').value = muni;
+  onMunicipioSeleccionadoSL();
+}
 
 // ── PASO 2: Beneficiario ─────────────────────────────────────
 async function buscarBeneficiario() {
@@ -126,11 +115,11 @@ async function buscarBeneficiario() {
       $('inGeneroAcudiente').value = b.genero_acudiente || '';
 
       if (b.municipio) {
-        seleccionarMunicipio(b.departamento || '', b.municipio);
+        setDepartamentoMunicipioSL(b.departamento || '', b.municipio);
         if (b.comuna && $('comunaWrap').style.display === 'block') $('inComuna').value = b.comuna;
       } else {
-        $('inDepartamento').value = ''; $('inMunicipio').value = ''; $('inMunicipioBusq').value = '';
-        $('municipioSel').textContent = ''; $('comunaWrap').style.display = 'none';
+        $('inDepartamento').value = '';
+        cargarMunicipiosSL();
       }
 
       status.className = 'status found';
@@ -138,10 +127,10 @@ async function buscarBeneficiario() {
       status.style.display = 'flex';
     } else {
       S.beneficiarioId = null;
-      ['inNombrePaciente','inGeneroPaciente','inRegimen','inEdad','inMunicipioBusq',
+      ['inNombrePaciente','inGeneroPaciente','inRegimen','inEdad',
        'inDocAcudiente','inNombreAcudiente','inCelular','inGeneroAcudiente'].forEach(id => $(id).value = '');
-      $('inDepartamento').value = ''; $('inMunicipio').value = '';
-      $('municipioSel').textContent = ''; $('comunaWrap').style.display = 'none';
+      $('inDepartamento').value = '';
+      cargarMunicipiosSL();
       status.className = 'status notfound';
       status.textContent = 'No se encontró. Completa los datos para crearlo.';
       status.style.display = 'flex';
@@ -413,12 +402,12 @@ function nuevoRegistro() {
   S.etapaPanales = null;
   S.fotoBlob = null;
   document.querySelectorAll('.pill.sel').forEach(p => p.classList.remove('sel'));
-  ['inDocPaciente','inNombrePaciente','inGeneroPaciente','inRegimen','inEdad','inMunicipioBusq',
+  ['inDocPaciente','inNombrePaciente','inGeneroPaciente','inRegimen','inEdad',
    'inDocAcudiente','inNombreAcudiente','inCelular','inGeneroAcudiente','inServicio','inObservacion',
    'inAsistentesSala','inActividadSala','inDesayuno','inAlmuerzo','inMerienda','inRefrigerio',
    'inAsistentesFort','inActividadFort','inFecha','inFirmaNombre'].forEach(id => { if ($(id)) $(id).value = ''; });
-  $('inDepartamento').value = ''; $('inMunicipio').value = '';
-  $('municipioSel').textContent = ''; $('comunaWrap').style.display = 'none';
+  $('inDepartamento').value = '';
+  cargarMunicipiosSL();
   $('inAutorizaImagen').checked = false;
   quitarFoto();
   limpiarFirma();
@@ -429,4 +418,6 @@ function nuevoRegistro() {
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   $('headerDate').textContent = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+  cargarDepartamentosSL();
+  cargarMunicipiosSL();
 });
