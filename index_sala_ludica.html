@@ -128,7 +128,8 @@
         <div class="field"><label>Edad</label><input type="text" id="inEdad" placeholder="Ej. 4 Años, 8 Meses"></div>
         <div class="field col-full" style="position:relative">
           <label>Municipio de residencia</label>
-          <input type="text" id="inMunicipioBusq" placeholder="Escribe para buscar el municipio..." autocomplete="off" oninput="filtrarMunicipios(this.value)" onfocus="filtrarMunicipios(this.value)">
+          <input type="text" id="inMunicipioBusq" placeholder="Click para elegir o escribe para buscar..." autocomplete="off" style="padding-right:32px" oninput="filtrarMunicipios(this.value)" onfocus="filtrarMunicipios(this.value)">
+          <span style="position:absolute;right:12px;top:38px;color:var(--ink-lt);pointer-events:none;font-size:.8rem">▾</span>
           <div id="sugMunicipios" class="sugerencias-box" style="display:none"></div>
           <input type="hidden" id="inDepartamento">
           <input type="hidden" id="inMunicipio">

@@ -47,7 +47,16 @@ function selComponente(c) {
 function filtrarMunicipios(q) {
   const box = $('sugMunicipios');
   q = (q || '').trim().toLowerCase();
-  if (q.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+
+  if (q.length === 0) {
+    // Sin texto aún: mostrar opciones para elegir de inmediato (Antioquia primero, como un selector)
+    const antioquia = MUNICIPIOS_CO.filter(x => x.d === 'Antioquia').slice(0, 30);
+    box.innerHTML = antioquia.map(x =>
+      `<div class="sug-item" onclick="seleccionarMunicipio('${x.d.replace(/'/g, "\\'")}','${x.m.replace(/'/g, "\\'")}')">${x.m}<small>${x.d}</small></div>`
+    ).join('');
+    box.style.display = 'block';
+    return;
+  }
 
   const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const qn = norm(q);
