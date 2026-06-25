@@ -421,3 +421,124 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarDepartamentosSL();
   cargarMunicipiosSL();
 });
+
+// ============================================================
+// ENCUESTA DE SATISFACCIÓN
+// ============================================================
+const ENCUESTA_CONFIG = {
+  sala_ludica: {
+    titulo: 'Sala Lúdica',
+    pregunta: 'Las actividades en la sala lúdica ayudaron a: (Puedes marcar más de una opción)',
+    tipo: 'multi',
+    opciones: [
+      'Reducir el estrés del niño.',
+      'Hacer más llevadera la espera y hospitalización.',
+      'Fortalecer el bienestar emocional del niño y la familia.',
+      'No generaron mayor impacto.',
+      'No participé en las actividades.',
+    ],
+  },
+  kits_bienvenida: {
+    titulo: 'Kits de Bienvenida',
+    pregunta: 'Durante la estadía en la Clínica, los productos del kit de bienvenida (aseo y cuidado personal) entregados fueron:',
+    tipo: 'single',
+    opciones: ['Muy útiles.', 'Útiles en parte.', 'Poco útiles.', 'No fueron útiles.'],
+  },
+  apoyo_alimentario: {
+    titulo: 'Apoyo Alimentario',
+    pregunta: 'Durante la hospitalización de tu hijo(a), ¿qué tan importante fue para tu familia contar con el apoyo en alimentación (desayunos, almuerzos o meriendas)?',
+    tipo: 'single',
+    opciones: ['Muy importante.', 'Importante.', 'Poco importante.', 'No fue necesario.', 'No recibí este apoyo.'],
+  },
+  fortalecimiento_cuidadores: {
+    titulo: 'Talleres y Acompañamiento a Cuidadoras',
+    pregunta: '¿Cómo calificarías los talleres y espacios de acompañamiento para madres y cuidadoras (psicología, manualidades, salud oral, etc.) en los que participaste?',
+    tipo: 'single',
+    opciones: [
+      'Excelente: Me brindaron herramientas útiles para mi bienestar y autocuidado.',
+      'Bueno: Fueron espacios agradables de distracción.',
+      'Regular: No sentí que aportaran a mi situación actual.',
+      'No participé en los talleres para cuidadoras.',
+    ],
+  },
+};
+
+const ES = { componente: '', seleccion: [] };
+
+function irAEncuestaComponente() {
+  ES.componente = '';
+  ES.seleccion = [];
+  irA('sec-encuesta-componente');
+}
+
+function selComponenteEncuesta(c) {
+  ES.componente = c;
+  ES.seleccion = [];
+  renderEncuestaForm();
+  irA('sec-encuesta-form');
+}
+
+function renderEncuestaForm() {
+  const cfg = ENCUESTA_CONFIG[ES.componente];
+  $('encTitulo').innerHTML = 'Evaluación de <em>' + cfg.titulo + '</em>';
+  $('encPregunta').textContent = cfg.pregunta;
+  $('encComentario').value = '';
+
+  if (cfg.tipo === 'multi') {
+    $('encOpciones').innerHTML = cfg.opciones.map((op, i) => `
+      <div class="check-row">
+        <input type="checkbox" id="encOp${i}" data-val="${op.replace(/"/g, '&quot;')}" onchange="toggleOpcionEncuesta(this)">
+        <label for="encOp${i}">${op}</label>
+      </div>
+    `).join('');
+  } else {
+    $('encOpciones').innerHTML = `<div class="pill-row" style="flex-direction:column;align-items:stretch">` +
+      cfg.opciones.map(op => `<div class="pill" data-val="${op.replace(/"/g, '&quot;')}" onclick="selOpcionEncuesta(this)">${op}</div>`).join('') +
+      `</div>`;
+  }
+}
+
+function toggleOpcionEncuesta(el) {
+  const valor = el.dataset.val;
+  if (el.checked) {
+    if (!ES.seleccion.includes(valor)) ES.seleccion.push(valor);
+  } else {
+    ES.seleccion = ES.seleccion.filter(v => v !== valor);
+  }
+}
+
+function selOpcionEncuesta(el) {
+  el.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  ES.seleccion = [el.dataset.val];
+}
+
+async function guardarEncuesta() {
+  if (!ES.seleccion.length) {
+    alert('Selecciona al menos una opción antes de enviar.');
+    return;
+  }
+  loading(true, 'Enviando encuesta...');
+  try {
+    const payload = {
+      componente: ES.componente,
+      respuestas: ES.seleccion,
+      comentario: $('encComentario').value.trim() || null,
+    };
+    const r = await fetch(SUPABASE_URL + '/rest/v1/encuesta_satisfaccion', {
+      method: 'POST',
+      headers: { ...sbH(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || 'No se pudo guardar la encuesta');
+    }
+    irA('sec-encuesta-ok');
+  } catch (e) {
+    console.error(e);
+    alert('Ocurrió un error enviando la encuesta: ' + e.message);
+  } finally {
+    loading(false);
+  }
+}

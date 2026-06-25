@@ -96,6 +96,11 @@
         <div class="tipo-pedido-name">Fortalecimiento a Cuidadores</div>
         <div class="tipo-pedido-desc">Talleres y acompañamiento a la familia</div>
       </div>
+      <div class="tipo-pedido-card" onclick="irAEncuestaComponente()">
+        <div class="tipo-pedido-icon">📋</div>
+        <div class="tipo-pedido-name">Encuesta de Satisfacción</div>
+        <div class="tipo-pedido-desc">Evalúa el apoyo recibido</div>
+      </div>
     </div>
   </div>
 </div>
@@ -285,6 +290,66 @@
     <div class="section-sub" id="okMsg"></div>
     <div class="btn-row">
       <button class="btn-primary" onclick="nuevoRegistro()">Registrar otro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENCUESTA: COMPONENTE ══════════════════════════════ -->
+<div class="section" id="sec-encuesta-componente">
+  <div class="card">
+    <div class="step-label">Encuesta de Satisfacción</div>
+    <div class="section-title">¿Qué deseas <em>evaluar</em>?</div>
+    <div class="section-sub">Elige el apoyo que quieres calificar. Cada uno tiene su propia pregunta.</div>
+    <div class="tipo-pedido-grid">
+      <div class="tipo-pedido-card" onclick="selComponenteEncuesta('sala_ludica')">
+        <div class="tipo-pedido-icon">🧸</div>
+        <div class="tipo-pedido-name">Sala Lúdica</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponenteEncuesta('kits_bienvenida')">
+        <div class="tipo-pedido-icon">🎒</div>
+        <div class="tipo-pedido-name">Kits de Bienvenida</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponenteEncuesta('apoyo_alimentario')">
+        <div class="tipo-pedido-icon">🍽</div>
+        <div class="tipo-pedido-name">Apoyo Alimentario</div>
+      </div>
+      <div class="tipo-pedido-card" onclick="selComponenteEncuesta('fortalecimiento_cuidadores')">
+        <div class="tipo-pedido-icon">💛</div>
+        <div class="tipo-pedido-name">Talleres y Acompañamiento</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="irA('sec-componente')">Atrás</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENCUESTA: FORMULARIO ══════════════════════════════ -->
+<div class="section" id="sec-encuesta-form">
+  <div class="card">
+    <div class="step-label">Encuesta de Satisfacción</div>
+    <div class="section-title" id="encTitulo">Evaluación</div>
+    <div class="section-sub" id="encPregunta"></div>
+    <div id="encOpciones"></div>
+    <div class="field" style="margin-top:18px">
+      <label>¿Qué fue lo más valioso de estos apoyos y qué crees que podríamos mejorar para acompañar mejor a las familias? <span style="color:var(--ink-lt);font-weight:400">(opcional)</span></label>
+      <textarea id="encComentario" maxlength="600" placeholder="Cuéntanos tu experiencia..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="irA('sec-encuesta-componente')">Atrás</button>
+      <button class="btn-primary" onclick="guardarEncuesta()">Enviar encuesta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENCUESTA: CONFIRMACIÓN ══════════════════════════════ -->
+<div class="section" id="sec-encuesta-ok">
+  <div class="card ok-box">
+    <div class="check">✅</div>
+    <div class="section-title">¡Gracias por tu opinión!</div>
+    <div class="section-sub">Tu respuesta nos ayuda a mejorar el acompañamiento a las familias.</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="irA('sec-componente')">Volver al inicio</button>
     </div>
   </div>
 </div>

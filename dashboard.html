@@ -196,18 +196,20 @@ tr:hover td{background:var(--pink-lt)}
       <div class="sidebar-user-rol" id="sidebarRol">—</div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="irA('inicio')"><span class="nav-icon">🏠</span> Inicio</div>
-      <div class="nav-item" onclick="irA('pedidos')"><span class="nav-icon">📦</span> Pedidos</div>
-      <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
-      <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
-      <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
-      <div class="nav-item" onclick="irA('bonos')"><span class="nav-icon">🎨</span> Bonos</div>
-      <div class="nav-item" onclick="irA('eventos')"><span class="nav-icon">📅</span> Eventos</div>
-      <div class="nav-item" onclick="irA('temporada')"><span class="nav-icon">🎁</span> Temporada</div>
-      <div class="nav-item" id="nav-envios" onclick="irA('envios')"><span class="nav-icon">🚚</span> Envíos</div>
-      <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
-      <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
-      <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
+      <div id="nav-grupo-pedidos">
+        <div class="nav-item active" onclick="irA('inicio')"><span class="nav-icon">🏠</span> Inicio</div>
+        <div class="nav-item" onclick="irA('pedidos')"><span class="nav-icon">📦</span> Pedidos</div>
+        <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
+        <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
+        <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
+        <div class="nav-item" onclick="irA('bonos')"><span class="nav-icon">🎨</span> Bonos</div>
+        <div class="nav-item" onclick="irA('eventos')"><span class="nav-icon">📅</span> Eventos</div>
+        <div class="nav-item" onclick="irA('temporada')"><span class="nav-icon">🎁</span> Temporada</div>
+        <div class="nav-item" id="nav-envios" onclick="irA('envios')"><span class="nav-icon">🚚</span> Envíos</div>
+        <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
+        <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
+        <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
+      </div>
       <div class="nav-item" id="nav-salaludica" onclick="irA('salaludica')"><span class="nav-icon">🧸</span> Salas Lúdicas</div>
       <div class="nav-item" onclick="irA('manual')"><span class="nav-icon">📖</span> Manual de uso</div>
     </nav>
@@ -1250,6 +1252,7 @@ tr:hover td{background:var(--pink-lt)}
           <option value="operador">Operador — ve pedidos y clientes</option>
           <option value="admin">Administrador — acceso total</option>
           <option value="consulta">Consulta — solo lectura</option>
+          <option value="salas_ludicas">Salas Lúdicas — solo el módulo de acompañamiento</option>
         </select>
       </div>
     </div>
@@ -1452,7 +1455,9 @@ function iniciarApp() {
   $('loginWrap').style.display = 'none';
   $('app').classList.add('show');
   $('sidebarName').textContent = usuarioActual.nombre;
-  $('sidebarRol').textContent = usuarioActual.rol === 'admin' ? 'Administrador' : usuarioActual.rol === 'operador' ? 'Operador' : 'Consulta';
+  const ROL_LABELS = { admin: 'Administrador', operador: 'Operador', consulta: 'Consulta', salas_ludicas: 'Salas Lúdicas' };
+  $('sidebarRol').textContent = ROL_LABELS[usuarioActual.rol] || usuarioActual.rol;
+
   // Mostrar menú usuarios y envíos solo para admin
   if (usuarioActual.rol === 'admin') {
     $('nav-usuarios').style.display = 'flex';
@@ -1460,6 +1465,19 @@ function iniciarApp() {
   } else {
     if ($('nav-envios')) $('nav-envios').style.display = 'none';
   }
+
+  // Control de acceso por perfil — Salas Lúdicas vs. Formulario de Pedidos
+  if (usuarioActual.rol === 'salas_ludicas') {
+    $('nav-grupo-pedidos').style.display = 'none';
+    $('nav-salaludica').style.display = 'flex';
+    irA('salaludica');
+    return; // este perfil no necesita catálogo/inicio de pedidos
+  }
+  if (usuarioActual.rol !== 'admin') {
+    // operador / consulta no acceden a Salas Lúdicas
+    if ($('nav-salaludica')) $('nav-salaludica').style.display = 'none';
+  }
+
   cargarCatalogo();
   cargarCategoriasYSubs();
   cargarInicio();
@@ -2915,7 +2933,7 @@ async function cargarUsuarios() {
   $('bodyUsuarios').innerHTML = usuarios.length ? usuarios.map(u => `<tr>
     <td><strong>${u.nombre||'—'}</strong></td>
     <td>${u.email||'—'}</td>
-    <td><span class="badge" style="background:${u.rol==='admin'?'#fde8e8':'var(--pink-lt)'};color:${u.rol==='admin'?'#c0392b':'var(--pink)'}">${u.rol||'—'}</span></td>
+    <td><span class="badge" style="background:${u.rol==='admin'?'#fde8e8':u.rol==='salas_ludicas'?'#fff4d9':'var(--pink-lt)'};color:${u.rol==='admin'?'#c0392b':u.rol==='salas_ludicas'?'#9c7a00':'var(--pink)'}">${u.rol==='salas_ludicas'?'Salas Lúdicas':(u.rol||'—')}</span></td>
     <td><label class="toggle"><input type="checkbox" ${u.activo?'checked':''} onchange="toggleUsuario(${u.id}, this.checked)"><span class="toggle-slider"></span></label></td>
     <td>${u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleDateString('es-CO') : 'Nunca'}</td>
     <td><button class="btn btn-secondary btn-sm" onclick="resetPassword(${u.id})">🔑 Reset</button></td>
