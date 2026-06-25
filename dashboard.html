@@ -2970,14 +2970,23 @@ async function guardarUsuario() {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard`, {
-    method: 'POST',
-    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nombre, email, password_hash: hashHex, rol, activo: true })
-  });
-  toast('Usuario creado. Contraseña inicial: ' + pass, 'success');
-  cerrarModal('modalUsuario');
-  cargarUsuarios();
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, password_hash: hashHex, rol, activo: true })
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || `Error ${r.status} guardando el usuario`);
+    }
+    toast('Usuario creado. Contraseña inicial: ' + pass, 'success');
+    cerrarModal('modalUsuario');
+    cargarUsuarios();
+  } catch (e) {
+    console.error('Error creando usuario:', e);
+    alert('No se pudo crear el usuario: ' + e.message);
+  }
 }
 
 async function toggleUsuario(id, activo) {
