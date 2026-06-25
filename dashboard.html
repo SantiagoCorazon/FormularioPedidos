@@ -1022,6 +1022,12 @@ tr:hover td{background:var(--pink-lt)}
           </table></div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📋 Encuesta de Satisfacción</div></div>
+        <div class="card-body" id="slEncuestaResumen">Cargando...</div>
+      </div>
+
     </div>
 
   </div><!-- /main -->
@@ -3260,6 +3266,7 @@ function onCambioPeriodoSL() {
 
 async function cargarSalaLudica() {
   $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
+  cargarEncuestas();
   try {
     const { desde, hasta } = slRangoFechas();
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=componente,fecha,beneficiario_id,actividad_sala_ludica`;
@@ -3380,6 +3387,67 @@ async function cargarSalaLudica() {
   } catch (e) {
     console.error('Error cargando Salas Lúdicas:', e);
     $('slMetricsGrid').innerHTML = `<div class="metric-card" style="border-color:#c0392b"><div class="metric-label">Error</div><div class="metric-sub">${e.message}</div></div>`;
+  }
+}
+
+// ── Encuesta de Satisfacción ───────────────────────────────
+const ENCUESTA_LABELS = {
+  sala_ludica: 'Sala Lúdica',
+  kits_bienvenida: 'Kits de Bienvenida',
+  apoyo_alimentario: 'Apoyo Alimentario',
+  fortalecimiento_cuidadores: 'Talleres y Acompañamiento',
+};
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+async function cargarEncuestas() {
+  const cont = $('slEncuestaResumen');
+  if (!cont) return;
+  cont.innerHTML = 'Cargando...';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/encuesta_satisfaccion?select=componente,respuestas,comentario,fecha&order=fecha.desc&limit=2000`, { headers: hdrs() });
+    const datos = await r.json();
+    if (!Array.isArray(datos)) throw new Error(datos.message || 'No se pudo leer encuesta_satisfaccion (revisa permisos/RLS)');
+
+    if (!datos.length) {
+      cont.innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem">Todavía no hay respuestas registradas.</div>';
+      return;
+    }
+
+    let html = '';
+    Object.keys(ENCUESTA_LABELS).forEach(comp => {
+      const delComp = datos.filter(d => d.componente === comp);
+      if (!delComp.length) return;
+      const conteo = {};
+      delComp.forEach(d => (d.respuestas || []).forEach(op => { conteo[op] = (conteo[op] || 0) + 1; }));
+      const maxOp = Math.max(1, ...Object.values(conteo));
+      html += `<div style="margin-bottom:22px">
+        <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:8px">${escapeHtml(ENCUESTA_LABELS[comp])} <span style="color:var(--ink-lt);font-weight:400">(${delComp.length} respuestas)</span></div>` +
+        Object.entries(conteo).sort((a, b) => b[1] - a[1]).map(([op, n]) => `
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px;gap:10px">
+              <span style="color:var(--ink-mid)">${escapeHtml(op)}</span><strong style="white-space:nowrap">${n} (${Math.round(n / delComp.length * 100)}%)</strong>
+            </div>
+            <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+              <div style="background:${SL_COLORS[comp] || '#1565c0'};height:100%;width:${Math.round(n / maxOp * 100)}%;border-radius:6px"></div>
+            </div>
+          </div>`).join('') +
+        `</div>`;
+    });
+
+    const comentarios = datos.filter(d => d.comentario && d.comentario.trim()).slice(0, 30);
+    html += `<hr class="div" style="margin:18px 0">
+      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos recientes (${comentarios.length})</div>` +
+      (comentarios.length ? comentarios.map(c => `
+        <div style="background:var(--cream);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;line-height:1.5">
+          <div style="color:var(--ink-lt);font-size:.7rem;margin-bottom:4px">${escapeHtml(ENCUESTA_LABELS[c.componente] || c.componente)} · ${new Date(c.fecha).toLocaleDateString('es-CO')}</div>
+          ${escapeHtml(c.comentario)}
+        </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin comentarios todavía.</div>');
+
+    cont.innerHTML = html;
+  } catch (e) {
+    console.error('Error cargando encuestas:', e);
+    cont.innerHTML = `<div style="color:#c0392b;font-size:.85rem">Error: ${escapeHtml(e.message)}</div>`;
   }
 }
 
