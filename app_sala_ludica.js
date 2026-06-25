@@ -428,6 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   if (params.has('encuesta')) {
     MODO_SOLO_ENCUESTA = true;
+    document.title = 'Encuesta de Satisfacción — Santiago Corazón';
+    if ($('headerTitulo')) $('headerTitulo').textContent = 'Encuesta de Satisfacción';
     if ($('btnAtrasEncuestaComp')) $('btnAtrasEncuestaComp').style.display = 'none';
     if ($('btnFinEncuesta')) {
       $('btnFinEncuesta').outerHTML = '<div style="color:var(--ink-lt);font-size:.85rem;text-align:center;padding-top:6px">Ya puedes cerrar esta ventana.</div>';
