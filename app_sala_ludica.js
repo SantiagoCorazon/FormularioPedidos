@@ -416,10 +416,29 @@ function nuevoRegistro() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
+let MODO_SOLO_ENCUESTA = false;
+
 document.addEventListener('DOMContentLoaded', () => {
   $('headerDate').textContent = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
   cargarDepartamentosSL();
   cargarMunicipiosSL();
+
+  // ── Link individual de encuesta: ?encuesta=1 (elige componente)
+  //    o ?encuesta=sala_ludica / kits_bienvenida / apoyo_alimentario / fortalecimiento_cuidadores (va directo)
+  const params = new URLSearchParams(location.search);
+  if (params.has('encuesta')) {
+    MODO_SOLO_ENCUESTA = true;
+    if ($('btnAtrasEncuestaComp')) $('btnAtrasEncuestaComp').style.display = 'none';
+    if ($('btnFinEncuesta')) {
+      $('btnFinEncuesta').outerHTML = '<div style="color:var(--ink-lt);font-size:.85rem;text-align:center;padding-top:6px">Ya puedes cerrar esta ventana.</div>';
+    }
+    const valor = params.get('encuesta');
+    if (ENCUESTA_CONFIG[valor]) {
+      selComponenteEncuesta(valor);
+    } else {
+      irAEncuestaComponente();
+    }
+  }
 });
 
 // ============================================================
