@@ -317,9 +317,32 @@
         <div class="tipo-pedido-icon">💛</div>
         <div class="tipo-pedido-name">Talleres y Acompañamiento</div>
       </div>
+      <div class="tipo-pedido-card" onclick="irAEncuestaTodos()">
+        <div class="tipo-pedido-icon">⭐</div>
+        <div class="tipo-pedido-name">Evaluar todos los servicios</div>
+        <div class="tipo-pedido-desc">Las 4 preguntas en un solo formulario</div>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn-secondary" id="btnAtrasEncuestaComp" onclick="irA('sec-componente')">Atrás</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENCUESTA: TODOS LOS SERVICIOS ══════════════════════════════ -->
+<div class="section" id="sec-encuesta-todos">
+  <div class="card">
+    <div class="step-label">Encuesta de Satisfacción</div>
+    <div class="section-title">Evaluación <em>completa</em> de los 4 servicios</div>
+    <div class="section-sub">Responde cada pregunta según tu experiencia. Puedes dejar en blanco lo que no aplique.</div>
+    <div id="encTodosContenido"></div>
+    <div class="field" style="margin-top:18px">
+      <label>¿Qué fue lo más valioso de estos apoyos y qué crees que podríamos mejorar para acompañar mejor a las familias? <span style="color:var(--ink-lt);font-weight:400">(opcional)</span></label>
+      <textarea id="encTodosComentario" maxlength="600" placeholder="Cuéntanos tu experiencia..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="btnAtrasEncuestaTodos" onclick="irA('sec-encuesta-componente')">Atrás</button>
+      <button class="btn-primary" onclick="guardarEncuestaTodos()">Enviar encuesta completa</button>
     </div>
   </div>
 </div>
@@ -357,6 +380,6 @@
 </div>
 
 <script src="data_municipios.js"></script>
-<script src="app_sala_ludica.js?v=3"></script>
+<script src="app_sala_ludica.js?v=4"></script>
 </body>
 </html>

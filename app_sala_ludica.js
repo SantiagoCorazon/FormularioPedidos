@@ -431,11 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.title = 'Encuesta de Satisfacción — Santiago Corazón';
     if ($('headerTitulo')) $('headerTitulo').textContent = 'Encuesta de Satisfacción';
     if ($('btnAtrasEncuestaComp')) $('btnAtrasEncuestaComp').style.display = 'none';
+    if ($('btnAtrasEncuestaTodos')) $('btnAtrasEncuestaTodos').style.display = 'none';
     if ($('btnFinEncuesta')) {
       $('btnFinEncuesta').outerHTML = '<div style="color:var(--ink-lt);font-size:.85rem;text-align:center;padding-top:6px">Ya puedes cerrar esta ventana.</div>';
     }
     const valor = params.get('encuesta');
-    if (ENCUESTA_CONFIG[valor]) {
+    if (valor === 'todos') {
+      irAEncuestaTodos();
+    } else if (ENCUESTA_CONFIG[valor]) {
       selComponenteEncuesta(valor);
     } else {
       irAEncuestaComponente();
@@ -485,6 +488,7 @@ const ENCUESTA_CONFIG = {
 };
 
 const ES = { componente: '', seleccion: [] };
+const ET = { sala_ludica: [], kits_bienvenida: '', apoyo_alimentario: '', fortalecimiento_cuidadores: '' };
 
 function irAEncuestaComponente() {
   ES.componente = '';
@@ -550,6 +554,91 @@ async function guardarEncuesta() {
       method: 'POST',
       headers: { ...sbH(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || 'No se pudo guardar la encuesta');
+    }
+    irA('sec-encuesta-ok');
+  } catch (e) {
+    console.error(e);
+    alert('Ocurrió un error enviando la encuesta: ' + e.message);
+  } finally {
+    loading(false);
+  }
+}
+
+// ── Encuesta combinada: los 4 servicios en un solo formulario ──
+function irAEncuestaTodos() {
+  ET.sala_ludica = [];
+  ET.kits_bienvenida = '';
+  ET.apoyo_alimentario = '';
+  ET.fortalecimiento_cuidadores = '';
+  renderEncuestaTodos();
+  irA('sec-encuesta-todos');
+}
+
+function renderEncuestaTodos() {
+  $('encTodosComentario').value = '';
+  $('encTodosContenido').innerHTML = Object.keys(ENCUESTA_CONFIG).map(key => {
+    const cfg = ENCUESTA_CONFIG[key];
+    let opcionesHtml;
+    if (cfg.tipo === 'multi') {
+      opcionesHtml = cfg.opciones.map((op, i) => `
+        <div class="check-row">
+          <input type="checkbox" id="encTodos_${key}_${i}" data-comp="${key}" data-val="${op.replace(/"/g, '&quot;')}" onchange="toggleOpcionEncuestaTodos(this)">
+          <label for="encTodos_${key}_${i}">${op}</label>
+        </div>`).join('');
+    } else {
+      opcionesHtml = `<div class="pill-row" style="flex-direction:column;align-items:stretch">` +
+        cfg.opciones.map(op => `<div class="pill" data-comp="${key}" data-val="${op.replace(/"/g, '&quot;')}" onclick="selOpcionEncuestaTodos(this)">${op}</div>`).join('') +
+        `</div>`;
+    }
+    return `
+      <div style="margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid var(--border)">
+        <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">${cfg.titulo}</div>
+        <div style="font-size:.83rem;color:var(--ink-lt);margin-bottom:12px">${cfg.pregunta}</div>
+        ${opcionesHtml}
+      </div>`;
+  }).join('');
+}
+
+function toggleOpcionEncuestaTodos(el) {
+  const comp = el.dataset.comp, valor = el.dataset.val;
+  if (el.checked) {
+    if (!ET[comp].includes(valor)) ET[comp].push(valor);
+  } else {
+    ET[comp] = ET[comp].filter(v => v !== valor);
+  }
+}
+
+function selOpcionEncuestaTodos(el) {
+  const comp = el.dataset.comp;
+  el.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  ET[comp] = el.dataset.val;
+}
+
+async function guardarEncuestaTodos() {
+  const comentario = $('encTodosComentario').value.trim() || null;
+  const filas = Object.keys(ENCUESTA_CONFIG).map(key => {
+    const cfg = ENCUESTA_CONFIG[key];
+    const valor = ET[key];
+    const respuestas = cfg.tipo === 'multi' ? valor : (valor ? [valor] : []);
+    return respuestas.length ? { componente: key, respuestas, comentario } : null;
+  }).filter(Boolean);
+
+  if (!filas.length) {
+    alert('Responde al menos una pregunta antes de enviar.');
+    return;
+  }
+
+  loading(true, 'Enviando encuesta...');
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/encuesta_satisfaccion', {
+      method: 'POST',
+      headers: { ...sbH(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(filas),
     });
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
