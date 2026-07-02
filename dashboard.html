@@ -156,6 +156,12 @@ tr:hover td{background:var(--pink-lt)}
   .metrics{grid-template-columns:1fr 1fr}
   .form-grid{grid-template-columns:1fr}
 }
+/* Safari iOS fix: divs with onclick need cursor:pointer to register touch */
+[onclick]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nav-item,.tipo-pedido-card,.pill,.sug-item,.badge,.btn,.btn-primary,.btn-secondary,.btn-sm,
+.btn-login,.metric-card,.card-header button,.table-wrap td button{
+  -webkit-tap-highlight-color:transparent
+}
 </style>
 </head>
 <body>
