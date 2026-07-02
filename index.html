@@ -19,6 +19,13 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+/* Safari iOS fix: divs con onclick necesitan cursor:pointer inline para registrar el toque */
+[onclick]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tipo-pedido-card,.pill,.sug-item,.btn-primary,.btn-secondary,.btn-outline{
+  -webkit-tap-highlight-color:transparent
+}
+</style>
 </head>
 <body>
 
