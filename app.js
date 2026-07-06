@@ -12,6 +12,7 @@ const sbH = () => ({ 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
 const fmt    = n => '$ ' + Math.max(0, Number(n)).toLocaleString('es-CO');
 const $      = id => document.getElementById(id);
 const today  = () => new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+const nowTime = () => new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
 let orderNum = null;
 async function generarNumeroPedido() {
   try {
@@ -72,6 +73,12 @@ const PASOS_LABELS = {
   campana:     ['Campaña','Envío','Comprador','Destinatario','Pago'],
   evento:      ['Evento','Envío','Comprador','Destinatario','Pago'],
   temporada:   ['Temporada','Envío','Comprador','Destinatario','Pago'],
+};
+
+const TIPO_PEDIDO_LABELS = {
+  pesame:'Bono de Pésame', toda_ocasion:'Bono Toda Ocasión', producto:'Solo Productos',
+  empresarial:'Línea Empresarial', donacion:'Donación', campana:'Campaña',
+  evento:'Evento', temporada:'Temporada',
 };
 
 // ── Init ────────────────────────────────────────────────────
@@ -959,12 +966,18 @@ function actualizarTotal() {
 }
 
 // ── Render orden final ───────────────────────────────────────
-function renderOrden() {
+async function renderOrden() {
+  if (!orderNum) orderNum = await generarNumeroPedido();
+
   var total = getTotal();
   var c = S.comprador, d = S.destinatario;
+  var costoEnvio = (S.envio ? S.envio.p : 0) || 0;
+  var subtotalProductos = total - costoEnvio;
+
+  // Ítems del pedido (SIN el envío — el envío se muestra aparte, en su propio bloque)
   var items = [];
   if (S.eligioCombo && S.combos && S.combos.length) {
-    S.combos.forEach(function(c){ items.push({ desc:'Combo: ' + c.nombre, precio:c.precio }); });
+    S.combos.forEach(function(cb){ items.push({ desc:'Combo: ' + cb.nombre, precio:cb.precio }); });
   } else {
     if (S.bonos && S.bonos.length) S.bonos.forEach(b => items.push({ desc:b.nombre, precio:b.precio }));
     else if (S.bono) items.push({ desc:S.bono.nombre, precio:S.bono.precio });
@@ -973,34 +986,63 @@ function renderOrden() {
   }
   S.productosElegidos.forEach(p => items.push({ desc:p.nombre + (p.qty>1?' x'+p.qty:''), precio:p.precio*(p.qty||1) }));
   if (S.tipoPedido === 'donacion') items.push({ desc:'Donación', precio:S.valorDonacion });
-  if (S.envio && S.envio.p > 0) items.push({ desc:'Envío', precio:S.envio.p });
+
+  var nombreComprador = (c.tipo==='Empresa' ? (c.razonSocial||'') : ((c.nombres||'')+' '+(c.apellidos||'')).trim());
+  var direccionComprador = [c.direccion, c.ciudad, c.departamento].filter(Boolean).join(' — ');
+  var direccionDestino   = [d.direccion, d.referencia].filter(Boolean).join(' · ');
+  var ciudadDestino      = [d.ciudad, d.departamento].filter(Boolean).join(', ');
 
   $('ordenPrint').innerHTML =
     '<div class="orden-header">' +
     '<img src="https://santiagocorazon.org/cdn/shop/files/logo_2x_bbc620f1-38c8-4061-b2f2-1f87b357546e.png?v=1614736127&width=200" class="orden-logo" alt="Santiago Corazón" onerror="this.style.display=\'none\'">' +
-    '<div class="orden-num"><strong>' + orderNum + '</strong>' + today() + '<br><span style="font-size:.68rem;color:var(--pink);font-weight:600">ORDEN DE DESPACHO</span></div></div>' +
+    '<div class="orden-num"><strong>Pedido ' + orderNum + '</strong>' + today() + ' · ' + nowTime() +
+    '<br><span style="font-size:.68rem;color:var(--pink);font-weight:600">ORDEN DE DESPACHO</span></div></div>' +
+
     '<div class="orden-grid">' +
-    '<div class="orden-block"><h4>📦 Comprador / Pagador</h4><p><strong>' +
-    (c.tipo==='Empresa' ? (c.razonSocial||'') : ((c.nombres||'')+' '+(c.apellidos||'')).trim()) +
-    '</strong><br>' + (c.tipo==='Empresa' ? 'NIT: '+(c.nit||'—') : 'Doc: '+(c.cedula||'—')) +
-    '<br>Tel: ' + (c.celular||'—') + '<br>Email: ' + (c.correo||'—') + '</p></div>' +
+
+    '<div class="orden-block"><h4>📦 Comprador / Pagador</h4><p><strong>' + (nombreComprador||'—') + '</strong><br>' +
+    (c.tipo==='Empresa' ? 'NIT: '+(c.nit||'—')+'<br>Contacto: '+(c.contacto||'—') : 'Doc: '+(c.cedula||'—')) +
+    '<br>Tel: ' + (c.celular||'—') + '<br>Email: ' + (c.correo||'—') +
+    (c.correoFactura && c.correoFactura !== c.correo ? '<br>Email factura: ' + c.correoFactura : '') +
+    (direccionComprador ? '<br>Dir: ' + direccionComprador : '') + '</p></div>' +
+
     '<div class="orden-block"><h4>🚚 Destinatario y entrega</h4><p><strong>' +
-    ((d.nombres||'')+' '+(d.apellidos||'')).trim() + '</strong><br>Tel: ' + (d.celular||'—') +
-    '<br>Ciudad: ' + (d.ciudad||'—') + '<br>Dir: ' + (d.direccion||'—') + '</p></div>' +
-    '<div class="orden-block"><h4>✨ Detalle</h4><p>' +
-    (S.combos&&S.combos.length ? S.combos.map(function(c){return '<strong>Combo: '+c.nombre+'</strong>';}).join('<br>')+'<br>' : '') +
-    (S.fallecido ? '<strong>Fallecido: '+S.fallecido+'</strong><br>' : '') +
+    (((d.nombres||'')+' '+(d.apellidos||'')).trim()||'—') + '</strong><br>Tel: ' + (d.celular||'—') +
+    '<br>Dir: ' + (direccionDestino||'—') + '<br>Ciudad: ' + (ciudadDestino||'—') + '</p></div>' +
+
+    '<div class="orden-block"><h4>✨ Detalle del pedido</h4><p>' +
+    '<strong>Tipo: ' + (TIPO_PEDIDO_LABELS[S.tipoPedido] || S.tipoPedido || '—') + '</strong><br>' +
+    (S.combos&&S.combos.length ? S.combos.map(function(cb){return 'Combo: '+cb.nombre;}).join('<br>')+'<br>' : '') +
+    (S.fallecido ? 'Fallecido: <strong>'+S.fallecido+'</strong><br>' : '') +
     (S.dirigido ? 'Para: <strong>'+S.dirigido+'</strong><br>' : '') +
     (S.firma ? 'De parte de: '+S.firma+'<br>' : '') +
-    (S.tarjeta ? 'Tarjeta: '+S.tarjeta : '') + '</p></div>' +
-    '<div class="orden-block"><h4>📋 Pago</h4><p>Canal: ' + (S.canal||'—') +
-    '<br>Pago: <span id="od-pago">—</span><br>Atendido: <span id="od-atend">—</span></p></div></div>' +
+    (S.tarjeta ? 'Tarjeta: '+S.tarjeta+'<br>' : '') +
+    (S.campana ? 'Campaña: '+S.campana+'<br>' : '') +
+    (S.evento ? 'Evento: '+S.evento : '') +
+    '</p></div>' +
+
+    '<div class="orden-block"><h4>🚛 Envío</h4><p>' +
+    (S.envio ? (S.envio.l||'—') + '<br>Costo: ' + (costoEnvio>0 ? fmt(costoEnvio) : 'Gratis') : 'No aplica') +
+    '</p></div>' +
+
+    '<div class="orden-block"><h4>📋 Pago y atención</h4><p>Canal: ' + (S.canal||'—') +
+    '<br>Pago: <span id="od-pago">' + (S.metodoPago||'—') + '</span>' +
+    '<br>Atendido: <span id="od-atend">' + (S.atendidoPor||'—') + '</span></p></div>' +
+
+    '</div>' +
+
     (S.mensaje ? '<div class="mensaje-box">✉ "' + S.mensaje + '"' + (S.firma ? '<br><span style="font-size:.8rem">— '+S.firma+'</span>' : '') + '</div>' : '') +
     (S.notas && S.notas !== S.mensaje ? '<div class="notas-box">📝 ' + S.notas + '</div>' : '') +
+
     '<table class="orden-table"><thead><tr><th>Producto / Servicio</th><th style="text-align:right">Precio</th></tr></thead><tbody>' +
     items.map(it => '<tr><td>' + it.desc + '</td><td style="text-align:right">' + fmt(it.precio) + '</td></tr>').join('') +
     '</tbody></table>' +
-    '<div class="orden-totals"><div class="orden-total-row grand"><span>TOTAL</span><span>' + fmt(total) + '</span></div></div>' +
+
+    '<div class="orden-totals">' +
+    '<div class="orden-total-row"><span>Subtotal productos</span><span>' + fmt(subtotalProductos) + '</span></div>' +
+    '<div class="orden-total-row"><span>Envío</span><span>' + (costoEnvio>0 ? fmt(costoEnvio) : 'Gratis') + '</span></div>' +
+    '<div class="orden-total-row grand"><span>TOTAL</span><span>' + fmt(total) + '</span></div></div>' +
+
     '<div style="margin-top:28px;padding-top:18px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:36px;font-size:.78rem;color:#8a7d72">' +
     '<div><div style="border-top:1px solid #ccc;margin-top:36px;padding-top:7px;text-align:center">Firma del cliente</div></div>' +
     '<div><div style="border-top:1px solid #ccc;margin-top:36px;padding-top:7px;text-align:center">Firma y sello Fundación</div></div></div>';
@@ -1023,7 +1065,7 @@ async function confirmarPedido() {
   S.atendidoPor = $('atendidoPor').value;
   $('loadingMsg').textContent = 'Guardando tu pedido...';
   $('loadingOverlay').classList.add('show');
-  orderNum = await generarNumeroPedido();
+  if (!orderNum) orderNum = await generarNumeroPedido();
   try {
     var fecha    = new Date();
     var fechaStr = fecha.toISOString().split('T')[0];
@@ -1179,8 +1221,9 @@ function generarPDF() {
   try {
     var ordenEl = $('ordenPrint');
     if (!ordenEl) return;
+    var nombreArchivoPDF = 'Pedido_' + (orderNum || '').replace('-', '');
     var ventana = window.open('', '_blank');
-    ventana.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PEDIDO_' + orderNum + '</title><style>' +
+    ventana.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + nombreArchivoPDF + '</title><style>' +
       'body{font-family:Helvetica,Arial,sans-serif;color:#1A0A10;padding:30px;font-size:12px}' +
       'h1{color:#E8176B;font-size:18px}' +
       '.header{display:flex;justify-content:space-between;border-bottom:2px solid #F0D8E4;padding-bottom:12px;margin-bottom:16px}' +
@@ -1194,14 +1237,14 @@ function generarPDF() {
       '.msg{background:#FDE8F2;border-left:3px solid #E8176B;padding:10px 14px;font-style:italic;margin:12px 0}' +
       '</style></head><body>' +
       '<div class="header"><div><h1>Santiago Corazón</h1><div style="font-size:10px;color:#9A7A88">Fundación Infantil</div></div>' +
-      '<div style="text-align:right"><div class="badge">PEDIDO_' + orderNum + '</div>' +
+      '<div style="text-align:right"><div class="badge">Pedido ' + orderNum + '</div>' +
       '<div style="font-size:10px;color:#9A7A88;margin-top:4px">' + new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'}) + '</div></div></div>' +
       ordenEl.innerHTML +
       '<div style="margin-top:30px;padding-top:16px;border-top:1px solid #F0D8E4;font-size:10px;color:#9A7A88;text-align:center">' +
       'Este documento es tu comprobante de pedido.<br>www.santiagocorazon.org | 311 724 9887</div>' +
       '</body></html>');
     ventana.document.close();
-    setTimeout(() => { ventana.document.title = 'PEDIDO_' + orderNum; ventana.print(); }, 500);
+    setTimeout(() => { ventana.document.title = nombreArchivoPDF; ventana.print(); }, 500);
   } catch(e) { console.warn('Error PDF:', e); }
 }
 
