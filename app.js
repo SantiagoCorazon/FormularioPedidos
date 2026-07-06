@@ -12,8 +12,22 @@ const sbH = () => ({ 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABA
 const fmt    = n => '$ ' + Math.max(0, Number(n)).toLocaleString('es-CO');
 const $      = id => document.getElementById(id);
 const today  = () => new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
-const newNum = () => 'SC-' + Date.now().toString().slice(-7);
-let orderNum = newNum();
+let orderNum = null;
+async function generarNumeroPedido() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/generar_numero_pedido', {
+      method: 'POST',
+      headers: { ...sbH(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const num = await res.json();
+    if (typeof num === 'string' && num.startsWith('SC-')) return num;
+    throw new Error('Respuesta inesperada');
+  } catch(e) {
+    console.warn('Error generando número consecutivo, usando respaldo:', e);
+    return 'SC-' + Date.now().toString().slice(-7);
+  }
+}
 
 // ── Estado global ───────────────────────────────────────────
 let CATALOGO   = {};
@@ -1000,6 +1014,7 @@ async function confirmarPedido() {
   S.atendidoPor = $('atendidoPor').value;
   $('loadingMsg').textContent = 'Guardando tu pedido...';
   $('loadingOverlay').classList.add('show');
+  orderNum = await generarNumeroPedido();
   try {
     var fecha    = new Date();
     var fechaStr = fecha.toISOString().split('T')[0];
