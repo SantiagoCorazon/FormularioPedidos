@@ -220,13 +220,18 @@ async function cargarTemporadaActiva() {
 // ── Departamentos y municipios ───────────────────────────────
 function cargarDepartamentos() {
   var deptos = ['Amazonas','Antioquia','Arauca','Atlántico','Bogotá D.C.','Bolívar','Boyacá','Caldas','Caquetá','Casanare','Cauca','Cesar','Chocó','Cundinamarca','Córdoba','Guainía','Guaviare','Huila','La Guajira','Magdalena','Meta','Nariño','Norte de Santander','Putumayo','Quindío','Risaralda','San Andrés, Providencia y Santa Catalina','Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada'];
-  var sel = $('d_departamento');
-  if (sel) sel.innerHTML = '<option value="">Selecciona departamento...</option>' + deptos.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  var opciones = '<option value="">Selecciona departamento...</option>' + deptos.map(d=>'<option value="'+d+'">'+d+'</option>').join('');
+  ['d_departamento','c_departamento','e_departamento'].forEach(function(id){
+    var sel = $(id);
+    if (sel) sel.innerHTML = opciones;
+  });
 }
 
-function cargarMunicipios() {
-  var selDepto  = $('d_departamento');
-  var selCiudad = $('d_ciudad');
+function cargarMunicipios(deptoId, ciudadId) {
+  deptoId  = deptoId  || 'd_departamento';
+  ciudadId = ciudadId || 'd_ciudad';
+  var selDepto  = $(deptoId);
+  var selCiudad = $(ciudadId);
   if (!selDepto || !selCiudad) return;
   var depto = selDepto.value;
   var munis = {
@@ -504,12 +509,13 @@ function validar(secId) {
       if (!$('c_celular').value.trim())          { alert('Ingresa el celular.'); return false; }
       if (!$('c_correo_contacto').value.trim())  { alert('Ingresa el correo de contacto.'); return false; }
       if (!$('c_correo_factura').value.trim())   { alert('Ingresa el correo para factura.'); return false; }
-      if (!$('c_ciudad').value.trim())           { alert('Ingresa la ciudad.'); return false; }
+      if (!$('c_departamento').value)            { alert('Selecciona el departamento.'); return false; }
+      if (!$('c_ciudad').value)                  { alert('Selecciona la ciudad.'); return false; }
       S.comprador = { tipo:'Personal', tipodoc:$('tipoDocInput').value, cedula:$('docInput').value.trim(),
         nombres:$('c_nombres').value.trim(), apellidos:$('c_apellidos').value.trim(),
         celular:$('c_celular').value.trim(), correo:$('c_correo_contacto').value.trim(),
-        correoFactura:$('c_correo_factura').value.trim(), ciudad:$('c_ciudad').value.trim(),
-        departamento:$('c_departamento').value.trim(), direccion:$('c_direccion').value.trim(), esNuevo:S.esNuevo };
+        correoFactura:$('c_correo_factura').value.trim(), ciudad:$('c_ciudad').value,
+        departamento:$('c_departamento').value, direccion:$('c_direccion').value.trim(), esNuevo:S.esNuevo };
     } else {
       if (!$('e_nit').value.trim())              { alert('Ingresa el NIT.'); return false; }
       if (!$('e_razon').value.trim())            { alert('Ingresa la razón social.'); return false; }
@@ -517,12 +523,13 @@ function validar(secId) {
       if (!$('e_contacto').value.trim())         { alert('Ingresa el nombre del contacto.'); return false; }
       if (!$('e_telefono').value.trim())         { alert('Ingresa el teléfono.'); return false; }
       if (!$('e_correo_contacto').value.trim())  { alert('Ingresa el correo de contacto.'); return false; }
-      if (!$('e_ciudad').value.trim())           { alert('Ingresa la ciudad.'); return false; }
+      if (!$('e_departamento').value)            { alert('Selecciona el departamento.'); return false; }
+      if (!$('e_ciudad').value)                  { alert('Selecciona la ciudad.'); return false; }
       S.comprador = { tipo:'Empresa', nit:$('e_nit').value.trim(), cedula:$('e_nit').value.trim(),
         razonSocial:$('e_razon').value.trim(), contacto:$('e_contacto').value.trim(),
         celular:$('e_telefono').value.trim(), correo:$('e_correo_contacto').value.trim(),
-        correoFactura:$('e_correo_factura').value.trim(), ciudad:$('e_ciudad').value.trim(),
-        departamento:$('e_departamento').value.trim(), esNuevo:S.esNuevo };
+        correoFactura:$('e_correo_factura').value.trim(), ciudad:$('e_ciudad').value,
+        departamento:$('e_departamento').value, esNuevo:S.esNuevo };
     }
     return true;
   }
@@ -625,8 +632,9 @@ async function buscarTercero() {
         $('c_celular').value         = t.telefono1 || '';
         $('c_correo_contacto').value = t.correo_principal || '';
         $('c_correo_factura').value  = t.correoelectronica || t.correo_principal || '';
-        $('c_ciudad').value          = t.ciudad || '';
         $('c_departamento').value    = t.departamento || '';
+        cargarMunicipios('c_departamento','c_ciudad');
+        $('c_ciudad').value          = t.ciudad || '';
         $('c_direccion').value       = t.direccion || '';
       } else {
         $('e_nit').value             = t.nitempresa || t.numerodoc || '';
@@ -635,8 +643,9 @@ async function buscarTercero() {
         $('e_contacto').value        = t.contactoempresa || '';
         $('e_telefono').value        = t.telefono1 || '';
         $('e_correo_contacto').value = t.correo_principal || '';
-        $('e_ciudad').value          = t.ciudad || '';
         $('e_departamento').value    = t.departamento || '';
+        cargarMunicipios('e_departamento','e_ciudad');
+        $('e_ciudad').value          = t.ciudad || '';
       }
       mostrarStatus('found', '✓', '¡Encontrado! Datos cargados. Puedes corregir si es necesario.');
     } else {

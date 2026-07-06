@@ -19,15 +19,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<style>
-/* Safari iOS fix: divs con onclick necesitan cursor:pointer inline para registrar el toque */
-[onclick]{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tipo-pedido-card,.pill,.sug-item,.btn-primary,.btn-secondary,.btn-outline{
-  -webkit-tap-highlight-color:transparent
-}
-</style>
 </head>
-<body ontouchstart="">
+<body>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-box"><div class="spinner"></div><div id="loadingMsg">Cargando...</div></div>
@@ -187,8 +180,18 @@
         <div class="field"><label>Celular / WhatsApp <span class="req">*</span></label><input type="tel" id="c_celular" placeholder="3001234567"></div>
         <div class="field"><label>Correo de contacto <span class="req">*</span></label><input type="email" id="c_correo_contacto" placeholder="correo@ejemplo.com"></div>
         <div class="field col-full"><label>Correo para factura electrónica <span class="req">*</span></label><input type="email" id="c_correo_factura" placeholder="factura@ejemplo.com"></div>
-        <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="c_ciudad" placeholder="Medellín"></div>
-        <div class="field"><label>Departamento</label><input type="text" id="c_departamento" placeholder="Antioquia"></div>
+        <div class="field">
+          <label>Departamento <span class="req">*</span></label>
+          <select id="c_departamento" onchange="cargarMunicipios('c_departamento','c_ciudad')">
+            <option value="">Selecciona departamento...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ciudad / Municipio <span class="req">*</span></label>
+          <select id="c_ciudad">
+            <option value="">Primero selecciona departamento...</option>
+          </select>
+        </div>
         <div class="field col-full"><label>Dirección</label><input type="text" id="c_direccion" placeholder="Cra 45 # 23-10"></div>
       </div>
     </div>
@@ -196,8 +199,18 @@
       <div class="grid-2">
         <div class="field"><label>NIT <span class="req">*</span></label><input type="text" id="e_nit" placeholder="900123456-7"></div>
         <div class="field"><label>Razón Social <span class="req">*</span></label><input type="text" id="e_razon" placeholder="Empresa S.A.S"></div>
-        <div class="field"><label>Ciudad <span class="req">*</span></label><input type="text" id="e_ciudad" placeholder="Medellín"></div>
-        <div class="field"><label>Departamento</label><input type="text" id="e_departamento" placeholder="Antioquia"></div>
+        <div class="field">
+          <label>Departamento <span class="req">*</span></label>
+          <select id="e_departamento" onchange="cargarMunicipios('e_departamento','e_ciudad')">
+            <option value="">Selecciona departamento...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ciudad / Municipio <span class="req">*</span></label>
+          <select id="e_ciudad">
+            <option value="">Primero selecciona departamento...</option>
+          </select>
+        </div>
         <div class="field col-full"><label>Correo para factura electrónica <span class="req">*</span></label><input type="email" id="e_correo_factura" placeholder="facturacion@empresa.com"></div>
         <div class="field"><label>Nombre de quien hace el pedido <span class="req">*</span></label><input type="text" id="e_contacto" placeholder="Nombre completo"></div>
         <div class="field"><label>Celular / WhatsApp <span class="req">*</span></label><input type="tel" id="e_telefono" placeholder="3001234567"></div>
@@ -224,7 +237,7 @@
         <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="d_celular" placeholder="3001234567"></div>
         <div class="field">
           <label>Departamento <span class="req">*</span></label>
-          <select id="d_departamento" onchange="cargarMunicipios()">
+          <select id="d_departamento" onchange="cargarMunicipios('d_departamento','d_ciudad')">
             <option value="">Selecciona departamento...</option>
           </select>
         </div>
