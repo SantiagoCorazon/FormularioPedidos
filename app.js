@@ -483,6 +483,12 @@ function mostrarSeccion(secId) {
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
+// Bono Virtual no lleva acompañante ni envío físico → esos pasos se saltan automáticamente.
+function debeSaltarSeccion(secId) {
+  var todoVirtual = S.bonos && S.bonos.length > 0 && S.bonos.every(b => b.es_virtual);
+  return !!todoVirtual && (secId === 'sec-acompanante' || secId === 'sec-envio');
+}
+
 function irSiguiente(skip) {
   var secActual = S.flujo[S.flujoIdx];
   if (secActual === 'sec-orden') { confirmarPedido(); return; }
@@ -490,6 +496,11 @@ function irSiguiente(skip) {
   if (secActual === 'sec-4-bono' && S.sinBono)
     S.empaque = { nombre:'Sin empaque', precio:0, es_virtual:false };
   S.flujoIdx++;
+  while (S.flujoIdx < S.flujo.length - 1 && debeSaltarSeccion(S.flujo[S.flujoIdx])) {
+    if (S.flujo[S.flujoIdx] === 'sec-envio')
+      S.envio = { id:'virtual', l:'No aplica — Bono Virtual (se envía por email o WhatsApp)', p:0 };
+    S.flujoIdx++;
+  }
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
 
@@ -502,6 +513,9 @@ function irAtras() {
     return;
   }
   S.flujoIdx--;
+  while (S.flujoIdx > 0 && debeSaltarSeccion(S.flujo[S.flujoIdx])) {
+    S.flujoIdx--;
+  }
   mostrarSeccion(S.flujo[S.flujoIdx]);
 }
 
@@ -600,9 +614,7 @@ function validar(secId) {
     return true;
   }
   if (secId === 'sec-4-bono') {
-    if (!S.sinBono && (!S.bonos || !S.bonos.length)) { alert('Selecciona al menos una presentación.'); return false; }
-    var tienePlegable = S.bonos && S.bonos.some(b => !b.es_virtual);
-    if (tienePlegable && !S.empaque) { alert('Selecciona el tipo de empaque.'); return false; }
+    if (!S.sinBono && (!S.bonos || !S.bonos.length)) { alert('Selecciona una opción de bono.'); return false; }
     return true;
   }
   if (secId === 'sec-productos') {
@@ -685,71 +697,83 @@ function selTarjeta(card, val, scope) {
   card.classList.add('sel');
 }
 
-// ── Render bonos ─────────────────────────────────────────────
+// ── Render bonos (selección única: Virtual o una presentación física) ──
+// Antes existían dos pasos (bono base + empaque) y era posible elegir
+// "Bono Plegable" y además "Plegable Con Moño", duplicando el mismo producto
+// en el pedido. Ahora se combina en un solo paso con 4 tarjetas: Bono Virtual,
+// Plegable Con Moño, Bolsa Tela De Organza y Caja — cada una con su precio
+// total (bono físico base + presentación) calculado a partir del catálogo.
+var DESCRIPCIONES_BONO = {
+  virtual: 'Video Animado y personalizado, se envía por mail o Whats app',
+  'Plegable Con Moño': 'Portada troquelada, cinta de seda, tarjeta marcada a mano en caligrafía',
+  'Bolsa Tela De Organza': 'Plegable en Bolsa de organza con cinta de seda y tarjeta marcada a mano',
+  'Caja': 'Plegable en Caja de cartón con cierre imán, cinta de seda y tarjeta marcada a mano'
+};
+
 function renderBonos() {
-  var lista = CATALOGO.bonos_base || [];
-  if (!lista.length) { $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>'; return; }
-  var html = lista.map(function(p, i) {
-    var sel = S.bonos && S.bonos.some(b => b.id === p.id) ? ' sel' : '';
-    var img = (p.imagen_url || p.imagen_url_shopify) ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" onerror="this.style.display=\'none\'">' : '';
-    return '<div class="prod-card' + sel + '" onclick="selBono(' + i + ')">' + img +
-      '<div class="prod-info"><div class="prod-nombre">' + p.nombre + '</div>' +
-      '<div class="prod-precio">' + fmt(p.precio) + '</div></div></div>';
+  var virtuales      = (CATALOGO.bonos_base || []).filter(b => b.es_virtual);
+  var basePlegable    = (CATALOGO.bonos_base || []).find(b => !b.es_virtual);
+  var presentaciones = (CATALOGO.empaques || []).filter(p => !p.es_virtual);
+  if (!virtuales.length && !basePlegable) {
+    $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>';
+    return;
+  }
+  var opciones = virtuales.map(function(v) {
+    return { key:'v_' + v.id, nombre:v.nombre, precio:v.precio, es_virtual:true,
+      desc: v.descripcion || DESCRIPCIONES_BONO.virtual,
+      img: v.imagen_url || v.imagen_url_shopify, bono:v, empaque:null };
+  });
+  if (basePlegable) {
+    presentaciones.forEach(function(p) {
+      opciones.push({ key:'e_' + p.id, nombre: p.nombre, precio: basePlegable.precio + (p.precio || 0),
+        es_virtual:false, desc: p.descripcion || DESCRIPCIONES_BONO[p.nombre] || '',
+        img: p.imagen_url || p.imagen_url_shopify, bono: basePlegable, empaque: p });
+    });
+  }
+  window._bonoOpciones = opciones;
+  $('bonoGrid').innerHTML = opciones.map(function(o, i) {
+    var sel  = S.bonoOpcionKey === o.key ? ' sel' : '';
+    var img  = o.img ? '<img src="' + o.img + '" onerror="this.style.display=\'none\'">' : '';
+    var desc = o.desc ? '<div class="prod-nota" style="font-style:normal">' + o.desc + '</div>' : '';
+    return '<div class="prod-card' + sel + '" onclick="selBonoOpcion(' + i + ')">' + img +
+      '<div class="prod-info"><div class="prod-nombre">' + o.nombre + '</div>' + desc +
+      '<div class="prod-precio">' + fmt(o.precio) + '</div></div></div>';
   }).join('');
-  $('bonoGrid').innerHTML = html;
 }
 
-function selBono(idx) {
-  var lista = CATALOGO.bonos_base || [];
-  var p = lista[idx];
-  if (!S.bonos) S.bonos = [];
+function selBonoOpcion(idx) {
+  var o = (window._bonoOpciones || [])[idx];
+  if (!o) return;
   S.sinBono = false;
-  var existeIdx = S.bonos.findIndex(b => b.id === p.id);
-  if (existeIdx >= 0) S.bonos.splice(existeIdx, 1);
-  else S.bonos.push(p);
-  S.bono = S.bonos.length > 0 ? S.bonos[0] : null;
-  renderBonos();
+  if (S.bonoOpcionKey === o.key) {
+    // Clic sobre la misma tarjeta → deseleccionar
+    S.bonoOpcionKey = null;
+    S.bonos = []; S.bono = null; S.empaque = null;
+  } else {
+    // Solo se puede tener UNA presentación de bono a la vez (virtual y física no se combinan).
+    S.bonoOpcionKey = o.key;
+    S.bonos   = [o.bono];
+    S.bono    = o.bono;
+    S.empaque = o.empaque;
+  }
   if (S.bonos.length > 0) {
-    $('bono-sel-nombre').textContent = S.bonos.map(b => b.nombre).join(', ');
-    $('bono-sel-precio').textContent = fmt(S.bonos.reduce((s, b) => s + b.precio, 0));
+    $('bono-sel-nombre').textContent = o.nombre;
+    $('bono-sel-precio').textContent = fmt(o.precio);
     $('bono-sel-resumen').style.display = 'block';
   } else {
     $('bono-sel-resumen').style.display = 'none';
   }
-  var todoVirtual = S.bonos.length > 0 && S.bonos.every(b => b.es_virtual);
-  var tieneVirtual = S.bonos.some(b => b.es_virtual);
-  if ($('aviso-virtual')) $('aviso-virtual').style.display = tieneVirtual ? 'block' : 'none';
-  var cardEmpaque = $('card-empaque');
-  if (cardEmpaque) {
-    if (S.bonos.length > 0 && !todoVirtual) { cardEmpaque.style.display = 'block'; renderEmpaques(); }
-    else {
-      cardEmpaque.style.display = 'none';
-      if (todoVirtual) S.empaque = { id:'virtual', nombre:'Virtual', precio:-4000, es_virtual:true };
-    }
+  var esVirtual = S.bono && S.bono.es_virtual;
+  if ($('aviso-virtual')) $('aviso-virtual').style.display = esVirtual ? 'block' : 'none';
+  // Bono virtual no lleva acompañante ni envío físico; al volver a un bono físico se libera el envío
+  // para que deba elegirse uno real.
+  if (esVirtual) {
+    S.acompanantes = [];
+    S.envio = { id:'virtual', l:'No aplica — Bono Virtual (se envía por email o WhatsApp)', p:0 };
+  } else if (S.envio && S.envio.id === 'virtual') {
+    S.envio = null;
   }
-  actualizarTotal();
-}
-
-// ── Render empaques ──────────────────────────────────────────
-function renderEmpaques() {
-  var lista = CATALOGO.empaques || [];
-  if (!lista.length) { $('empaqueGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>'; return; }
-  $('empaqueGrid').innerHTML = lista.map(function(p, i) {
-    var sel = S.empaque && S.empaque.id === p.id ? ' sel' : '';
-    var img = (p.imagen_url || p.imagen_url_shopify) ? '<img src="' + (p.imagen_url || p.imagen_url_shopify) + '" onerror="this.style.display=\'none\'">' : '';
-    var precioLabel = p.precio === 0 ? 'Sin costo adicional' : p.precio > 0 ? '+ ' + fmt(p.precio) : '- ' + fmt(Math.abs(p.precio));
-    return '<div class="prod-card' + sel + '" onclick="selEmpaque(' + i + ')">' + img +
-      '<div class="prod-info"><div class="prod-nombre">' + p.nombre + '</div>' +
-      '<div class="prod-precio">' + precioLabel + '</div></div></div>';
-  }).join('');
-}
-
-function selEmpaque(idx) {
-  S.empaque = CATALOGO.empaques[idx];
-  renderEmpaques();
-  $('emp-sel-nombre').textContent = S.empaque.nombre;
-  $('emp-sel-precio').textContent = S.empaque.precio === 0 ? 'Sin costo adicional' : fmt(S.empaque.precio);
-  $('emp-sel-resumen').style.display = 'block';
+  renderBonos();
   actualizarTotal();
 }
 
