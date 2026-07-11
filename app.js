@@ -634,6 +634,12 @@ function validar(secId) {
 }
 
 // ── Buscar tercero ───────────────────────────────────────────
+// Permite escribir solo dígitos en campos de documento y celular (pega incluido).
+function soloNumeros(el) {
+  var v = el.value.replace(/[^0-9]/g, '');
+  if (v !== el.value) el.value = v;
+}
+
 async function buscarTercero() {
   var doc     = $('docInput').value.trim();
   var tipodoc = $('tipoDocInput').value;
