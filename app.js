@@ -716,10 +716,19 @@ var DESCRIPCIONES_BONO = {
   'Caja': 'Plegable en Caja de cartón con cierre imán, cinta de seda y tarjeta marcada a mano'
 };
 
+// Filtra por subcategoría según el tipo de pedido actual (pesame / toda_ocasion),
+// igual que ya se hace con combos y productos. Un ítem sin subcategoría o con
+// subcategoria='ambos' aparece en los dos flujos; así el catálogo permite subir
+// imágenes y descripciones distintas para cada ocasión desde el Dashboard.
+function esDeSubcatActual(item) {
+  if (!item.subcategoria || item.subcategoria === 'ambos') return true;
+  return item.subcategoria === S.tipoPedido;
+}
+
 function renderBonos() {
-  var virtuales      = (CATALOGO.bonos_base || []).filter(b => b.es_virtual);
-  var basePlegable    = (CATALOGO.bonos_base || []).find(b => !b.es_virtual);
-  var presentaciones = (CATALOGO.empaques || []).filter(p => !p.es_virtual);
+  var virtuales       = (CATALOGO.bonos_base || []).filter(b => b.es_virtual && esDeSubcatActual(b));
+  var basePlegable     = (CATALOGO.bonos_base || []).find(b => !b.es_virtual && esDeSubcatActual(b));
+  var presentaciones  = (CATALOGO.empaques || []).filter(p => !p.es_virtual && esDeSubcatActual(p));
   if (!virtuales.length && !basePlegable) {
     $('bonoGrid').innerHTML = '<p style="color:var(--ink-lt);padding:20px">Cargando...</p>';
     return;
