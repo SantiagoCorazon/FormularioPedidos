@@ -92,6 +92,19 @@ hr.div{border:none;border-top:1px solid var(--border);margin:20px 0}
 .tarjeta-color{font-size:.7rem;color:var(--ink-lt);margin-top:2px}
 .tarjeta-card.sel .tarjeta-frase{color:var(--pink)}
 
+/* Elige frase/color (Bono Toda Ocasión) */
+.frase-color-wrap{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px}
+.frase-preview{flex:0 0 220px;max-width:220px}
+.frase-preview img{width:100%;border-radius:10px;border:1.5px solid var(--border);object-fit:cover;aspect-ratio:1/1}
+.frase-preview-empty{width:100%;aspect-ratio:1/1;border:1.5px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.78rem;color:var(--ink-lt);padding:14px}
+.frase-color-panel{flex:1;min-width:240px}
+.color-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.color-row{display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .2s;background:var(--white)}
+.color-row:hover{border-color:var(--pink)}
+.color-row.sel{border-color:var(--pink);background:var(--pink-lt)}
+.color-row img{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.color-row-nombre{font-size:.85rem;font-weight:600;color:var(--ink)}
+
 /* PRODUCTOS */
 .cat-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .cat-tab{padding:7px 16px;border-radius:24px;border:2px solid var(--border);background:var(--white);font-size:.8rem;font-weight:500;cursor:pointer;color:var(--ink-mid);transition:all .2s}

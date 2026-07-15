@@ -282,13 +282,27 @@
   <div class="card">
     <div class="step-label">Paso 3</div>
     <div class="section-title">Información del <em>Bono de Toda Ocasión</em></div>
-    <div class="section-sub">El nombre del destinatario se escribe a mano en caligrafía en la tarjeta.</div>
+    <div class="section-sub">El bono de toda ocasión representa una donación que ayudará a los niños enfermos del corazón a tener una oportunidad de vida.</div>
+    <div class="section-sub">Características: Papel importado HL Gofrado. 18.5 x 18.5 cms. Estampado al calor dorado. Etiqueta estampada al calor dorada, en alto relieve. Sobre con detalles repujados.</div>
+    <div class="section-sub">Personalizado 100% a mano, marcado en caligrafía.</div>
     <div class="grid-2">
       <div class="field"><label>Para quién va dirigido <span class="req">*</span></label><input type="text" id="t_dirigido" placeholder="María, el equipo de ventas..."></div>
     </div>
     <hr class="div">
-    <div class="sub-title">Selecciona el color de tu tarjeta ↓</div>
-    <div class="tarjeta-grid" id="tarjeta-grid-toda"></div>
+    <div class="sub-title">Elige frase/color de tu preferencia ↓</div>
+    <div class="frase-color-wrap">
+      <div class="frase-preview">
+        <img id="tf-preview-img" style="display:none" alt="Vista previa del color elegido">
+        <div class="frase-preview-empty" id="tf-preview-empty">Selecciona un color para ver la vista previa</div>
+      </div>
+      <div class="frase-color-panel">
+        <div class="field">
+          <label>Escoge etiqueta con frase según la ocasión</label>
+          <select id="t_frase"><option value="">Selecciona una opción...</option></select>
+        </div>
+        <div class="color-list" id="color-list-toda"></div>
+      </div>
+    </div>
     <hr class="div">
     <div class="field"><label>¿Quién(es) envía(n) el bono? <span class="req">*</span></label><input type="text" id="t_firma" placeholder="Tu familia, La empresa XYZ..."></div>
     <div class="sub-title">📝 Notas adicionales</div>

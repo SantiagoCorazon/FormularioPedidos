@@ -174,12 +174,28 @@ function selProdDonacion(id, nombre, precio) {
 }
 
 // ── Colores de bonos ────────────────────────────────────────
+// Frases disponibles para "Bono de Toda Ocasión" (independientes del color).
+// Para agregar/quitar frases, edita esta lista.
+var FRASES_TODA_OCASION = [
+  'Feliz Cumpleaños', 'Felicidades', 'Feliz Navidad', 'Felicitaciones', 'Feliz día',
+  'Bendiciones', 'Gracias por estar ahí', 'Un abrazo de corazón a corazón',
+  'Mejórate Pronto', 'Te damos la Bienvenida'
+];
+
+function poblarFrasesToda() {
+  var sel = $('t_frase');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecciona una opción...</option>' +
+    FRASES_TODA_OCASION.map(f => '<option value="' + f + '">' + f + '</option>').join('');
+}
+
 async function cargarColoresBonos() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/colores_bono?activo=eq.true&order=orden.asc', { headers: sbH() });
     const colores = await r.json();
     renderColoresBono('tarjeta-grid-pesame', colores.filter(c => c.tipo_bono === 'pesame'), 'pesame');
-    renderColoresBono('tarjeta-grid-toda', colores.filter(c => c.tipo_bono === 'toda_ocasion'), 'toda');
+    renderColoresToda(colores.filter(c => c.tipo_bono === 'toda_ocasion'));
+    poblarFrasesToda();
   } catch(e) { console.error('Error colores:', e); }
 }
 
@@ -194,6 +210,33 @@ function renderColoresBono(containerId, colores, tipo) {
     return '<div class="tarjeta-card" onclick="selTarjeta(this,\'' + safe + '\',\'' + tipo + '\')">' +
       img + '<div class="tarjeta-info">' + frase + '<div class="tarjeta-color">' + c.nombre + '</div></div></div>';
   }).join('');
+}
+
+// Bono de Toda Ocasión: lista de colores + vista previa grande que cambia al elegir uno.
+function renderColoresToda(colores) {
+  var el = $('color-list-toda');
+  if (!el) return;
+  if (!colores.length) { el.innerHTML = '<p style="color:var(--ink-lt);font-size:.82rem">Sin colores disponibles.</p>'; return; }
+  el.innerHTML = colores.map(function(c) {
+    var safe  = (c.nombre||'').replace(/'/g,"&#39;");
+    var img   = c.imagen_url || '';
+    var thumb = img ? '<img src="' + img + '" onerror="this.style.display=\'none\'">' : '';
+    return '<div class="color-row" onclick="selTarjetaToda(this,\'' + safe + '\',\'' + img.replace(/'/g,"&#39;") + '\')">' +
+      thumb + '<div class="color-row-nombre">' + c.nombre + '</div></div>';
+  }).join('');
+}
+
+function selTarjetaToda(el, nombre, img) {
+  S.tarjeta = nombre;
+  document.querySelectorAll('#color-list-toda .color-row').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  var prevImg   = $('tf-preview-img');
+  var prevEmpty = $('tf-preview-empty');
+  if (img && prevImg) {
+    prevImg.src = img;
+    prevImg.style.display = 'block';
+    if (prevEmpty) prevEmpty.style.display = 'none';
+  }
 }
 
 // ── Envíos desde BD ─────────────────────────────────────────
@@ -585,11 +628,13 @@ function validar(secId) {
   if (secId === 'sec-3-toda') {
     if (!$('t_dirigido').value.trim()) { alert('Indica para quién va dirigido.'); return false; }
     if (!$('t_firma').value.trim())    { alert('Ingresa quién envía el bono.'); return false; }
+    if (!S.tarjeta) { alert('Selecciona el color de tu tarjeta.'); return false; }
     S.dirigido     = $('t_dirigido').value.trim();
     S.quienAtiende = '';
     S.mensaje      = $('t_mensaje').value.trim();
     S.firma        = $('t_firma').value.trim();
     S.notas        = S.mensaje;
+    S.fraseTarjeta = $('t_frase') ? $('t_frase').value : '';
     return true;
   }
   if (secId === 'sec-3-producto') {
@@ -1055,7 +1100,7 @@ async function renderOrden() {
     (S.fallecido ? 'Fallecido: <strong>'+S.fallecido+'</strong><br>' : '') +
     (S.dirigido ? 'Para: <strong>'+S.dirigido+'</strong><br>' : '') +
     (S.firma ? 'De parte de: '+S.firma+'<br>' : '') +
-    (S.tarjeta ? 'Tarjeta: '+S.tarjeta+'<br>' : '') +
+    (S.tarjeta ? 'Tarjeta: '+S.tarjeta + (S.fraseTarjeta ? ' — '+S.fraseTarjeta : '') + '<br>' : '') +
     (S.campana ? 'Campaña: '+S.campana+'<br>' : '') +
     (S.evento ? 'Evento: '+S.evento : '') +
     '</p></div>' +
@@ -1181,7 +1226,7 @@ async function confirmarPedido() {
         subtotal_productos: getTotal() - (S.envio ? S.envio.p : 0),
         total_pedido: getTotal(),
         metodo_pago: S.metodoPago||'', atendido_por: S.atendidoPor||'',
-        color_bono: S.tarjeta||'',
+        color_bono: S.tarjeta ? (S.tarjeta + (S.fraseTarjeta ? ' — ' + S.fraseTarjeta : '')) : '',
         estado: 'Pendiente',
         campana_id: S.campana_id ? parseInt(S.campana_id) : null,
         autorizo_datos: autoData, autorizo_publicidad: autoPub,
