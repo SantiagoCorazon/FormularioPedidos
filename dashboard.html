@@ -156,15 +156,9 @@ tr:hover td{background:var(--pink-lt)}
   .metrics{grid-template-columns:1fr 1fr}
   .form-grid{grid-template-columns:1fr}
 }
-/* Safari iOS fix: divs with onclick need cursor:pointer to register touch */
-[onclick]{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.nav-item,.tipo-pedido-card,.pill,.sug-item,.badge,.btn,.btn-primary,.btn-secondary,.btn-sm,
-.btn-login,.metric-card,.card-header button,.table-wrap td button{
-  -webkit-tap-highlight-color:transparent
-}
 </style>
 </head>
-<body ontouchstart="">
+<body>
 
 <!-- ══════════════════════════════════════════ -->
 <!-- LOGIN -->
@@ -202,21 +196,18 @@ tr:hover td{background:var(--pink-lt)}
       <div class="sidebar-user-rol" id="sidebarRol">—</div>
     </div>
     <nav class="sidebar-nav">
-      <div id="nav-grupo-pedidos">
-        <div class="nav-item active" onclick="irA('inicio')"><span class="nav-icon">🏠</span> Inicio</div>
-        <div class="nav-item" onclick="irA('pedidos')"><span class="nav-icon">📦</span> Pedidos</div>
-        <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
-        <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
-        <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
-        <div class="nav-item" onclick="irA('bonos')"><span class="nav-icon">🎨</span> Bonos</div>
-        <div class="nav-item" onclick="irA('eventos')"><span class="nav-icon">📅</span> Eventos</div>
-        <div class="nav-item" onclick="irA('temporada')"><span class="nav-icon">🎁</span> Temporada</div>
-        <div class="nav-item" id="nav-envios" onclick="irA('envios')"><span class="nav-icon">🚚</span> Envíos</div>
-        <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
-        <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
-        <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
-      </div>
-      <div class="nav-item" id="nav-salaludica" onclick="irA('salaludica')"><span class="nav-icon">🧸</span> Salas Lúdicas</div>
+      <div class="nav-item active" onclick="irA('inicio')"><span class="nav-icon">🏠</span> Inicio</div>
+      <div class="nav-item" onclick="irA('pedidos')"><span class="nav-icon">📦</span> Pedidos</div>
+      <div class="nav-item" onclick="irA('terceros')"><span class="nav-icon">👥</span> Clientes</div>
+      <div class="nav-item" onclick="irA('catalogo')"><span class="nav-icon">🛍</span> Catálogo</div>
+      <div class="nav-item" onclick="irA('campanas')"><span class="nav-icon">❤</span> Campañas</div>
+      <div class="nav-item" onclick="irA('bonos')"><span class="nav-icon">🎨</span> Bonos</div>
+      <div class="nav-item" onclick="irA('eventos')"><span class="nav-icon">📅</span> Eventos</div>
+      <div class="nav-item" onclick="irA('temporada')"><span class="nav-icon">🎁</span> Temporada</div>
+      <div class="nav-item" id="nav-envios" onclick="irA('envios')"><span class="nav-icon">🚚</span> Envíos</div>
+      <div class="nav-item" id="nav-usuarios" onclick="irA('usuarios')" style="display:none"><span class="nav-icon">👤</span> Usuarios</div>
+      <div class="nav-item" onclick="irA('shopify')"><span class="nav-icon">🛒</span> Importar Shopify</div>
+      <div class="nav-item" onclick="abrirModalExportar()"><span class="nav-icon">📥</span> Exportar a Excel</div>
       <div class="nav-item" onclick="irA('manual')"><span class="nav-icon">📖</span> Manual de uso</div>
     </nav>
     <div class="sidebar-footer">
@@ -948,137 +939,8 @@ tr:hover td{background:var(--pink-lt)}
       </div>
     </div>
 
-    <!-- SALAS LÚDICAS -->
-    <div class="page" id="page-salaludica">
-      <div class="page-title">🧸 Salas Lúdicas</div>
-      <div class="page-sub">Acompañamiento hospitalario — kits de bienvenida, sala lúdica, apoyo alimentario y fortalecimiento a cuidadores</div>
-
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
-        <label style="font-size:.72rem;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.05em">Período:</label>
-        <select id="slPeriodo" onchange="onCambioPeriodoSL()" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem">
-          <option value="mes">Este mes</option>
-          <option value="anio" selected>Este año</option>
-          <option value="todo">Todo el histórico</option>
-          <option value="rango">Rango de fechas...</option>
-        </select>
-        <div id="slRangoFechasWrap" style="display:none;gap:10px;align-items:center">
-          <label style="font-size:.72rem;color:var(--ink-mid)">Desde</label>
-          <input type="date" id="slFechaDesde" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
-          <label style="font-size:.72rem;color:var(--ink-mid)">Hasta</label>
-          <input type="date" id="slFechaHasta" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
-        </div>
-      </div>
-
-      <div class="metrics" id="slMetricsGrid"></div>
-
-      <div class="card">
-        <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente — 2026</div></div>
-        <div class="card-body">
-          <div class="table-wrap"><table>
-            <thead><tr><th>Componente</th><th>Meta</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
-            <tbody id="slMetasBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
-          </table></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><div class="card-title">Participantes en Actividades de la Sala Lúdica por Mes</div></div>
-        <div class="card-body" id="slChartSala">Cargando...</div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Kits de Bienvenida Entregados por Mes</div></div>
-          <div class="card-body" id="slChartKits">Cargando...</div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Beneficiarios de Alimentación por Mes</div></div>
-          <div class="card-body" id="slChartAlimentacion">Cargando...</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Top municipios de origen</div></div>
-          <div class="card-body" id="slMunicipios">Cargando...</div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Actividades de sala lúdica</div></div>
-          <div class="card-body" id="slActividades">Cargando...</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px">
-          <div class="card-title">Buscador de beneficiarios</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <input class="search-input" id="searchSL" placeholder="🔍 Buscar por nombre o documento del paciente..." style="flex:1" oninput="onBuscarSL(this.value)">
-            <span id="sl-hint" style="font-size:.75rem;color:var(--ink-lt);white-space:nowrap">Escribe para buscar</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-wrap"><table>
-            <thead><tr>
-              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Acciones</th>
-            </tr></thead>
-            <tbody id="bodySL"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
-              <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
-              Escribe el nombre o documento del beneficiario
-            </td></tr></tbody>
-          </table></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><div class="card-title">📋 Encuesta de Satisfacción</div></div>
-        <div class="card-body" id="slEncuestaResumen">Cargando...</div>
-      </div>
-
-    </div>
-
   </div><!-- /main -->
 </div><!-- /app -->
-
-<!-- Modal Historial 360 Beneficiario (Salas Lúdicas) -->
-<div class="modal-overlay" id="modalHistorialSL">
-  <div class="modal" style="max-width:760px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div class="modal-title" id="slHistNombre" style="margin:0">Historial del beneficiario</div>
-      <button onclick="cerrarModal('modalHistorialSL')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px;border-radius:6px;line-height:1" title="Cerrar">✕</button>
-    </div>
-    <div class="modal-sub">Ficha del niño y registro completo de acompañamiento</div>
-    <div id="slFichaResumen" style="background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.85rem;line-height:1.7"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-      <select id="slHistFiltro" onchange="filtrarHistorialSL()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
-        <option value="">Todos los componentes</option>
-        <option value="kits_bienvenida">Kits de bienvenida</option>
-        <option value="sala_ludica">Sala lúdica</option>
-        <option value="apoyo_alimentario">Apoyo alimentario</option>
-        <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
-      </select>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Fecha</th><th>Componente</th><th>Servicio</th><th>Detalle</th><th>Evidencia</th></tr></thead>
-        <tbody id="bodyHistorialSL"></tbody>
-      </table>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="cerrarModal('modalHistorialSL')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Lightbox para ver foto/firma en grande -->
-<div class="modal-overlay" id="lightboxSL">
-  <div class="modal" style="max-width:520px;text-align:center">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div class="modal-title" id="lightboxSLTitulo" style="margin:0;font-size:.95rem"></div>
-      <button onclick="cerrarModal('lightboxSL')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px;border-radius:6px;line-height:1">✕</button>
-    </div>
-    <img id="lightboxSLImg" src="" style="max-width:100%;max-height:70vh;border-radius:10px;background:var(--cream)">
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════ -->
 <!-- MODALES -->
@@ -1264,7 +1126,6 @@ tr:hover td{background:var(--pink-lt)}
           <option value="operador">Operador — ve pedidos y clientes</option>
           <option value="admin">Administrador — acceso total</option>
           <option value="consulta">Consulta — solo lectura</option>
-          <option value="salas_ludicas">Salas Lúdicas — solo el módulo de acompañamiento</option>
         </select>
       </div>
     </div>
@@ -1467,9 +1328,7 @@ function iniciarApp() {
   $('loginWrap').style.display = 'none';
   $('app').classList.add('show');
   $('sidebarName').textContent = usuarioActual.nombre;
-  const ROL_LABELS = { admin: 'Administrador', operador: 'Operador', consulta: 'Consulta', salas_ludicas: 'Salas Lúdicas' };
-  $('sidebarRol').textContent = ROL_LABELS[usuarioActual.rol] || usuarioActual.rol;
-
+  $('sidebarRol').textContent = usuarioActual.rol === 'admin' ? 'Administrador' : usuarioActual.rol === 'operador' ? 'Operador' : 'Consulta';
   // Mostrar menú usuarios y envíos solo para admin
   if (usuarioActual.rol === 'admin') {
     $('nav-usuarios').style.display = 'flex';
@@ -1477,19 +1336,6 @@ function iniciarApp() {
   } else {
     if ($('nav-envios')) $('nav-envios').style.display = 'none';
   }
-
-  // Control de acceso por perfil — Salas Lúdicas vs. Formulario de Pedidos
-  if (usuarioActual.rol === 'salas_ludicas') {
-    $('nav-grupo-pedidos').style.display = 'none';
-    $('nav-salaludica').style.display = 'flex';
-    irA('salaludica');
-    return; // este perfil no necesita catálogo/inicio de pedidos
-  }
-  if (usuarioActual.rol !== 'admin') {
-    // operador / consulta no acceden a Salas Lúdicas
-    if ($('nav-salaludica')) $('nav-salaludica').style.display = 'none';
-  }
-
   cargarCatalogo();
   cargarCategoriasYSubs();
   cargarInicio();
@@ -1506,8 +1352,7 @@ function irA(pagina) {
   const mapaNav = {
     inicio:'inicio', pedidos:'pedido', terceros:'cliente', catalogo:'catálogo',
     campanas:'campaña', bonos:'bono', eventos:'evento', temporada:'temporada',
-    envios:'envío', usuarios:'usuario', shopify:'shopify', manual:'manual',
-    salaludica:'lúdicas'
+    envios:'envío', usuarios:'usuario', shopify:'shopify', manual:'manual'
   };
   const clave = mapaNav[pagina] || pagina;
   document.querySelectorAll('.nav-item').forEach(n => {
@@ -1525,7 +1370,6 @@ function irA(pagina) {
   if (pagina === 'usuarios')  cargarUsuarios();
   if (pagina === 'manual')    mostrarSeccionManual('m-inicio');
   if (pagina === 'shopify')   iniciarShopify();
-  if (pagina === 'salaludica') cargarSalaLudica();
 }
 
 // ============================================================
@@ -1595,23 +1439,16 @@ function editarBono(id) {
 
 async function guardarBono() {
   const id = $('bono_id').value;
-  const esCombo = $('prod_tipo') && $('prod_tipo').value === 'combo';
-  const subTexto = esCombo
-    ? ($('prod_sub_combo') ? $('prod_sub_combo').value : '')
-    : ($('prod_sub') ? $('prod_sub').value : '');
-  const catObj = CATEGORIAS.find(c => c.tipo_interno === ($('prod_tipo')?$('prod_tipo').value:''));
-  const subObj = subTexto && catObj ? SUBCATEGORIAS.find(s => s.nombre===subTexto && s.categoria_id===catObj.id) : null;
   const datos = {
-    nombre:          $('prod_nombre').value.trim(),
-    descripcion:     $('prod_descripcion') ? ($('prod_descripcion').value.trim()||null) : null,
-    tipo:            $('prod_tipo') ? $('prod_tipo').value : 'acompanante',
-    subcategoria:    subTexto||null,
-    categoria_id:    catObj ? catObj.id : null,
-    subcategoria_id: subObj ? subObj.id : null,
-    orden:           parseInt($('prod_orden').value)||1,
+    nombre:     $('bono_nombre').value.trim(),
+    tipo_bono:  $('bono_tipo').value,
+    frase:      $('bono_frase').value.trim() || null,
+    imagen_url: convertirUrlDrive($('bono_img').value.trim()) || null,
+    orden:      parseInt($('bono_orden').value) || 1,
     activo:     true,
   };
-  if (!datos.nombre) { alert('El nombre del color es obligatorio.'); return; }
+  if (!datos.nombre)    { alert('El nombre del color es obligatorio.'); return; }
+  if (!datos.tipo_bono) { alert('Selecciona el tipo de bono (Pésame o Toda Ocasión).'); return; }
   if (id) {
     await fetch(`${SUPABASE_URL}/rest/v1/colores_bono?id=eq.${id}`, {
       method:'PATCH', headers:{...hdrs(),'Content-Type':'application/json'}, body:JSON.stringify(datos)
@@ -2945,7 +2782,7 @@ async function cargarUsuarios() {
   $('bodyUsuarios').innerHTML = usuarios.length ? usuarios.map(u => `<tr>
     <td><strong>${u.nombre||'—'}</strong></td>
     <td>${u.email||'—'}</td>
-    <td><span class="badge" style="background:${u.rol==='admin'?'#fde8e8':u.rol==='salas_ludicas'?'#fff4d9':'var(--pink-lt)'};color:${u.rol==='admin'?'#c0392b':u.rol==='salas_ludicas'?'#9c7a00':'var(--pink)'}">${u.rol==='salas_ludicas'?'Salas Lúdicas':(u.rol||'—')}</span></td>
+    <td><span class="badge" style="background:${u.rol==='admin'?'#fde8e8':'var(--pink-lt)'};color:${u.rol==='admin'?'#c0392b':'var(--pink)'}">${u.rol||'—'}</span></td>
     <td><label class="toggle"><input type="checkbox" ${u.activo?'checked':''} onchange="toggleUsuario(${u.id}, this.checked)"><span class="toggle-slider"></span></label></td>
     <td>${u.ultimo_acceso ? new Date(u.ultimo_acceso).toLocaleDateString('es-CO') : 'Nunca'}</td>
     <td><button class="btn btn-secondary btn-sm" onclick="resetPassword(${u.id})">🔑 Reset</button></td>
@@ -2976,23 +2813,14 @@ async function guardarUsuario() {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, email, password_hash: hashHex, rol, activo: true })
-    });
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      throw new Error(err.message || `Error ${r.status} guardando el usuario`);
-    }
-    toast('Usuario creado. Contraseña inicial: ' + pass, 'success');
-    cerrarModal('modalUsuario');
-    cargarUsuarios();
-  } catch (e) {
-    console.error('Error creando usuario:', e);
-    alert('No se pudo crear el usuario: ' + e.message);
-  }
+  await fetch(`${SUPABASE_URL}/rest/v1/usuarios_dashboard`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre, email, password_hash: hashHex, rol, activo: true })
+  });
+  toast('Usuario creado. Contraseña inicial: ' + pass, 'success');
+  cerrarModal('modalUsuario');
+  cargarUsuarios();
 }
 
 async function toggleUsuario(id, activo) {
@@ -3228,410 +3056,6 @@ async function exportarExcel(desde, hasta, canal) {
 // ============================================================
 function hdrs() {
   return { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` };
-}
-
-// ============================================================
-// SALAS LÚDICAS
-// ============================================================
-const SL_LABELS = {
-  kits_bienvenida: 'Kits de bienvenida',
-  sala_ludica: 'Sala lúdica',
-  apoyo_alimentario: 'Apoyo alimentario',
-  fortalecimiento_cuidadores: 'Fortalecimiento a cuidadores',
-};
-const SL_COLORS = {
-  kits_bienvenida: '#E8176B',
-  sala_ludica: '#1565c0',
-  apoyo_alimentario: '#2e7d32',
-  fortalecimiento_cuidadores: '#e65100',
-};
-
-function slRangoFechas() {
-  const periodo = ($('slPeriodo') || { value: 'anio' }).value;
-  const hoy = new Date();
-  if (periodo === 'mes') {
-    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    return { desde: desde.toISOString().slice(0, 10), hasta: null };
-  }
-  if (periodo === 'anio') {
-    return { desde: `${hoy.getFullYear()}-01-01`, hasta: null };
-  }
-  if (periodo === 'rango') {
-    const desde = ($('slFechaDesde') || { value: '' }).value || `${hoy.getFullYear()}-01-01`;
-    const hasta = ($('slFechaHasta') || { value: '' }).value || hoy.toISOString().slice(0, 10);
-    return { desde, hasta };
-  }
-  return { desde: null, hasta: null }; // todo el histórico
-}
-
-function onCambioPeriodoSL() {
-  const periodo = $('slPeriodo').value;
-  const wrap = $('slRangoFechasWrap');
-  if (periodo === 'rango') {
-    wrap.style.display = 'flex';
-    const hoy = new Date();
-    // Por defecto: 1 de enero del año en curso hasta hoy — el usuario puede cambiarlo libremente
-    if (!$('slFechaDesde').value) $('slFechaDesde').value = `${hoy.getFullYear()}-01-01`;
-    if (!$('slFechaHasta').value) $('slFechaHasta').value = hoy.toISOString().slice(0, 10);
-  } else {
-    wrap.style.display = 'none';
-  }
-  cargarSalaLudica();
-}
-
-async function cargarSalaLudica() {
-  $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
-  cargarEncuestas();
-  try {
-    const { desde, hasta } = slRangoFechas();
-    let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=componente,fecha,beneficiario_id,actividad_sala_ludica`;
-    if (desde) q += `&fecha=gte.${desde}`;
-    if (hasta) q += `&fecha=lte.${hasta}`;
-
-    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
-
-    const [rReg, rBen, rMetas, rAnual, rTodo] = await Promise.all([
-      fetch(q + '&limit=10000', { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&limit=10000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales
-    ]);
-    const registros = await rReg.json();
-    const beneficiarios = await rBen.json();
-    const metas = await rMetas.json();
-    const regAnual = await rAnual.json();
-    const regTodo = await rTodo.json();
-
-    if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
-
-    // ── Métricas principales (sin "Beneficiarios Únicos": queda solo Activos) ──
-    const totalRegistros = registros.length;
-    const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
-    const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
-    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta').length;
-
-    $('slMetricsGrid').innerHTML = `
-      <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
-      <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Registros del Período</div><div class="metric-value" style="color:#1565c0">${totalRegistros.toLocaleString()}</div><div class="metric-sub">${benUnicos} niños atendidos</div></div>
-      <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
-    `;
-
-    // ── Cumplimiento de Metas por Componente (siempre año en curso, igual a tu Data Bricks) ──
-    const metaMap = {};
-    (metas || []).forEach(m => metaMap[m.componente] = m.meta);
-
-    function totalBeneficiariosDe(comp, filas) {
-      const f = filas.filter(r => r.componente === comp);
-      if (comp === 'kits_bienvenida') return f.reduce((s, r) => s + (r.kit_paciente ? 1 : 0) + (r.kit_acudiente ? 1 : 0), 0);
-      if (comp === 'sala_ludica') return f.reduce((s, r) => s + (Number(r.asistentes_sala_ludica) || 0), 0);
-      if (comp === 'apoyo_alimentario') return f.reduce((s, r) => s + (Number(r.desayuno)||0) + (Number(r.almuerzo)||0) + (Number(r.merienda)||0) + (Number(r.refrigerio)||0), 0);
-      if (comp === 'fortalecimiento_cuidadores') return f.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0);
-      return 0;
-    }
-
-    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
-    $('slMetasBody').innerHTML = ordenComp.map(c => {
-      const meta = metaMap[c];
-      const total = totalBeneficiariosDe(c, regAnual || []);
-      const pct = meta ? ((total / meta) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
-      return `<tr>
-        <td>${c}</td>
-        <td>${meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>'}</td>
-        <td>${total.toLocaleString()}</td>
-        <td><strong style="color:${meta && total/meta>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
-      </tr>`;
-    }).join('');
-
-    // ── Tendencias mensuales (histórico completo, como en tus gráficos de referencia) ──
-    function agruparPorMes(filas, valorFn) {
-      const acc = {};
-      filas.forEach(r => {
-        if (!r.fecha) return;
-        const clave = r.fecha.slice(0, 7); // YYYY-MM
-        acc[clave] = (acc[clave] || 0) + valorFn(r);
-      });
-      return Object.keys(acc).sort().map(k => ({ mes: k, valor: acc[k] }));
-    }
-
-    const MES_NOMBRE = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    function etiquetaMes(claveYYYYMM) {
-      const [y, m] = claveYYYYMM.split('-');
-      return MES_NOMBRE[parseInt(m, 10) - 1] + ' ' + y.slice(2);
-    }
-
-    const serieSala = agruparPorMes(regTodo.filter(r => r.componente === 'sala_ludica'), r => Number(r.asistentes_sala_ludica) || 0);
-    const serieKits = agruparPorMes(regTodo.filter(r => r.componente === 'kits_bienvenida'), r => (r.kit_paciente ? 1 : 0) + (r.kit_acudiente ? 1 : 0));
-    const serieAlim = agruparPorMes(regTodo.filter(r => r.componente === 'apoyo_alimentario'), r => (Number(r.desayuno)||0)+(Number(r.almuerzo)||0)+(Number(r.merienda)||0)+(Number(r.refrigerio)||0));
-
-    $('slChartSala').innerHTML = svgLineChart(serieSala, etiquetaMes, '#E8176B');
-    $('slChartKits').innerHTML = svgLineChart(serieKits, etiquetaMes, '#1565c0');
-    $('slChartAlimentacion').innerHTML = svgLineChart(serieAlim, etiquetaMes, '#2e7d32');
-
-    // ── Top municipios ──
-    const conteoMuni = {};
-    (beneficiarios || []).forEach(b => { if (b.municipio) conteoMuni[b.municipio] = (conteoMuni[b.municipio] || 0) + 1; });
-    const topMuni = Object.entries(conteoMuni).sort((a, b) => b[1] - a[1]).slice(0, 6);
-    const maxMuni = Math.max(1, ...topMuni.map(m => m[1]));
-    $('slMunicipios').innerHTML = topMuni.length ? topMuni.map(([m, n]) => `
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
-          <span style="color:var(--ink-mid)">${m}</span><strong>${n}</strong>
-        </div>
-        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
-          <div style="background:#1565c0;height:100%;width:${Math.round((n / maxMuni) * 100)}%;border-radius:6px"></div>
-        </div>
-      </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin datos de municipio.</div>';
-
-    // ── Actividades de sala lúdica ──
-    const conteoAct = {};
-    registros.filter(r => r.componente === 'sala_ludica' && r.actividad_sala_ludica).forEach(r => {
-      conteoAct[r.actividad_sala_ludica] = (conteoAct[r.actividad_sala_ludica] || 0) + 1;
-    });
-    const maxAct = Math.max(1, ...Object.values(conteoAct));
-    $('slActividades').innerHTML = Object.keys(conteoAct).length ? Object.entries(conteoAct).sort((a,b)=>b[1]-a[1]).map(([act, n]) => `
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
-          <span style="color:var(--ink-mid)">${act}</span><strong>${n}</strong>
-        </div>
-        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
-          <div style="background:#1565c0;height:100%;width:${Math.round((n / maxAct) * 100)}%;border-radius:6px"></div>
-        </div>
-      </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin actividades registradas en el período.</div>';
-
-  } catch (e) {
-    console.error('Error cargando Salas Lúdicas:', e);
-    $('slMetricsGrid').innerHTML = `<div class="metric-card" style="border-color:#c0392b"><div class="metric-label">Error</div><div class="metric-sub">${e.message}</div></div>`;
-  }
-}
-
-// ── Encuesta de Satisfacción ───────────────────────────────
-const ENCUESTA_LABELS = {
-  sala_ludica: 'Sala Lúdica',
-  kits_bienvenida: 'Kits de Bienvenida',
-  apoyo_alimentario: 'Apoyo Alimentario',
-  fortalecimiento_cuidadores: 'Talleres y Acompañamiento',
-};
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-}
-async function cargarEncuestas() {
-  const cont = $('slEncuestaResumen');
-  if (!cont) return;
-  cont.innerHTML = 'Cargando...';
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/encuesta_satisfaccion?select=componente,respuestas,comentario,fecha&order=fecha.desc&limit=2000`, { headers: hdrs() });
-    const datos = await r.json();
-    if (!Array.isArray(datos)) throw new Error(datos.message || 'No se pudo leer encuesta_satisfaccion (revisa permisos/RLS)');
-
-    if (!datos.length) {
-      cont.innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem">Todavía no hay respuestas registradas.</div>';
-      return;
-    }
-
-    let html = '';
-    Object.keys(ENCUESTA_LABELS).forEach(comp => {
-      const delComp = datos.filter(d => d.componente === comp);
-      if (!delComp.length) return;
-      const conteo = {};
-      delComp.forEach(d => (d.respuestas || []).forEach(op => { conteo[op] = (conteo[op] || 0) + 1; }));
-      const maxOp = Math.max(1, ...Object.values(conteo));
-      html += `<div style="margin-bottom:22px">
-        <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:8px">${escapeHtml(ENCUESTA_LABELS[comp])} <span style="color:var(--ink-lt);font-weight:400">(${delComp.length} respuestas)</span></div>` +
-        Object.entries(conteo).sort((a, b) => b[1] - a[1]).map(([op, n]) => `
-          <div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px;gap:10px">
-              <span style="color:var(--ink-mid)">${escapeHtml(op)}</span><strong style="white-space:nowrap">${n} (${Math.round(n / delComp.length * 100)}%)</strong>
-            </div>
-            <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
-              <div style="background:${SL_COLORS[comp] || '#1565c0'};height:100%;width:${Math.round(n / maxOp * 100)}%;border-radius:6px"></div>
-            </div>
-          </div>`).join('') +
-        `</div>`;
-    });
-
-    const comentarios = datos.filter(d => d.comentario && d.comentario.trim()).slice(0, 30);
-    html += `<hr class="div" style="margin:18px 0">
-      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos recientes (${comentarios.length})</div>` +
-      (comentarios.length ? comentarios.map(c => `
-        <div style="background:var(--cream);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;line-height:1.5">
-          <div style="color:var(--ink-lt);font-size:.7rem;margin-bottom:4px">${escapeHtml(ENCUESTA_LABELS[c.componente] || c.componente)} · ${new Date(c.fecha).toLocaleDateString('es-CO')}</div>
-          ${escapeHtml(c.comentario)}
-        </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin comentarios todavía.</div>');
-
-    cont.innerHTML = html;
-  } catch (e) {
-    console.error('Error cargando encuestas:', e);
-    cont.innerHTML = `<div style="color:#c0392b;font-size:.85rem">Error: ${escapeHtml(e.message)}</div>`;
-  }
-}
-
-// ── Mini gráfico de línea en SVG (sin librerías externas) ──
-function svgLineChart(serie, etiquetaFn, color) {
-  if (!serie.length) return '<div style="color:var(--ink-lt);font-size:.85rem;padding:20px 0">Sin datos suficientes para graficar.</div>';
-  const W = 760, H = 230, padL = 40, padR = 20, padT = 24, padB = 36;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
-  const max = Math.max(1, ...serie.map(p => p.valor));
-  const stepX = serie.length > 1 ? innerW / (serie.length - 1) : 0;
-  const puntos = serie.map((p, i) => {
-    const x = padL + i * stepX;
-    const y = padT + innerH - (p.valor / max) * innerH;
-    return { x, y, ...p };
-  });
-  const path = puntos.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
-  const lineasGuia = [0, 0.5, 1].map(f => {
-    const y = padT + innerH * (1 - f);
-    return `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
-            <text x="${padL-8}" y="${y+4}" font-size="11" fill="var(--ink-lt)" text-anchor="end">${Math.round(max*f)}</text>`;
-  }).join('');
-  const etiquetasX = puntos.map((p, i) => {
-    if (serie.length > 9 && i % 2 !== 0 && i !== serie.length - 1) return '';
-    return `<text x="${p.x}" y="${H-10}" font-size="10.5" fill="var(--ink-lt)" text-anchor="middle">${etiquetaFn(p.mes)}</text>`;
-  }).join('');
-  const etiquetasValor = puntos.map(p => `<text x="${p.x}" y="${p.y-10}" font-size="11" fill="${color}" font-weight="600" text-anchor="middle">${p.valor}</text>`).join('');
-  const circulos = puntos.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${color}"/>`).join('');
-
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
-    ${lineasGuia}
-    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5"/>
-    ${circulos}
-    ${etiquetasValor}
-    ${etiquetasX}
-  </svg>`;
-}// ── Buscador de beneficiarios ──
-let _slBusqTimer = null;
-function onBuscarSL(q) {
-  clearTimeout(_slBusqTimer);
-  const hint = $('sl-hint');
-  q = (q || '').trim();
-  if (q.length < 3) {
-    if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar';
-    if (q.length === 0) {
-      $('bodySL').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
-        <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
-        Escribe el nombre o documento del beneficiario
-      </td></tr>`;
-    }
-    return;
-  }
-  if (hint) hint.textContent = 'Buscando...';
-  _slBusqTimer = setTimeout(() => buscarSLServidor(q), 350);
-}
-
-async function buscarSLServidor(q) {
-  const hint = $('sl-hint');
-  try {
-    const enc = encodeURIComponent(q);
-    const [r1, r2] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=ilike.${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?nombre_paciente=ilike.%25${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
-    ]);
-    const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-    const vistos = new Set();
-    const todos = [...(d1 || []), ...(d2 || [])].filter(b => {
-      if (vistos.has(b.id)) return false;
-      vistos.add(b.id); return true;
-    });
-    renderSL(todos);
-    if (hint) hint.textContent = `${todos.length} resultado${todos.length !== 1 ? 's' : ''}`;
-  } catch (e) {
-    console.error('Error buscando beneficiarios:', e);
-    if (hint) hint.textContent = 'Error al buscar';
-  }
-}
-
-function renderSL(lista) {
-  $('bodySL').innerHTML = lista.length ? lista.map(b => `<tr>
-    <td>${b.documento_paciente || ''}</td>
-    <td><strong>${b.nombre_paciente || '—'}</strong></td>
-    <td>${b.municipio || '—'}</td>
-    <td>${b.regimen_salud || '—'}</td>
-    <td>${b.nombre_acudiente || '—'}</td>
-    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialSL(${b.id})">📋 Historial</button></td>
-  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
-}
-
-// ── Historial 360 del beneficiario ──
-let _slHistorial = [];
-async function verHistorialSL(beneficiarioId) {
-  abrirModal('modalHistorialSL');
-  $('slHistNombre').textContent = '📋 Cargando...';
-  $('slFichaResumen').innerHTML = 'Cargando ficha...';
-  $('bodyHistorialSL').innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr>';
-
-  const rB = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${beneficiarioId}`, { headers: hdrs() });
-  const [b] = await rB.json();
-  if (!b) { $('slFichaResumen').innerHTML = 'Beneficiario no encontrado.'; return; }
-
-  $('slHistNombre').textContent = '📋 Historial de ' + b.nombre_paciente;
-  $('slFichaResumen').innerHTML = `
-    <strong>${b.nombre_paciente}</strong> · Doc. ${b.documento_paciente} · ${b.edad_texto || 'Edad no registrada'}<br>
-    ${b.municipio || '—'}${b.comuna && b.comuna !== 'No aplica' ? ' · ' + b.comuna : ''} · Régimen ${b.regimen_salud || '—'}<br>
-    Acudiente: ${b.nombre_acudiente || '—'} · ${b.celular_acudiente || '—'}
-  `;
-
-  const rR = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${beneficiarioId}&order=fecha.desc&limit=500`, { headers: hdrs() });
-  _slHistorial = await rR.json();
-  $('slHistFiltro').value = '';
-  filtrarHistorialSL();
-}
-
-function filtrarHistorialSL() {
-  const comp = $('slHistFiltro').value;
-  const filtrados = comp ? _slHistorial.filter(r => r.componente === comp) : _slHistorial;
-  renderHistorialSL(filtrados);
-}
-
-function detalleRegistroSL(r) {
-  if (r.componente === 'kits_bienvenida') {
-    const entregadoA = [r.kit_paciente && 'Paciente', r.kit_acudiente && 'Acudiente'].filter(Boolean).join(', ') || '—';
-    return `Kit entregado a: ${entregadoA}`;
-  }
-  if (r.componente === 'sala_ludica') {
-    return `${r.actividad_sala_ludica || '—'} · ${r.asistentes_sala_ludica || '—'} asistentes`;
-  }
-  if (r.componente === 'apoyo_alimentario') {
-    const partes = [];
-    if (r.desayuno) partes.push(`Desayuno x${r.desayuno}`);
-    if (r.almuerzo) partes.push(`Almuerzo x${r.almuerzo}`);
-    if (r.merienda) partes.push(`Merienda x${r.merienda}`);
-    if (r.refrigerio) partes.push(`Refrigerio x${r.refrigerio}`);
-    return partes.join(', ') || '—';
-  }
-  if (r.componente === 'fortalecimiento_cuidadores') {
-    return `${r.actividad_fortalecimiento || '—'} · ${r.asistentes_fortalecimiento || '—'} asistentes`;
-  }
-  return r.observacion || '—';
-}
-
-function renderHistorialSL(lista) {
-  $('bodyHistorialSL').innerHTML = lista.length ? lista.map(r => `<tr>
-    <td>${(r.fecha || '').slice(0, 10)}</td>
-    <td>${SL_LABELS[r.componente] || r.componente}</td>
-    <td>${r.servicio || '—'}</td>
-    <td>${detalleRegistroSL(r)}</td>
-    <td>${celdaEvidenciaSL(r)}</td>
-  </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:20px">Sin registros para este filtro</td></tr>';
-}
-
-function celdaEvidenciaSL(r) {
-  const partes = [];
-  if (r.foto_url) {
-    partes.push(`<img src="${r.foto_url}" onclick="verImagenSL('${r.foto_url}','Foto del ${(r.fecha||'').slice(0,10)}')" style="width:34px;height:34px;object-fit:cover;border-radius:6px;cursor:pointer;border:1.5px solid var(--border)" title="Ver foto">`);
-  }
-  if (r.firma_url) {
-    partes.push(`<span onclick="verImagenSL('${r.firma_url}','Firma de ${r.firma_nombre || 'beneficiario'}')" style="cursor:pointer;font-size:1.1rem" title="Ver firma de ${r.firma_nombre || ''}">✍️</span>`);
-  }
-  if (r.autorizacion_imagen) {
-    partes.push('<span title="Autorización de uso de imagen otorgada" style="font-size:1rem">✅</span>');
-  }
-  return partes.length ? `<div style="display:flex;gap:8px;align-items:center">${partes.join('')}</div>` : '<span style="color:var(--ink-lt)">—</span>';
-}
-
-function verImagenSL(url, titulo) {
-  $('lightboxSLImg').src = url;
-  $('lightboxSLTitulo').textContent = titulo || '';
-  abrirModal('lightboxSL');
 }
 
 async function verificarStorage() {
