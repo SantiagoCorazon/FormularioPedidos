@@ -571,7 +571,7 @@ function validar(secId) {
       if (!$('c_nombres').value.trim())          { alert('Ingresa los nombres.'); return false; }
       if (!$('c_apellidos').value.trim())        { alert('Ingresa los apellidos.'); return false; }
       if (!$('c_celular').value.trim())          { alert('Ingresa el celular.'); return false; }
-      if (!$('c_correo_contacto').value.trim())  { alert('Ingresa el correo de contacto.'); return false; }
+      if (!$('c_correo_contacto').value.trim())  { alert('Ingresa el correo institucional de quién solicita.'); return false; }
       if (!$('c_correo_factura').value.trim())   { alert('Ingresa el correo para factura.'); return false; }
       if (!$('c_departamento').value)            { alert('Selecciona el departamento.'); return false; }
       if (!$('c_ciudad').value)                  { alert('Selecciona la ciudad.'); return false; }
@@ -586,7 +586,7 @@ function validar(secId) {
       if (!$('e_correo_factura').value.trim())   { alert('Ingresa el correo de factura.'); return false; }
       if (!$('e_contacto').value.trim())         { alert('Ingresa el nombre del contacto.'); return false; }
       if (!$('e_telefono').value.trim())         { alert('Ingresa el teléfono.'); return false; }
-      if (!$('e_correo_contacto').value.trim())  { alert('Ingresa el correo de contacto.'); return false; }
+      if (!$('e_correo_contacto').value.trim())  { alert('Ingresa el correo de quien realiza el pedido.'); return false; }
       if (!$('e_departamento').value)            { alert('Selecciona el departamento.'); return false; }
       if (!$('e_ciudad').value)                  { alert('Selecciona la ciudad.'); return false; }
       S.comprador = { tipo:'Empresa', nit:$('e_nit').value.trim(), cedula:$('e_nit').value.trim(),
