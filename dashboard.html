@@ -1011,10 +1011,15 @@ tr:hover td{background:var(--pink-lt)}
       <div class="card">
         <div class="card-header" style="flex-direction:column;align-items:stretch;gap:10px">
           <div class="card-title">Buscador de beneficiarios</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <input class="search-input" id="searchSL" placeholder="🔍 Buscar por nombre o documento del paciente..." style="flex:1" oninput="onBuscarSL(this.value)">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <input class="search-input" id="searchSL" placeholder="🔍 Buscar por nombre o documento del paciente..." style="flex:1;min-width:200px" oninput="onBuscarSL(this.value)">
             <span id="sl-hint" style="font-size:.75rem;color:var(--ink-lt);white-space:nowrap">Escribe para buscar</span>
+            <button class="btn btn-primary btn-sm" id="btnNuevoBeneficiario" style="display:none" onclick="abrirModalBeneficiario()">➕ Nuevo beneficiario</button>
+            <button class="btn btn-secondary btn-sm" id="btnActualizarDoc" style="display:none" onclick="abrirModalActualizarDoc()">🔄 Actualizar identificación</button>
           </div>
+          <label id="lblMostrarRetirados" style="display:none;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt);cursor:pointer">
+            <input type="checkbox" id="chkMostrarRetirados" onchange="onBuscarSL($('searchSL').value)"> Mostrar retirados
+          </label>
         </div>
         <div class="card-body">
           <div class="table-wrap"><table>
@@ -1077,6 +1082,63 @@ tr:hover td{background:var(--pink-lt)}
       <button onclick="cerrarModal('lightboxSL')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-lt);padding:4px 8px;border-radius:6px;line-height:1">✕</button>
     </div>
     <img id="lightboxSLImg" src="" style="max-width:100%;max-height:70vh;border-radius:10px;background:var(--cream)">
+  </div>
+</div>
+
+<!-- Modal Nuevo/Editar Beneficiario (Salas Lúdicas) -->
+<div class="modal-overlay" id="modalBeneficiario">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title" id="benModalTitulo">Nuevo beneficiario</div>
+    <div class="modal-sub">Datos del paciente y del acudiente para Salas Lúdicas</div>
+    <input type="hidden" id="ben_id">
+    <div class="form-grid">
+      <div class="form-field"><label>Documento paciente <span style="color:var(--pink)">*</span></label><input type="text" id="ben_documento_paciente"></div>
+      <div class="form-field"><label>Nombre paciente <span style="color:var(--pink)">*</span></label><input type="text" id="ben_nombre_paciente"></div>
+      <div class="form-field"><label>Género paciente</label>
+        <select id="ben_genero_paciente"><option value="">—</option><option>Masculino</option><option>Femenino</option><option>Otro</option></select>
+      </div>
+      <div class="form-field"><label>Edad</label><input type="text" id="ben_edad_texto" placeholder="Ej: 5 años"></div>
+      <div class="form-field"><label>Régimen de salud</label><input type="text" id="ben_regimen_salud"></div>
+      <div class="form-field"><label>Estado</label>
+        <select id="ben_estado">
+          <option value="">Activo</option>
+          <option value="Retirado">Retirado</option>
+          <option value="Dado de alta">Dado de alta</option>
+          <option value="Fallecido">Fallecido</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Departamento</label><input type="text" id="ben_departamento"></div>
+      <div class="form-field"><label>Municipio</label><input type="text" id="ben_municipio"></div>
+      <div class="form-field"><label>Comuna</label><input type="text" id="ben_comuna"></div>
+      <div class="form-field"><label>Documento acudiente</label><input type="text" id="ben_documento_acudiente"></div>
+      <div class="form-field"><label>Nombre acudiente</label><input type="text" id="ben_nombre_acudiente"></div>
+      <div class="form-field"><label>Celular acudiente</label><input type="text" id="ben_celular_acudiente"></div>
+      <div class="form-field"><label>Género acudiente</label>
+        <select id="ben_genero_acudiente"><option value="">—</option><option>Masculino</option><option>Femenino</option><option>Otro</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalBeneficiario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarBeneficiario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Actualizar identificación de beneficiario -->
+<div class="modal-overlay" id="modalActualizarDoc">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title">🔄 Actualizar identificación</div>
+    <div class="modal-sub">Corrige el documento de un beneficiario. Si ya existe otro registro con el documento nuevo, se fusiona el historial automáticamente.</div>
+    <div class="form-grid">
+      <div class="form-field"><label>Documento anterior</label><input type="text" id="actdoc_viejo"></div>
+      <div class="form-field"><label>Documento nuevo</label><input type="text" id="actdoc_nuevo"></div>
+    </div>
+    <div style="margin-top:10px"><button class="btn btn-secondary btn-sm" onclick="buscarParaActualizarDoc()">🔍 Buscar</button></div>
+    <div id="actdocResultado" style="margin-top:16px;font-size:.85rem;line-height:1.6"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalActualizarDoc')">Cerrar</button>
+      <button class="btn btn-primary" id="btnConfirmarActualizarDoc" style="display:none" onclick="confirmarActualizarDoc()">Confirmar</button>
+    </div>
   </div>
 </div>
 
@@ -1476,6 +1538,13 @@ function iniciarApp() {
     $('nav-envios').style.display = 'flex';
   } else {
     if ($('nav-envios')) $('nav-envios').style.display = 'none';
+  }
+
+  // Gestión de beneficiarios (crear/editar/retirar/actualizar documento): solo admin
+  if (usuarioActual.rol === 'admin') {
+    if ($('btnNuevoBeneficiario')) $('btnNuevoBeneficiario').style.display = 'inline-flex';
+    if ($('btnActualizarDoc')) $('btnActualizarDoc').style.display = 'inline-flex';
+    if ($('lblMostrarRetirados')) $('lblMostrarRetirados').style.display = 'flex';
   }
 
   // Control de acceso por perfil — Salas Lúdicas vs. Formulario de Pedidos
@@ -3309,7 +3378,7 @@ async function cargarSalaLudica() {
     const totalRegistros = registros.length;
     const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
     const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
-    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta').length;
+    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta' && b.estado !== 'Retirado' && !(b.estado || '').startsWith('Fusionado')).length;
 
     $('slMetricsGrid').innerHTML = `
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
@@ -3518,6 +3587,7 @@ function onBuscarSL(q) {
   _slBusqTimer = setTimeout(() => buscarSLServidor(q), 350);
 }
 
+let _slResultados = [];
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
   try {
@@ -3528,10 +3598,13 @@ async function buscarSLServidor(q) {
     ]);
     const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
     const vistos = new Set();
-    const todos = [...(d1 || []), ...(d2 || [])].filter(b => {
+    let todos = [...(d1 || []), ...(d2 || [])].filter(b => {
       if (vistos.has(b.id)) return false;
       vistos.add(b.id); return true;
     });
+    const mostrarRetirados = $('chkMostrarRetirados') && $('chkMostrarRetirados').checked;
+    if (!mostrarRetirados) todos = todos.filter(b => b.estado !== 'Retirado');
+    _slResultados = todos;
     renderSL(todos);
     if (hint) hint.textContent = `${todos.length} resultado${todos.length !== 1 ? 's' : ''}`;
   } catch (e) {
@@ -3540,15 +3613,199 @@ async function buscarSLServidor(q) {
   }
 }
 
+function badgeEstadoSL(estado) {
+  if (!estado) return '';
+  const esRetirado = estado === 'Retirado';
+  const esFusion = estado.startsWith('Fusionado');
+  const color = esRetirado || esFusion ? '#9c7a00' : '#c0392b';
+  const bg = esRetirado || esFusion ? '#fff4d9' : '#fde8e8';
+  return ` <span class="badge" style="background:${bg};color:${color}">${estado}</span>`;
+}
+
 function renderSL(lista) {
-  $('bodySL').innerHTML = lista.length ? lista.map(b => `<tr>
+  const esAdmin = usuarioActual?.rol === 'admin';
+  $('bodySL').innerHTML = lista.length ? lista.map(b => {
+    const acciones = [`<button class="btn btn-secondary btn-sm" onclick="verHistorialSL(${b.id})">📋 Historial</button>`];
+    if (esAdmin) {
+      acciones.push(`<button class="btn btn-secondary btn-sm" onclick="abrirModalBeneficiario(${b.id})">✏️ Editar</button>`);
+      if (b.estado === 'Retirado') {
+        acciones.push(`<button class="btn btn-secondary btn-sm" onclick="reactivarBeneficiario(${b.id})">✅ Reactivar</button>`);
+      } else {
+        acciones.push(`<button class="btn btn-secondary btn-sm" style="color:#c0392b;border-color:#f5a0a0" onclick="retirarBeneficiario(${b.id})">🚫 Retirar</button>`);
+      }
+    }
+    return `<tr>
     <td>${b.documento_paciente || ''}</td>
-    <td><strong>${b.nombre_paciente || '—'}</strong></td>
+    <td><strong>${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b.estado)}</td>
     <td>${b.municipio || '—'}</td>
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
-    <td><button class="btn btn-secondary btn-sm" onclick="verHistorialSL(${b.id})">📋 Historial</button></td>
-  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
+    <td style="display:flex;gap:6px;flex-wrap:wrap">${acciones.join('')}</td>
+  </tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
+}
+
+// ── Nuevo / Editar beneficiario ──
+const BEN_CAMPOS = ['documento_paciente','nombre_paciente','genero_paciente','edad_texto','regimen_salud','estado','departamento','municipio','comuna','documento_acudiente','nombre_acudiente','celular_acudiente','genero_acudiente'];
+
+function abrirModalBeneficiario(id) {
+  $('ben_id').value = id || '';
+  if (id) {
+    const b = _slResultados.find(x => x.id === id);
+    $('benModalTitulo').textContent = 'Editar beneficiario';
+    BEN_CAMPOS.forEach(campo => { $('ben_' + campo).value = (b && b[campo]) || ''; });
+  } else {
+    $('benModalTitulo').textContent = 'Nuevo beneficiario';
+    BEN_CAMPOS.forEach(campo => { $('ben_' + campo).value = ''; });
+  }
+  abrirModal('modalBeneficiario');
+}
+
+async function guardarBeneficiario() {
+  const id = $('ben_id').value;
+  const documento = $('ben_documento_paciente').value.trim();
+  const nombre = $('ben_nombre_paciente').value.trim();
+  if (!documento || !nombre) { alert('El documento y el nombre del paciente son obligatorios.'); return; }
+
+  const payload = {};
+  BEN_CAMPOS.forEach(campo => {
+    payload[campo] = $('ben_' + campo).value.trim() || null;
+  });
+
+  try {
+    if (!id) {
+      const rDup = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=eq.${encodeURIComponent(documento)}&select=id`, { headers: hdrs() });
+      const dup = await rDup.json();
+      if (dup && dup.length) { alert('Ya existe un beneficiario con ese documento. Usa "Editar" o la opción de Actualizar identificación si es un duplicado.'); return; }
+
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios`, {
+        method: 'POST',
+        headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.message || `Error ${r.status}`); }
+      toast('Beneficiario creado', 'success');
+    } else {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...hdrs(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.message || `Error ${r.status}`); }
+      toast('Beneficiario actualizado', 'success');
+    }
+    cerrarModal('modalBeneficiario');
+    buscarSLServidor($('searchSL').value || documento);
+  } catch (e) {
+    console.error('Error guardando beneficiario:', e);
+    alert('No se pudo guardar: ' + e.message);
+  }
+}
+
+async function retirarBeneficiario(id) {
+  if (!confirm('¿Retirar este beneficiario? Dejará de aparecer en el buscador por defecto. Puedes reactivarlo después.')) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: 'Retirado' })
+  });
+  toast('Beneficiario retirado', 'success');
+  buscarSLServidor($('searchSL').value);
+}
+
+async function reactivarBeneficiario(id) {
+  await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: null })
+  });
+  toast('Beneficiario reactivado', 'success');
+  buscarSLServidor($('searchSL').value);
+}
+
+// ── Actualizar identificación (corregir documento / fusionar duplicados) ──
+let _actDocState = null;
+
+function abrirModalActualizarDoc() {
+  $('actdoc_viejo').value = '';
+  $('actdoc_nuevo').value = '';
+  $('actdocResultado').innerHTML = '';
+  $('btnConfirmarActualizarDoc').style.display = 'none';
+  _actDocState = null;
+  abrirModal('modalActualizarDoc');
+}
+
+function fichaCortaSL(b) {
+  return `<strong>${b.nombre_paciente || '—'}</strong> · Doc. ${b.documento_paciente} · ${b.municipio || '—'}${b.estado ? ' · ' + b.estado : ''}`;
+}
+
+async function buscarParaActualizarDoc() {
+  const docViejo = $('actdoc_viejo').value.trim();
+  const docNuevo = $('actdoc_nuevo').value.trim();
+  const resultado = $('actdocResultado');
+  $('btnConfirmarActualizarDoc').style.display = 'none';
+  _actDocState = null;
+
+  if (!docViejo || !docNuevo) { resultado.innerHTML = '<span style="color:#c0392b">Escribe el documento anterior y el nuevo.</span>'; return; }
+  if (docViejo === docNuevo) { resultado.innerHTML = '<span style="color:#c0392b">El documento nuevo debe ser diferente al anterior.</span>'; return; }
+
+  resultado.innerHTML = 'Buscando...';
+  const [rViejo, rNuevo] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=eq.${encodeURIComponent(docViejo)}`, { headers: hdrs() }),
+    fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=eq.${encodeURIComponent(docNuevo)}`, { headers: hdrs() }),
+  ]);
+  const [beneViejo] = await rViejo.json();
+  const [beneNuevo] = await rNuevo.json();
+
+  if (!beneViejo) { resultado.innerHTML = `<span style="color:#c0392b">No existe ningún beneficiario con el documento ${docViejo}.</span>`; return; }
+
+  if (!beneNuevo) {
+    resultado.innerHTML = `
+      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px">${fichaCortaSL(beneViejo)}</div>
+      No existe otro registro con el documento ${docNuevo}. Se actualizará únicamente el documento de este beneficiario.
+    `;
+    _actDocState = { modo: 'renombrar', idViejo: beneViejo.id, docNuevo };
+    $('btnConfirmarActualizarDoc').textContent = 'Confirmar cambio de documento';
+    $('btnConfirmarActualizarDoc').style.display = 'inline-flex';
+  } else {
+    resultado.innerHTML = `
+      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px"><em>Perfil con documento anterior (se fusionará y quedará marcado):</em><br>${fichaCortaSL(beneViejo)}</div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px"><em>Perfil con el documento nuevo (quedará con todo el historial):</em><br>${fichaCortaSL(beneNuevo)}</div>
+      <span style="color:#c0392b">Ya existe un beneficiario con el documento ${docNuevo}. Se moverá todo el historial de actividades del perfil anterior hacia este, y el perfil anterior quedará marcado como fusionado (no se borra). Confirma que es la misma persona.</span>
+    `;
+    _actDocState = { modo: 'fusionar', idViejo: beneViejo.id, idNuevo: beneNuevo.id, docNuevo };
+    $('btnConfirmarActualizarDoc').textContent = 'Confirmar fusión';
+    $('btnConfirmarActualizarDoc').style.display = 'inline-flex';
+  }
+}
+
+async function confirmarActualizarDoc() {
+  if (!_actDocState) return;
+  try {
+    if (_actDocState.modo === 'renombrar') {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${_actDocState.idViejo}`, {
+        method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documento_paciente: _actDocState.docNuevo })
+      });
+      if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.message || `Error ${r.status}`); }
+      toast('Documento actualizado', 'success');
+    } else {
+      if (!confirm('¿Confirmas la fusión? Se moverá todo el historial y esta acción no se deshace fácilmente.')) return;
+      const rMov = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${_actDocState.idViejo}`, {
+        method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beneficiario_id: _actDocState.idNuevo })
+      });
+      if (!rMov.ok) { const err = await rMov.json().catch(() => ({})); throw new Error(err.message || `Error ${rMov.status} moviendo el historial`); }
+
+      const rMarca = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${_actDocState.idViejo}`, {
+        method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'Fusionado con doc. ' + _actDocState.docNuevo })
+      });
+      if (!rMarca.ok) { const err = await rMarca.json().catch(() => ({})); throw new Error(err.message || `Error ${rMarca.status} marcando el perfil anterior`); }
+      toast('Perfiles fusionados correctamente', 'success');
+    }
+    cerrarModal('modalActualizarDoc');
+    buscarSLServidor($('searchSL').value || _actDocState.docNuevo);
+  } catch (e) {
+    console.error('Error actualizando identificación:', e);
+    alert('No se pudo completar la operación: ' + e.message);
+  }
 }
 
 // ── Historial 360 del beneficiario ──
