@@ -1019,10 +1019,10 @@ tr:hover td{background:var(--pink-lt)}
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
-              <input type="text" inputmode="numeric" id="slFechaDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+              <input type="text" inputmode="numeric" id="slBenDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
-              <input type="text" inputmode="numeric" id="slFechaHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+              <input type="text" inputmode="numeric" id="slBenHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
             </label>
             <button class="btn btn-primary btn-sm" onclick="buscarPorFechaSL()">🔍 Buscar por fecha</button>
             <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroFechasSL()">✕ Limpiar fechas</button>
@@ -3610,7 +3610,7 @@ function onBuscarSL(q) {
   clearTimeout(_slBusqTimer);
   const hint = $('sl-hint');
   q = (q || '').trim();
-  const hayRango = parseFechaCO($('slFechaDesde').value) || parseFechaCO($('slFechaHasta').value);
+  const hayRango = parseFechaCO($('slBenDesde').value) || parseFechaCO($('slBenHasta').value);
   if (q.length < 3 && !hayRango) {
     if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar o elige un rango de fechas';
     if (q.length === 0) {
@@ -3626,14 +3626,14 @@ function onBuscarSL(q) {
 }
 
 function limpiarFiltroFechasSL() {
-  $('slFechaDesde').value = '';
-  $('slFechaHasta').value = '';
+  $('slBenDesde').value = '';
+  $('slBenHasta').value = '';
   onBuscarSL($('searchSL').value);
 }
 
 function buscarPorFechaSL() {
-  const desdeTxt = $('slFechaDesde').value.trim();
-  const hastaTxt = $('slFechaHasta').value.trim();
+  const desdeTxt = $('slBenDesde').value.trim();
+  const hastaTxt = $('slBenHasta').value.trim();
   if (!desdeTxt && !hastaTxt) {
     alert('Escribe al menos una fecha (Desde o Hasta) en formato DD/MM/AAAA, por ejemplo 05/03/2026.');
     return;
@@ -3652,8 +3652,8 @@ function buscarPorFechaSL() {
 let _slResultados = [];
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
-  const desde = parseFechaCO($('slFechaDesde').value);
-  const hasta = parseFechaCO($('slFechaHasta').value);
+  const desde = parseFechaCO($('slBenDesde').value);
+  const hasta = parseFechaCO($('slBenHasta').value);
   try {
     let todos;
     if (desde || hasta) {
@@ -3935,8 +3935,8 @@ async function verHistorialSL(beneficiarioId) {
   _slHistorial = await rR.json();
   $('slHistFiltro').value = '';
   // Si el buscador tiene un rango de fechas activo, el detalle abre ya filtrado a ese mismo rango
-  $('slHistDesde').value = $('slFechaDesde').value || '';
-  $('slHistHasta').value = $('slFechaHasta').value || '';
+  $('slHistDesde').value = $('slBenDesde').value || '';
+  $('slHistHasta').value = $('slBenHasta').value || '';
   filtrarHistorialSL();
 }
 
