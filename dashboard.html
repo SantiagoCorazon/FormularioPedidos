@@ -1017,6 +1017,15 @@ tr:hover td{background:var(--pink-lt)}
             <button class="btn btn-primary btn-sm" id="btnNuevoBeneficiario" style="display:none" onclick="abrirModalBeneficiario()">➕ Nuevo beneficiario</button>
             <button class="btn btn-secondary btn-sm" id="btnActualizarDoc" style="display:none" onclick="abrirModalActualizarDoc()">🔄 Actualizar identificación</button>
           </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
+              <input type="date" id="slFechaDesde" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
+              <input type="date" id="slFechaHasta" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+            </label>
+            <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroFechasSL()">✕ Limpiar fechas</button>
+          </div>
           <label id="lblMostrarRetirados" style="display:none;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt);cursor:pointer">
             <input type="checkbox" id="chkMostrarRetirados" onchange="onBuscarSL($('searchSL').value)"> Mostrar retirados
           </label>
@@ -1053,7 +1062,7 @@ tr:hover td{background:var(--pink-lt)}
     </div>
     <div class="modal-sub">Ficha del niño y registro completo de acompañamiento</div>
     <div id="slFichaResumen" style="background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.85rem;line-height:1.7"></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
       <select id="slHistFiltro" onchange="filtrarHistorialSL()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
         <option value="">Todos los componentes</option>
         <option value="kits_bienvenida">Kits de bienvenida</option>
@@ -1061,6 +1070,13 @@ tr:hover td{background:var(--pink-lt)}
         <option value="apoyo_alimentario">Apoyo alimentario</option>
         <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
       </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
+        <input type="date" id="slHistDesde" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
+        <input type="date" id="slHistHasta" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+      </label>
+      <button class="btn btn-secondary btn-sm" onclick="$('slHistDesde').value='';$('slHistHasta').value='';filtrarHistorialSL()">✕ Ver todo el historial</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -3575,12 +3591,13 @@ function onBuscarSL(q) {
   clearTimeout(_slBusqTimer);
   const hint = $('sl-hint');
   q = (q || '').trim();
-  if (q.length < 3) {
-    if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar';
+  const hayRango = $('slFechaDesde').value || $('slFechaHasta').value;
+  if (q.length < 3 && !hayRango) {
+    if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar o elige un rango de fechas';
     if (q.length === 0) {
       $('bodySL').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
         <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
-        Escribe el nombre o documento del beneficiario
+        Escribe el nombre o documento del beneficiario, o elige un rango de fechas
       </td></tr>`;
     }
     return;
@@ -3589,26 +3606,55 @@ function onBuscarSL(q) {
   _slBusqTimer = setTimeout(() => buscarSLServidor(q), 350);
 }
 
+function limpiarFiltroFechasSL() {
+  $('slFechaDesde').value = '';
+  $('slFechaHasta').value = '';
+  onBuscarSL($('searchSL').value);
+}
+
 let _slResultados = [];
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
+  const desde = $('slFechaDesde').value;
+  const hasta = $('slFechaHasta').value;
   try {
-    const enc = encodeURIComponent(q);
-    const [r1, r2] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=ilike.${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?nombre_paciente=ilike.%25${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
-    ]);
-    const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-    const vistos = new Set();
-    let todos = [...(d1 || []), ...(d2 || [])].filter(b => {
-      if (vistos.has(b.id)) return false;
-      vistos.add(b.id); return true;
-    });
+    let todos;
+    if (desde || hasta) {
+      let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id&limit=10000`;
+      if (desde) urlReg += `&fecha=gte.${desde}`;
+      if (hasta) urlReg += `&fecha=lte.${hasta}`;
+      const rReg = await fetch(urlReg, { headers: hdrs() });
+      const filas = await rReg.json();
+      const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))].slice(0, 300);
+      if (!ids.length) {
+        todos = [];
+      } else {
+        const rBen = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=in.(${ids.join(',')})&order=nombre_paciente.asc&limit=300`, { headers: hdrs() });
+        todos = await rBen.json();
+        if (q) {
+          const qLower = q.toLowerCase();
+          todos = todos.filter(b => (b.nombre_paciente || '').toLowerCase().includes(qLower) || (b.documento_paciente || '').includes(q));
+        }
+      }
+    } else {
+      const enc = encodeURIComponent(q);
+      const [r1, r2] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?documento_paciente=ilike.${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
+        fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?nombre_paciente=ilike.%25${enc}%25&limit=50&order=nombre_paciente.asc`, { headers: hdrs() }),
+      ]);
+      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const vistos = new Set();
+      todos = [...(d1 || []), ...(d2 || [])].filter(b => {
+        if (vistos.has(b.id)) return false;
+        vistos.add(b.id); return true;
+      });
+    }
     const mostrarRetirados = $('chkMostrarRetirados') && $('chkMostrarRetirados').checked;
     if (!mostrarRetirados) todos = todos.filter(b => b.estado !== 'Retirado');
     _slResultados = todos;
     renderSL(todos);
-    if (hint) hint.textContent = `${todos.length} resultado${todos.length !== 1 ? 's' : ''}`;
+    const sufijoRango = (desde || hasta) ? ' en el rango de fechas' : '';
+    if (hint) hint.textContent = `${todos.length} resultado${todos.length !== 1 ? 's' : ''}${sufijoRango}`;
   } catch (e) {
     console.error('Error buscando beneficiarios:', e);
     if (hint) hint.textContent = 'Error al buscar';
@@ -3851,12 +3897,19 @@ async function verHistorialSL(beneficiarioId) {
   const rR = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${beneficiarioId}&order=fecha.desc&limit=500`, { headers: hdrs() });
   _slHistorial = await rR.json();
   $('slHistFiltro').value = '';
+  // Si el buscador tiene un rango de fechas activo, el detalle abre ya filtrado a ese mismo rango
+  $('slHistDesde').value = $('slFechaDesde').value || '';
+  $('slHistHasta').value = $('slFechaHasta').value || '';
   filtrarHistorialSL();
 }
 
 function filtrarHistorialSL() {
   const comp = $('slHistFiltro').value;
-  const filtrados = comp ? _slHistorial.filter(r => r.componente === comp) : _slHistorial;
+  const desde = $('slHistDesde').value;
+  const hasta = $('slHistHasta').value;
+  let filtrados = comp ? _slHistorial.filter(r => r.componente === comp) : _slHistorial;
+  if (desde) filtrados = filtrados.filter(r => (r.fecha || '').slice(0, 10) >= desde);
+  if (hasta) filtrados = filtrados.filter(r => (r.fecha || '').slice(0, 10) <= hasta);
   renderHistorialSL(filtrados);
 }
 
