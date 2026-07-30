@@ -3973,7 +3973,18 @@ function renderSL(lista) {
 // ── Nuevo / Editar beneficiario ──
 const BEN_CAMPOS = ['documento_paciente','nombre_paciente','genero_paciente','edad_texto','regimen_salud','estado','departamento','municipio','comuna','documento_acudiente','nombre_acudiente','celular_acudiente','genero_acudiente'];
 
+// Bloquea cualquier intento de modificar beneficiarios si el rol no es admin,
+// aunque alguien intente saltarse la interfaz (ej. desde la consola del navegador).
+function bloqueadoParaNoAdminSL() {
+  if (usuarioActual?.rol !== 'admin') {
+    alert('Solo una administradora puede modificar beneficiarios de Salas Lúdicas. Tu rol solo tiene acceso de consulta.');
+    return true;
+  }
+  return false;
+}
+
 function abrirModalBeneficiario(id) {
+  if (bloqueadoParaNoAdminSL()) return;
   $('ben_id').value = id || '';
   if (id) {
     const b = _slResultados.find(x => x.id === id);
@@ -3987,6 +3998,7 @@ function abrirModalBeneficiario(id) {
 }
 
 async function guardarBeneficiario() {
+  if (bloqueadoParaNoAdminSL()) return;
   const id = $('ben_id').value;
   const documento = $('ben_documento_paciente').value.trim();
   const nombre = $('ben_nombre_paciente').value.trim();
@@ -4028,6 +4040,7 @@ async function guardarBeneficiario() {
 }
 
 async function retirarBeneficiario(id) {
+  if (bloqueadoParaNoAdminSL()) return;
   if (!confirm('¿Retirar este beneficiario? Dejará de aparecer en el buscador por defecto. Puedes reactivarlo después.')) return;
   await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${id}`, {
     method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: 'Retirado' })
@@ -4037,6 +4050,7 @@ async function retirarBeneficiario(id) {
 }
 
 async function reactivarBeneficiario(id) {
+  if (bloqueadoParaNoAdminSL()) return;
   await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${id}`, {
     method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: null })
   });
@@ -4048,6 +4062,7 @@ async function reactivarBeneficiario(id) {
 let _actDocState = null;
 
 function abrirModalActualizarDoc() {
+  if (bloqueadoParaNoAdminSL()) return;
   $('actdoc_viejo').value = '';
   $('actdoc_nuevo').value = '';
   $('actdocResultado').innerHTML = '';
@@ -4111,6 +4126,7 @@ async function buscarParaActualizarDoc() {
 }
 
 async function confirmarActualizarDoc() {
+  if (bloqueadoParaNoAdminSL()) return;
   if (!_actDocState) return;
   let docParaBuscar = _actDocState.docNuevo;
   try {
