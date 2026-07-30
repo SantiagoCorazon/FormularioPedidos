@@ -3765,11 +3765,21 @@ async function buscarParaActualizarDoc() {
     $('btnConfirmarActualizarDoc').style.display = 'inline-flex';
   } else {
     resultado.innerHTML = `
-      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px"><em>Perfil con documento anterior (se fusionará y quedará marcado):</em><br>${fichaCortaSL(beneViejo)}</div>
-      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px"><em>Perfil con el documento nuevo (quedará con todo el historial):</em><br>${fichaCortaSL(beneNuevo)}</div>
-      <span style="color:#c0392b">Ya existe un beneficiario con el documento ${docNuevo}. Se moverá todo el historial de actividades del perfil anterior hacia este, y el perfil anterior quedará marcado como fusionado (no se borra). Confirma que es la misma persona.</span>
+      <span style="color:#c0392b">Ya existen dos perfiles distintos: uno con el documento ${docViejo} y otro con el documento ${docNuevo}. Elige cuál número debe quedar como definitivo — se moverá todo el historial del otro perfil hacia el que elijas, y el otro quedará marcado como fusionado (no se borra):</span>
+      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin:10px 0">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+          <input type="radio" name="actdocGanador" value="viejo" style="margin-top:4px">
+          <span>${fichaCortaSL(beneViejo)}<br><small style="color:var(--ink-lt)">Quedaría definitivo el documento ${docViejo}</small></span>
+        </label>
+      </div>
+      <div style="background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+          <input type="radio" name="actdocGanador" value="nuevo" style="margin-top:4px">
+          <span>${fichaCortaSL(beneNuevo)}<br><small style="color:var(--ink-lt)">Quedaría definitivo el documento ${docNuevo}</small></span>
+        </label>
+      </div>
     `;
-    _actDocState = { modo: 'fusionar', idViejo: beneViejo.id, idNuevo: beneNuevo.id, docNuevo };
+    _actDocState = { modo: 'fusionar', idViejo: beneViejo.id, idNuevo: beneNuevo.id, docViejo, docNuevo };
     $('btnConfirmarActualizarDoc').textContent = 'Confirmar fusión';
     $('btnConfirmarActualizarDoc').style.display = 'inline-flex';
   }
@@ -3777,6 +3787,7 @@ async function buscarParaActualizarDoc() {
 
 async function confirmarActualizarDoc() {
   if (!_actDocState) return;
+  let docParaBuscar = _actDocState.docNuevo;
   try {
     if (_actDocState.modo === 'renombrar') {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${_actDocState.idViejo}`, {
@@ -3786,22 +3797,29 @@ async function confirmarActualizarDoc() {
       if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.message || `Error ${r.status}`); }
       toast('Documento actualizado', 'success');
     } else {
-      if (!confirm('¿Confirmas la fusión? Se moverá todo el historial y esta acción no se deshace fácilmente.')) return;
-      const rMov = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${_actDocState.idViejo}`, {
+      const elegido = document.querySelector('input[name="actdocGanador"]:checked');
+      if (!elegido) { alert('Selecciona cuál de los dos documentos debe quedar como definitivo.'); return; }
+      const idGanador = elegido.value === 'viejo' ? _actDocState.idViejo : _actDocState.idNuevo;
+      const idPerdedor = elegido.value === 'viejo' ? _actDocState.idNuevo : _actDocState.idViejo;
+      const docGanador = elegido.value === 'viejo' ? _actDocState.docViejo : _actDocState.docNuevo;
+      docParaBuscar = docGanador;
+
+      if (!confirm(`¿Confirmas que el documento ${docGanador} quede como definitivo? Se moverá todo el historial y esta acción no se deshace fácilmente.`)) return;
+      const rMov = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${idPerdedor}`, {
         method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ beneficiario_id: _actDocState.idNuevo })
+        body: JSON.stringify({ beneficiario_id: idGanador })
       });
       if (!rMov.ok) { const err = await rMov.json().catch(() => ({})); throw new Error(err.message || `Error ${rMov.status} moviendo el historial`); }
 
-      const rMarca = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${_actDocState.idViejo}`, {
+      const rMarca = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${idPerdedor}`, {
         method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'Fusionado con doc. ' + _actDocState.docNuevo })
+        body: JSON.stringify({ estado: 'Fusionado con doc. ' + docGanador })
       });
       if (!rMarca.ok) { const err = await rMarca.json().catch(() => ({})); throw new Error(err.message || `Error ${rMarca.status} marcando el perfil anterior`); }
       toast('Perfiles fusionados correctamente', 'success');
     }
     cerrarModal('modalActualizarDoc');
-    buscarSLServidor($('searchSL').value || _actDocState.docNuevo);
+    buscarSLServidor($('searchSL').value || docParaBuscar);
   } catch (e) {
     console.error('Error actualizando identificación:', e);
     alert('No se pudo completar la operación: ' + e.message);
