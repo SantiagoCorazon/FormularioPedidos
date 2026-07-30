@@ -1019,12 +1019,12 @@ tr:hover td{background:var(--pink-lt)}
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
-              <input type="date" id="slFechaDesde" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+              <input type="text" inputmode="numeric" id="slFechaDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
-              <input type="date" id="slFechaHasta" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+              <input type="text" inputmode="numeric" id="slFechaHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
             </label>
-            <button class="btn btn-primary btn-sm" onclick="onBuscarSL($('searchSL').value)">🔍 Buscar por fecha</button>
+            <button class="btn btn-primary btn-sm" onclick="buscarPorFechaSL()">🔍 Buscar por fecha</button>
             <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroFechasSL()">✕ Limpiar fechas</button>
           </div>
           <label id="lblMostrarRetirados" style="display:none;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt);cursor:pointer">
@@ -1072,10 +1072,10 @@ tr:hover td{background:var(--pink-lt)}
         <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
       </select>
       <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
-        <input type="date" id="slHistDesde" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+        <input type="text" inputmode="numeric" id="slHistDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
       </label>
       <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
-        <input type="date" id="slHistHasta" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+        <input type="text" inputmode="numeric" id="slHistHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
       </label>
       <button class="btn btn-secondary btn-sm" onclick="$('slHistDesde').value='';$('slHistHasta').value='';filtrarHistorialSL()">✕ Ver todo el historial</button>
     </div>
@@ -3586,13 +3586,31 @@ function svgLineChart(serie, etiquetaFn, color) {
     ${etiquetasValor}
     ${etiquetasX}
   </svg>`;
-}// ── Buscador de beneficiarios ──
+}// ── Fechas en formato colombiano DD/MM/AAAA (no depende de la configuración regional del navegador) ──
+function formatearFechaInput(el) {
+  let v = el.value.replace(/[^\d]/g, '').slice(0, 8);
+  if (v.length > 4) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+  else if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
+  el.value = v;
+}
+
+function parseFechaCO(texto) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((texto || '').trim());
+  if (!m) return null;
+  const [, dd, mm, yyyy] = m;
+  const d = Number(dd), mo = Number(mm), y = Number(yyyy);
+  const fecha = new Date(y, mo - 1, d);
+  if (fecha.getFullYear() !== y || fecha.getMonth() !== mo - 1 || fecha.getDate() !== d) return null;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// ── Buscador de beneficiarios ──
 let _slBusqTimer = null;
 function onBuscarSL(q) {
   clearTimeout(_slBusqTimer);
   const hint = $('sl-hint');
   q = (q || '').trim();
-  const hayRango = $('slFechaDesde').value || $('slFechaHasta').value;
+  const hayRango = parseFechaCO($('slFechaDesde').value) || parseFechaCO($('slFechaHasta').value);
   if (q.length < 3 && !hayRango) {
     if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar o elige un rango de fechas';
     if (q.length === 0) {
@@ -3613,11 +3631,29 @@ function limpiarFiltroFechasSL() {
   onBuscarSL($('searchSL').value);
 }
 
+function buscarPorFechaSL() {
+  const desdeTxt = $('slFechaDesde').value.trim();
+  const hastaTxt = $('slFechaHasta').value.trim();
+  if (!desdeTxt && !hastaTxt) {
+    alert('Escribe al menos una fecha (Desde o Hasta) en formato DD/MM/AAAA, por ejemplo 05/03/2026.');
+    return;
+  }
+  if (desdeTxt && !parseFechaCO(desdeTxt)) {
+    alert('La fecha "Desde" no es válida. Debe estar en formato DD/MM/AAAA, por ejemplo 05/03/2026.');
+    return;
+  }
+  if (hastaTxt && !parseFechaCO(hastaTxt)) {
+    alert('La fecha "Hasta" no es válida. Debe estar en formato DD/MM/AAAA, por ejemplo 05/03/2026.');
+    return;
+  }
+  onBuscarSL($('searchSL').value);
+}
+
 let _slResultados = [];
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
-  const desde = $('slFechaDesde').value;
-  const hasta = $('slFechaHasta').value;
+  const desde = parseFechaCO($('slFechaDesde').value);
+  const hasta = parseFechaCO($('slFechaHasta').value);
   try {
     let todos;
     if (desde || hasta) {
@@ -3906,8 +3942,8 @@ async function verHistorialSL(beneficiarioId) {
 
 function filtrarHistorialSL() {
   const comp = $('slHistFiltro').value;
-  const desde = $('slHistDesde').value;
-  const hasta = $('slHistHasta').value;
+  const desde = parseFechaCO($('slHistDesde').value);
+  const hasta = parseFechaCO($('slHistHasta').value);
   let filtrados = comp ? _slHistorial.filter(r => r.componente === comp) : _slHistorial;
   if (desde) filtrados = filtrados.filter(r => (r.fecha || '').slice(0, 10) >= desde);
   if (hasta) filtrados = filtrados.filter(r => (r.fecha || '').slice(0, 10) <= hasta);
