@@ -1024,6 +1024,7 @@ tr:hover td{background:var(--pink-lt)}
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
               <input type="date" id="slFechaHasta" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
             </label>
+            <button class="btn btn-primary btn-sm" onclick="onBuscarSL($('searchSL').value)">🔍 Buscar por fecha</button>
             <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroFechasSL()">✕ Limpiar fechas</button>
           </div>
           <label id="lblMostrarRetirados" style="display:none;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt);cursor:pointer">
