@@ -1095,10 +1095,12 @@ tr:hover td{background:var(--pink-lt)}
       <div class="form-field"><label>Documento paciente <span style="color:var(--pink)">*</span></label><input type="text" id="ben_documento_paciente"></div>
       <div class="form-field"><label>Nombre paciente <span style="color:var(--pink)">*</span></label><input type="text" id="ben_nombre_paciente"></div>
       <div class="form-field"><label>Género paciente</label>
-        <select id="ben_genero_paciente"><option value="">—</option><option>Masculino</option><option>Femenino</option><option>Otro</option></select>
+        <select id="ben_genero_paciente"><option value="">—</option><option>Masculino</option><option>Femenino</option></select>
       </div>
       <div class="form-field"><label>Edad</label><input type="text" id="ben_edad_texto" placeholder="Ej: 5 años"></div>
-      <div class="form-field"><label>Régimen de salud</label><input type="text" id="ben_regimen_salud"></div>
+      <div class="form-field"><label>Régimen de salud</label>
+        <select id="ben_regimen_salud"><option value="">—</option><option>Subsidiado</option><option>Contributivo</option></select>
+      </div>
       <div class="form-field"><label>Estado</label>
         <select id="ben_estado">
           <option value="">Activo</option>
@@ -1114,7 +1116,7 @@ tr:hover td{background:var(--pink-lt)}
       <div class="form-field"><label>Nombre acudiente</label><input type="text" id="ben_nombre_acudiente"></div>
       <div class="form-field"><label>Celular acudiente</label><input type="text" id="ben_celular_acudiente"></div>
       <div class="form-field"><label>Género acudiente</label>
-        <select id="ben_genero_acudiente"><option value="">—</option><option>Masculino</option><option>Femenino</option><option>Otro</option></select>
+        <select id="ben_genero_acudiente"><option value="">—</option><option>Masculino</option><option>Femenino</option></select>
       </div>
     </div>
     <div class="modal-footer">
@@ -3378,7 +3380,7 @@ async function cargarSalaLudica() {
     const totalRegistros = registros.length;
     const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
     const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
-    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta' && b.estado !== 'Retirado' && !(b.estado || '').startsWith('Fusionado')).length;
+    const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta' && b.estado !== 'Retirado' && b.estado !== 'Fusionado').length;
 
     $('slMetricsGrid').innerHTML = `
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
@@ -3613,13 +3615,14 @@ async function buscarSLServidor(q) {
   }
 }
 
-function badgeEstadoSL(estado) {
-  if (!estado) return '';
-  const esRetirado = estado === 'Retirado';
-  const esFusion = estado.startsWith('Fusionado');
+function badgeEstadoSL(b) {
+  if (!b.estado) return '';
+  const esRetirado = b.estado === 'Retirado';
+  const esFusion = b.estado === 'Fusionado';
   const color = esRetirado || esFusion ? '#9c7a00' : '#c0392b';
   const bg = esRetirado || esFusion ? '#fff4d9' : '#fde8e8';
-  return ` <span class="badge" style="background:${bg};color:${color}">${estado}</span>`;
+  const texto = esFusion && b.fusionado_con_documento ? `Fusionado → doc. ${b.fusionado_con_documento}` : b.estado;
+  return ` <span class="badge" style="background:${bg};color:${color}">${texto}</span>`;
 }
 
 function renderSL(lista) {
@@ -3630,13 +3633,13 @@ function renderSL(lista) {
       acciones.push(`<button class="btn btn-secondary btn-sm" onclick="abrirModalBeneficiario(${b.id})">✏️ Editar</button>`);
       if (b.estado === 'Retirado') {
         acciones.push(`<button class="btn btn-secondary btn-sm" onclick="reactivarBeneficiario(${b.id})">✅ Reactivar</button>`);
-      } else {
+      } else if (b.estado !== 'Fusionado') {
         acciones.push(`<button class="btn btn-secondary btn-sm" style="color:#c0392b;border-color:#f5a0a0" onclick="retirarBeneficiario(${b.id})">🚫 Retirar</button>`);
       }
     }
     return `<tr>
     <td>${b.documento_paciente || ''}</td>
-    <td><strong>${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b.estado)}</td>
+    <td><strong>${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b)}</td>
     <td>${b.municipio || '—'}</td>
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
@@ -3813,7 +3816,7 @@ async function confirmarActualizarDoc() {
 
       const rMarca = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=eq.${idPerdedor}`, {
         method: 'PATCH', headers: { ...hdrs(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'Fusionado con doc. ' + docGanador })
+        body: JSON.stringify({ estado: 'Fusionado', fusionado_con_documento: docGanador })
       });
       if (!rMarca.ok) { const err = await rMarca.json().catch(() => ({})); throw new Error(err.message || `Error ${rMarca.status} marcando el perfil anterior`); }
       toast('Perfiles fusionados correctamente', 'success');
