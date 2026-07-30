@@ -103,6 +103,8 @@ tr:hover td{background:var(--pink-lt)}
 .btn-success{background:#2e7d32;color:var(--white)}
 .btn-success:hover{background:#1b5e20}
 .btn-sm{padding:6px 12px;font-size:.75rem}
+.btn-icon{width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;font-size:.85rem;line-height:1;flex-shrink:0}
+.btn-icon:hover{border-color:var(--ink-mid);background:var(--cream)}
 
 /* ── FORM ── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -1019,10 +1021,14 @@ tr:hover td{background:var(--pink-lt)}
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
-              <input type="text" inputmode="numeric" id="slBenDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+              <input type="text" inputmode="numeric" id="slBenDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:100px">
+              <button type="button" class="btn-icon" title="Elegir en el calendario" onclick="abrirCalendarioPara('slBenDesdeCal')">📅</button>
+              <input type="date" id="slBenDesdeCal" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1" onchange="aplicarFechaDesdeCalendario('slBenDesde', this.value)">
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
-              <input type="text" inputmode="numeric" id="slBenHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+              <input type="text" inputmode="numeric" id="slBenHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="onBuscarSL($('searchSL').value)" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:100px">
+              <button type="button" class="btn-icon" title="Elegir en el calendario" onclick="abrirCalendarioPara('slBenHastaCal')">📅</button>
+              <input type="date" id="slBenHastaCal" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1" onchange="aplicarFechaDesdeCalendario('slBenHasta', this.value)">
             </label>
             <button class="btn btn-primary btn-sm" onclick="buscarPorFechaSL()">🔍 Buscar por fecha</button>
             <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroFechasSL()">✕ Limpiar fechas</button>
@@ -1034,9 +1040,9 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-body">
           <div class="table-wrap"><table>
             <thead><tr>
-              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Acciones</th>
+              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Último beneficio</th><th>Acciones</th>
             </tr></thead>
-            <tbody id="bodySL"><tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
+            <tbody id="bodySL"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
               <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
               Escribe el nombre o documento del beneficiario
             </td></tr></tbody>
@@ -1072,10 +1078,14 @@ tr:hover td{background:var(--pink-lt)}
         <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
       </select>
       <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
-        <input type="text" inputmode="numeric" id="slHistDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+        <input type="text" inputmode="numeric" id="slHistDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:100px">
+        <button type="button" class="btn-icon" title="Elegir en el calendario" onclick="abrirCalendarioPara('slHistDesdeCal')">📅</button>
+        <input type="date" id="slHistDesdeCal" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1" onchange="aplicarFechaDesdeCalendario('slHistDesde', this.value); filtrarHistorialSL()">
       </label>
       <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Hasta
-        <input type="text" inputmode="numeric" id="slHistHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:110px">
+        <input type="text" inputmode="numeric" id="slHistHasta" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:100px">
+        <button type="button" class="btn-icon" title="Elegir en el calendario" onclick="abrirCalendarioPara('slHistHastaCal')">📅</button>
+        <input type="date" id="slHistHastaCal" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1" onchange="aplicarFechaDesdeCalendario('slHistHasta', this.value); filtrarHistorialSL()">
       </label>
       <button class="btn btn-secondary btn-sm" onclick="$('slHistDesde').value='';$('slHistHasta').value='';filtrarHistorialSL()">✕ Ver todo el historial</button>
     </div>
@@ -3383,7 +3393,7 @@ async function cargarSalaLudica() {
       fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&limit=10000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales
+      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&order=fecha.desc&limit=20000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales (orden por fecha desc: si hay mas de 20000 filas historicas, se prefiere perder historia antigua antes que meses recientes)
     ]);
     const registros = await rReg.json();
     const beneficiarios = await rBen.json();
@@ -3486,6 +3496,17 @@ async function cargarSalaLudica() {
           <div style="background:#1565c0;height:100%;width:${Math.round((n / maxAct) * 100)}%;border-radius:6px"></div>
         </div>
       </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin actividades registradas en el período.</div>';
+
+    // ── Sugerir un rango inicial de un mes en el buscador de beneficiarios (solo la primera vez) ──
+    if (!_slRangoInicialAplicado) {
+      _slRangoInicialAplicado = true;
+      const fmtCO = d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      const haceUnMes = new Date();
+      haceUnMes.setMonth(haceUnMes.getMonth() - 1);
+      if ($('slBenDesde') && !$('slBenDesde').value) $('slBenDesde').value = fmtCO(haceUnMes);
+      if ($('slBenHasta') && !$('slBenHasta').value) $('slBenHasta').value = fmtCO(new Date());
+      onBuscarSL($('searchSL').value);
+    }
 
   } catch (e) {
     console.error('Error cargando Salas Lúdicas:', e);
@@ -3604,6 +3625,20 @@ function parseFechaCO(texto) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function abrirCalendarioPara(idInputOculto) {
+  const el = $(idInputOculto);
+  if (el.showPicker) el.showPicker();
+  else el.click();
+}
+
+function aplicarFechaDesdeCalendario(idTexto, valorISO) {
+  if (!valorISO) return;
+  const [y, m, d] = valorISO.split('-');
+  const el = $(idTexto);
+  el.value = `${d}/${m}/${y}`;
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 // ── Buscador de beneficiarios ──
 let _slBusqTimer = null;
 function onBuscarSL(q) {
@@ -3614,7 +3649,7 @@ function onBuscarSL(q) {
   if (q.length < 3 && !hayRango) {
     if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar o elige un rango de fechas';
     if (q.length === 0) {
-      $('bodySL').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:30px">
+      $('bodySL').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
         <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
         Escribe el nombre o documento del beneficiario, o elige un rango de fechas
       </td></tr>`;
@@ -3649,6 +3684,7 @@ function buscarPorFechaSL() {
   onBuscarSL($('searchSL').value);
 }
 
+let _slRangoInicialAplicado = false;
 let _slResultados = [];
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
@@ -3688,6 +3724,17 @@ async function buscarSLServidor(q) {
     }
     const mostrarRetirados = $('chkMostrarRetirados') && $('chkMostrarRetirados').checked;
     if (!mostrarRetirados) todos = todos.filter(b => b.estado !== 'Retirado');
+
+    // ── Fecha del último beneficio recibido por cada beneficiario listado ──
+    if (todos.length) {
+      const idsUltimo = todos.map(b => b.id);
+      const rUlt = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id,fecha&beneficiario_id=in.(${idsUltimo.join(',')})&order=fecha.desc&limit=5000`, { headers: hdrs() });
+      const filasUlt = await rUlt.json();
+      const ultimoPorId = {};
+      (filasUlt || []).forEach(r => { if (!ultimoPorId[r.beneficiario_id]) ultimoPorId[r.beneficiario_id] = r.fecha; });
+      todos.forEach(b => { b.ultimo_beneficio = ultimoPorId[b.id] || null; });
+    }
+
     _slResultados = todos;
     renderSL(todos);
     const sufijoRango = (desde || hasta) ? ' en el rango de fechas' : '';
@@ -3711,24 +3758,25 @@ function badgeEstadoSL(b) {
 function renderSL(lista) {
   const esAdmin = usuarioActual?.rol === 'admin';
   $('bodySL').innerHTML = lista.length ? lista.map(b => {
-    const acciones = [`<button class="btn btn-secondary btn-sm" onclick="verHistorialSL(${b.id})">📋 Historial</button>`];
+    const acciones = [`<button class="btn-icon" title="Ver historial" onclick="verHistorialSL(${b.id})">📋</button>`];
     if (esAdmin) {
-      acciones.push(`<button class="btn btn-secondary btn-sm" onclick="abrirModalBeneficiario(${b.id})">✏️ Editar</button>`);
+      acciones.push(`<button class="btn-icon" title="Editar beneficiario" onclick="abrirModalBeneficiario(${b.id})">✏️</button>`);
       if (b.estado === 'Retirado') {
-        acciones.push(`<button class="btn btn-secondary btn-sm" onclick="reactivarBeneficiario(${b.id})">✅ Reactivar</button>`);
+        acciones.push(`<button class="btn-icon" title="Reactivar beneficiario" onclick="reactivarBeneficiario(${b.id})">✅</button>`);
       } else if (b.estado !== 'Fusionado') {
-        acciones.push(`<button class="btn btn-secondary btn-sm" style="color:#c0392b;border-color:#f5a0a0" onclick="retirarBeneficiario(${b.id})">🚫 Retirar</button>`);
+        acciones.push(`<button class="btn-icon" title="Retirar beneficiario" style="color:#c0392b;border-color:#f5a0a0" onclick="retirarBeneficiario(${b.id})">🚫</button>`);
       }
     }
-    return `<tr>
+    return `<tr style="white-space:nowrap">
     <td>${b.documento_paciente || ''}</td>
     <td><strong>${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b)}</td>
     <td>${b.municipio || '—'}</td>
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
-    <td style="display:flex;gap:6px;flex-wrap:wrap">${acciones.join('')}</td>
+    <td>${b.ultimo_beneficio ? b.ultimo_beneficio.slice(0, 10) : '—'}</td>
+    <td style="display:flex;gap:5px">${acciones.join('')}</td>
   </tr>`;
-  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
 }
 
 // ── Nuevo / Editar beneficiario ──
