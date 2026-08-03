@@ -987,10 +987,11 @@ tr:hover td{background:var(--pink-lt)}
       <div class="metrics" id="slMetricsGrid"></div>
 
       <div class="card">
-        <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente — 2026</div></div>
+        <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente</div></div>
         <div class="card-body">
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual 2026 · Total del período seleccionado arriba</div>
           <div class="table-wrap"><table>
-            <thead><tr><th>Componente</th><th>Meta</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
+            <thead><tr><th>Componente</th><th>Meta 2026</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
             <tbody id="slMetasBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
         </div>
@@ -3573,23 +3574,20 @@ async function cargarSalaLudica() {
   cargarEncuestas();
   try {
     const { desde, hasta } = slRangoFechas();
-    let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=componente,fecha,beneficiario_id,actividad_sala_ludica`;
+    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
+    let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}`;
     if (desde) q += `&fecha=gte.${desde}`;
     if (hasta) q += `&fecha=lte.${hasta}`;
 
-    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
-
-    const [rReg, rBen, rMetas, rAnual, rTodo] = await Promise.all([
+    const [rReg, rBen, rMetas, rTodo] = await Promise.all([
       fetch(q + '&limit=10000', { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&fecha=gte.2026-01-01&limit=10000`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&order=fecha.desc&limit=20000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales (orden por fecha desc: si hay mas de 20000 filas historicas, se prefiere perder historia antigua antes que meses recientes)
     ]);
     const registros = await rReg.json();
     const beneficiarios = await rBen.json();
     const metas = await rMetas.json();
-    const regAnual = await rAnual.json();
     const regTodo = await rTodo.json();
 
     if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
@@ -3606,7 +3604,7 @@ async function cargarSalaLudica() {
       <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
     `;
 
-    // ── Cumplimiento de Metas por Componente (siempre año en curso, igual a tu Data Bricks) ──
+    // ── Cumplimiento de Metas por Componente (total del período seleccionado, meta siempre anual 2026) ──
     const metaMap = {};
     (metas || []).forEach(m => metaMap[m.componente] = m.meta);
 
@@ -3622,7 +3620,7 @@ async function cargarSalaLudica() {
     const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
-      const total = totalBeneficiariosDe(c, regAnual || []);
+      const total = totalBeneficiariosDe(c, registros);
       const pct = meta ? ((total / meta) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
       return `<tr>
         <td>${c}</td>
