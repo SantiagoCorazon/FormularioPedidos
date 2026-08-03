@@ -989,9 +989,9 @@ tr:hover td{background:var(--pink-lt)}
       <div class="card">
         <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente</div></div>
         <div class="card-body">
-          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual 2026 · Total del período seleccionado arriba</div>
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual <span id="slMetaAnioTxt">—</span> · Total del período seleccionado arriba</div>
           <div class="table-wrap"><table>
-            <thead><tr><th>Componente</th><th>Meta 2026</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
+            <thead><tr><th>Componente</th><th>Meta <span id="slMetaAnioTh">—</span></th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
             <tbody id="slMetasBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
         </div>
@@ -3574,6 +3574,7 @@ async function cargarSalaLudica() {
   cargarEncuestas();
   try {
     const { desde, hasta } = slRangoFechas();
+    const anioSel = desde ? Number(desde.slice(0, 4)) : new Date().getFullYear();
     const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}`;
     if (desde) q += `&fecha=gte.${desde}`;
@@ -3582,7 +3583,7 @@ async function cargarSalaLudica() {
     const [rReg, rBen, rMetas, rTodo] = await Promise.all([
       fetch(q + '&limit=10000', { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.2026`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.${anioSel}`, { headers: hdrs() }),
       fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&order=fecha.desc&limit=20000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales (orden por fecha desc: si hay mas de 20000 filas historicas, se prefiere perder historia antigua antes que meses recientes)
     ]);
     const registros = await rReg.json();
@@ -3604,9 +3605,11 @@ async function cargarSalaLudica() {
       <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
     `;
 
-    // ── Cumplimiento de Metas por Componente (total del período seleccionado, meta siempre anual 2026) ──
+    // ── Cumplimiento de Metas por Componente (total del período seleccionado, meta del año que cae en "desde") ──
     const metaMap = {};
     (metas || []).forEach(m => metaMap[m.componente] = m.meta);
+    $('slMetaAnioTxt').textContent = anioSel;
+    $('slMetaAnioTh').textContent = anioSel;
 
     function totalBeneficiariosDe(comp, filas) {
       const f = filas.filter(r => r.componente === comp);
@@ -3617,14 +3620,19 @@ async function cargarSalaLudica() {
       return 0;
     }
 
+    const esAdminMetas = usuarioActual?.rol === 'admin';
     const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
       const total = totalBeneficiariosDe(c, registros);
       const pct = meta ? ((total / meta) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
+      const celdaMeta = esAdminMetas
+        ? `<input type="number" min="0" value="${meta != null ? meta : ''}" id="metaInput_${c}" style="width:90px" placeholder="Sin meta">
+           <button class="btn-icon" title="Guardar meta" onclick="guardarMetaSL('${c}', ${anioSel})">💾</button>`
+        : (meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>');
       return `<tr>
-        <td>${c}</td>
-        <td>${meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>'}</td>
+        <td>${SL_LABELS[c] || c}</td>
+        <td>${celdaMeta}</td>
         <td>${total.toLocaleString()}</td>
         <td><strong style="color:${meta && total/meta>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
       </tr>`;
@@ -4054,6 +4062,35 @@ async function reactivarBeneficiario(id) {
   });
   toast('Beneficiario reactivado', 'success');
   buscarSLServidor($('searchSL').value);
+}
+
+// ── Metas de Salas Lúdicas (solo admin, usa service_role como permisos_roles/usuarios_dashboard) ──
+async function guardarMetaSL(componente, anio) {
+  if (bloqueadoParaNoAdminSL()) return;
+  const input = $('metaInput_' + componente);
+  const valor = parseFloat(input.value);
+  if (input.value === '' || isNaN(valor) || valor < 0) { alert('Ingresa un valor de meta válido.'); return; }
+  const hdrsSRK = { 'apikey': SUPABASE_SRK, 'Authorization': `Bearer ${SUPABASE_SRK}` };
+  try {
+    const rExist = await fetch(`${SUPABASE_URL}/rest/v1/sl_metas?componente=eq.${componente}&anio=eq.${anio}&select=id`, { headers: hdrsSRK });
+    const existentes = await rExist.json();
+    if (existentes && existentes.length) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_metas?id=eq.${existentes[0].id}`, {
+        method: 'PATCH', headers: { ...hdrsSRK, 'Content-Type': 'application/json' }, body: JSON.stringify({ meta: valor })
+      });
+      if (!r.ok) throw new Error(`Error ${r.status}`);
+    } else {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_metas`, {
+        method: 'POST', headers: { ...hdrsSRK, 'Content-Type': 'application/json' }, body: JSON.stringify({ componente, anio, meta: valor })
+      });
+      if (!r.ok) throw new Error(`Error ${r.status}`);
+    }
+    toast('Meta guardada', 'success');
+    cargarSalaLudica();
+  } catch (e) {
+    console.error('Error guardando meta:', e);
+    alert('No se pudo guardar la meta: ' + e.message);
+  }
 }
 
 // ── Actualizar identificación (corregir documento / fusionar duplicados) ──
