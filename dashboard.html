@@ -989,10 +989,10 @@ tr:hover td{background:var(--pink-lt)}
       <div class="card">
         <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente</div></div>
         <div class="card-body">
-          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual <span id="slMetaAnioTxt">—</span> · Total del período seleccionado arriba</div>
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual <span id="slMetaAnioTxt">—</span> · "Meta del período" y "% ejecutado" se ajustan al rango de fechas seleccionado arriba</div>
           <div class="table-wrap"><table>
-            <thead><tr><th>Componente</th><th>Meta <span id="slMetaAnioTh">—</span></th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
-            <tbody id="slMetasBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
+            <thead><tr><th>Componente</th><th>Meta anual <span id="slMetaAnioTh">—</span></th><th>Meta del período</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
+            <tbody id="slMetasBody"><tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
         </div>
       </div>
@@ -3620,12 +3620,24 @@ async function cargarSalaLudica() {
       return 0;
     }
 
+    // La meta guardada es siempre anual; para comparar contra el período elegido (mes, rango, etc.)
+    // se prorratea según cuántos días cubre ese período dentro del año de la meta.
+    function diasEnAnio(anio) {
+      return ((anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0) ? 366 : 365;
+    }
+    const fechasPeriodo = registros.map(r => r.fecha).filter(Boolean).sort();
+    const desdeEfectivo = desde || fechasPeriodo[0] || `${anioSel}-01-01`;
+    const hastaEfectivo = hasta || fechasPeriodo[fechasPeriodo.length - 1] || new Date().toISOString().slice(0, 10);
+    const diasPeriodo = Math.max(1, Math.round((new Date(hastaEfectivo) - new Date(desdeEfectivo)) / 86400000) + 1);
+    const fraccionPeriodo = diasPeriodo / diasEnAnio(anioSel);
+
     const esAdminMetas = usuarioActual?.rol === 'admin';
     const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
+      const metaPeriodo = meta != null ? meta * fraccionPeriodo : null;
       const total = totalBeneficiariosDe(c, registros);
-      const pct = meta ? ((total / meta) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
+      const pct = metaPeriodo ? ((total / metaPeriodo) * 100).toFixed(1) + '%' : '<em style="color:var(--ink-lt)">null</em>';
       const celdaMeta = esAdminMetas
         ? `<input type="number" min="0" value="${meta != null ? meta : ''}" id="metaInput_${c}" style="width:90px" placeholder="Sin meta">
            <button class="btn-icon" title="Guardar meta" onclick="guardarMetaSL('${c}', ${anioSel})">💾</button>`
@@ -3633,8 +3645,9 @@ async function cargarSalaLudica() {
       return `<tr>
         <td>${SL_LABELS[c] || c}</td>
         <td>${celdaMeta}</td>
+        <td>${metaPeriodo != null ? Math.round(metaPeriodo).toLocaleString() : '—'}</td>
         <td>${total.toLocaleString()}</td>
-        <td><strong style="color:${meta && total/meta>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
+        <td><strong style="color:${metaPeriodo && total/metaPeriodo>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
       </tr>`;
     }).join('');
 
