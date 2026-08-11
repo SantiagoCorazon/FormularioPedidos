@@ -998,6 +998,14 @@ tr:hover td{background:var(--pink-lt)}
       </div>
 
       <div class="card">
+        <div class="card-header"><div class="card-title">Desglose de apoyos por ítem</div></div>
+        <div class="card-body">
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Mismo período seleccionado arriba. El total de cada rubro coincide con la columna "Total beneficiarios" de la tabla de metas.</div>
+          <div id="slDesglose" style="display:grid;grid-template-columns:1fr 1fr;gap:22px" class="sl-grid-2">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="card-header"><div class="card-title">Participantes en Actividades de la Sala Lúdica por Mes</div></div>
         <div class="card-body" id="slChartSala">Cargando...</div>
       </div>
@@ -3650,6 +3658,66 @@ async function cargarSalaLudica() {
         <td><strong style="color:${metaPeriodo && total/metaPeriodo>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
       </tr>`;
     }).join('');
+
+    // ── Desglose por ítem dentro de cada rubro ──
+    function bloqueDesglose(comp, items) {
+      const total = items.reduce((s, [, n]) => s + n, 0);
+      const maxItem = Math.max(1, ...items.map(([, n]) => n));
+      const filas = items.length
+        ? items.sort((a, b) => b[1] - a[1]).map(([nombre, n]) => `
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+              <span style="color:var(--ink-mid)">${escapeHtml(nombre)}</span><strong>${n.toLocaleString()}</strong>
+            </div>
+            <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
+              <div style="background:${SL_COLORS[comp]};height:100%;width:${Math.round((n / maxItem) * 100)}%;border-radius:6px"></div>
+            </div>
+          </div>`).join('')
+        : '<div style="color:var(--ink-lt);font-size:.85rem">Sin datos en el período.</div>';
+      return `<div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+          <strong style="font-size:.85rem;color:var(--ink)">${SL_LABELS[comp]}</strong>
+          <span style="font-size:.8rem;color:var(--ink-lt)">Total: <strong style="color:${SL_COLORS[comp]}">${total.toLocaleString()}</strong></span>
+        </div>
+        ${filas}
+      </div>`;
+    }
+
+    const regAlim = registros.filter(r => r.componente === 'apoyo_alimentario');
+    const itemsAlim = [
+      ['Desayuno', regAlim.reduce((s, r) => s + (Number(r.desayuno) || 0), 0)],
+      ['Almuerzo', regAlim.reduce((s, r) => s + (Number(r.almuerzo) || 0), 0)],
+      ['Merienda', regAlim.reduce((s, r) => s + (Number(r.merienda) || 0), 0)],
+      ['Refrigerio', regAlim.reduce((s, r) => s + (Number(r.refrigerio) || 0), 0)],
+    ];
+
+    const regKits = registros.filter(r => r.componente === 'kits_bienvenida');
+    const itemsKits = [
+      ['Entregado a paciente', regKits.reduce((s, r) => s + (r.kit_paciente ? 1 : 0), 0)],
+      ['Entregado a acudiente', regKits.reduce((s, r) => s + (r.kit_acudiente ? 1 : 0), 0)],
+    ];
+
+    const regSala = registros.filter(r => r.componente === 'sala_ludica');
+    const conteoSalaItems = {};
+    regSala.forEach(r => {
+      const clave = r.actividad_sala_ludica || 'Sin actividad registrada';
+      conteoSalaItems[clave] = (conteoSalaItems[clave] || 0) + (Number(r.asistentes_sala_ludica) || 0);
+    });
+    const itemsSala = Object.entries(conteoSalaItems);
+
+    const regFort = registros.filter(r => r.componente === 'fortalecimiento_cuidadores');
+    const conteoFortItems = {};
+    regFort.forEach(r => {
+      const clave = r.actividad_fortalecimiento || 'Sin actividad registrada';
+      conteoFortItems[clave] = (conteoFortItems[clave] || 0) + (Number(r.asistentes_fortalecimiento) || 0);
+    });
+    const itemsFort = Object.entries(conteoFortItems);
+
+    $('slDesglose').innerHTML =
+      bloqueDesglose('apoyo_alimentario', itemsAlim) +
+      bloqueDesglose('kits_bienvenida', itemsKits) +
+      bloqueDesglose('sala_ludica', itemsSala) +
+      bloqueDesglose('fortalecimiento_cuidadores', itemsFort);
 
     // ── Tendencias mensuales (histórico completo, como en tus gráficos de referencia) ──
     function agruparPorMes(filas, valorFn) {
