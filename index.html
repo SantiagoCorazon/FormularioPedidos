@@ -225,7 +225,7 @@
   <div class="card">
     <div class="step-label" id="sl-2">Destinatario</div>
     <div class="section-title">¿Quién <em>recibe</em>?</div>
-    <div class="section-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega.</div>
+    <div class="section-sub" id="sec2-sub">Ingresa los datos de quien va a recibir el pedido y la dirección de entrega.</div>
     <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border);border-radius:10px;margin-bottom:14px;cursor:pointer;background:var(--white)">
       <input type="checkbox" id="mismoComprador" onchange="toggleMismo(this)" style="width:auto;accent-color:var(--pink)">
       <span style="font-size:.85rem;color:var(--ink-mid)">El destinatario soy yo mismo</span>
@@ -234,7 +234,10 @@
       <div class="grid-2">
         <div class="field"><label>Nombres <span class="req">*</span></label><input type="text" id="d_nombres" placeholder="Nombres"></div>
         <div class="field"><label>Apellidos</label><input type="text" id="d_apellidos" placeholder="Apellidos"></div>
-        <div class="field"><label>Celular <span class="req">*</span></label><input type="tel" id="d_celular" placeholder="3001234567" inputmode="numeric" oninput="soloNumeros(this)"></div>
+        <div class="field" id="field-celular"><label id="lbl-d-celular">Celular <span class="req">*</span></label><input type="tel" id="d_celular" placeholder="3001234567" inputmode="numeric" oninput="soloNumeros(this)"></div>
+        <div class="field" id="field-correo"><label id="lbl-d-correo">Correo electrónico</label><input type="email" id="d_correo" placeholder="correo@ejemplo.com"></div>
+      </div>
+      <div class="grid-2" id="campos-dest-fisicos">
         <div class="field">
           <label>Departamento <span class="req">*</span></label>
           <select id="d_departamento" onchange="cargarMunicipios('d_departamento','d_ciudad')">
@@ -250,6 +253,7 @@
         <div class="field col-full" id="field-dir"><label>Dirección de entrega <span class="req">*</span></label><input type="text" id="d_direccion" placeholder="Cra 45 # 23-10, Apto 301"></div>
         <div class="field col-full" id="field-ref"><label>Referencia o indicaciones</label><input type="text" id="d_referencia" placeholder="Frente al parque, edificio azul..."></div>
       </div>
+      <div class="donacion-info" id="aviso-dest-virtual" style="display:none;margin-top:12px">❤ Este bono es virtual: no se entrega en dirección física. Ingresa el correo y/o el WhatsApp del destinatario para enviárselo.</div>
     </div>
   </div>
 </div>

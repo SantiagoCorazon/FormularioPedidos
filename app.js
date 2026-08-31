@@ -517,6 +517,7 @@ function mostrarSeccion(secId) {
   if (secId === 'sec-productos')           renderProductos();
   if (secId === 'sec-acompanante')         renderAcompanantes('Velas');
   if (secId === 'sec-envio')               renderEnvios();
+  if (secId === 'sec-2')                   actualizarCamposDestinatario();
   if (secId === 'sec-productos-campana')   cargarProductosCampanaForm();
   if (secId === 'sec-productos-evento')    cargarProductosEventoForm();
   if (secId === 'sec-productos-temporada') cargarProductosTemporadaForm();
@@ -527,9 +528,11 @@ function mostrarSeccion(secId) {
 }
 
 // Bono Virtual no lleva acompañante ni envío físico → esos pasos se saltan automáticamente.
+function esTodoVirtual() {
+  return !!(S.bonos && S.bonos.length > 0 && S.bonos.every(b => b.es_virtual));
+}
 function debeSaltarSeccion(secId) {
-  var todoVirtual = S.bonos && S.bonos.length > 0 && S.bonos.every(b => b.es_virtual);
-  return !!todoVirtual && (secId === 'sec-acompanante' || secId === 'sec-envio');
+  return esTodoVirtual() && (secId === 'sec-acompanante' || secId === 'sec-envio');
 }
 
 function irSiguiente(skip) {
@@ -598,18 +601,28 @@ function validar(secId) {
     return true;
   }
   if (secId === 'sec-2') {
+    var virtual = esTodoVirtual();
     if (!$('mismoComprador').checked) {
       if (!$('d_nombres').value.trim())    { alert('Ingresa los nombres del destinatario.'); return false; }
-      if (!$('d_celular').value.trim())    { alert('Ingresa el celular del destinatario.'); return false; }
-      if (!$('d_departamento').value)      { alert('Selecciona el departamento.'); return false; }
-      if (!$('d_ciudad').value)            { alert('Selecciona el municipio.'); return false; }
-      if (!$('d_direccion').value.trim())  { alert('Ingresa la dirección de entrega.'); return false; }
+      if (virtual) {
+        if (!$('d_celular').value.trim() && !$('d_correo').value.trim()) {
+          alert('Ingresa el correo y/o el WhatsApp del destinatario para enviarle el bono virtual.'); return false;
+        }
+      } else {
+        if (!$('d_celular').value.trim())    { alert('Ingresa el celular del destinatario.'); return false; }
+        if (!$('d_departamento').value)      { alert('Selecciona el departamento.'); return false; }
+        if (!$('d_ciudad').value)            { alert('Selecciona el municipio.'); return false; }
+        if (!$('d_direccion').value.trim())  { alert('Ingresa la dirección de entrega.'); return false; }
+      }
     }
     S.destinatario = $('mismoComprador').checked ? { ...S.comprador, esMismo:true } : {
       nombres:$('d_nombres').value.trim(), apellidos:$('d_apellidos').value.trim(),
-      celular:$('d_celular').value.trim(), ciudad:$('d_ciudad').value,
-      municipio:$('d_ciudad').value, departamento:$('d_departamento').value,
-      direccion:$('d_direccion').value.trim(), referencia:$('d_referencia').value.trim()
+      celular:$('d_celular').value.trim(), correo:$('d_correo').value.trim(),
+      ciudad: virtual ? '' : $('d_ciudad').value,
+      municipio: virtual ? '' : $('d_ciudad').value,
+      departamento: virtual ? '' : $('d_departamento').value,
+      direccion: virtual ? '' : $('d_direccion').value.trim(),
+      referencia: virtual ? '' : $('d_referencia').value.trim()
     };
     return true;
   }
@@ -738,6 +751,19 @@ function mostrarStatus(tipo, icon, msg) {
 
 function toggleMismo(cb) {
   $('campos-dest').style.display = cb.checked ? 'none' : 'block';
+}
+
+// Bono Virtual (Pésame u otra ocasión) no se entrega en dirección física:
+// se oculta el bloque de dirección/departamento/ciudad y solo se pide
+// correo y/o celular (WhatsApp) del destinatario para enviárselo.
+function actualizarCamposDestinatario() {
+  var virtual = esTodoVirtual();
+  $('campos-dest-fisicos').style.display = virtual ? 'none' : 'grid';
+  $('aviso-dest-virtual').style.display  = virtual ? 'block' : 'none';
+  $('sec2-sub').textContent = virtual
+    ? 'Este bono se envía virtual: ingresa el correo y/o el WhatsApp de quien lo recibe.'
+    : 'Ingresa los datos de quien va a recibir el pedido y la dirección de entrega.';
+  $('lbl-d-celular').innerHTML = virtual ? 'Celular / WhatsApp' : 'Celular <span class="req">*</span>';
 }
 
 // ── Tarjetas de color ────────────────────────────────────────
@@ -1092,7 +1118,9 @@ async function renderOrden() {
 
     '<div class="orden-block"><h4>🚚 Destinatario y entrega</h4><p><strong>' +
     (((d.nombres||'')+' '+(d.apellidos||'')).trim()||'—') + '</strong><br>Tel: ' + (d.celular||'—') +
-    '<br>Dir: ' + (direccionDestino||'—') + '<br>Ciudad: ' + (ciudadDestino||'—') + '</p></div>' +
+    (esTodoVirtual()
+      ? '<br>Correo: ' + (d.correo||'—') + '<br><em>Envío virtual — no requiere dirección</em>'
+      : '<br>Dir: ' + (direccionDestino||'—') + '<br>Ciudad: ' + (ciudadDestino||'—')) + '</p></div>' +
 
     '<div class="orden-block"><h4>✨ Detalle del pedido</h4><p>' +
     '<strong>Tipo: ' + (TIPO_PEDIDO_LABELS[S.tipoPedido] || S.tipoPedido || '—') + '</strong><br>' +
@@ -1220,7 +1248,8 @@ async function confirmarPedido() {
         direccion_entrega: d.direccion||'', referencia_entrega: d.referencia||'',
         ocasion: S.tipoPedido||'', protagonista: S.dirigido||'',
         detalle_protagonista: S.fallecido||'', mensaje: S.mensaje||'',
-        firma_mensaje: S.firma||'', observaciones: S.notas||'',
+        firma_mensaje: S.firma||'',
+        observaciones: (d.correo ? 'Correo destinatario (envío virtual): ' + d.correo + (S.notas ? ' | ' : '') : '') + (S.notas||''),
         envio_descripcion: S.envio ? S.envio.l : '',
         costo_envio: S.envio ? S.envio.p : 0,
         subtotal_productos: getTotal() - (S.envio ? S.envio.p : 0),
