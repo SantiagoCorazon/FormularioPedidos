@@ -575,6 +575,8 @@ tr:hover td{background:var(--pink-lt)}
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-usuarios')">👤 Usuarios</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-excel')">📥 Excel</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-formulario')">📝 Formulario</button>
+        <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-salaludica')">🧸 Salas Lúdicas</button>
+        <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-encuesta')">📋 Encuesta</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-shopify')">🛒 Shopify</button>
         <button class="manual-nav-btn" onclick="mostrarSeccionManual('m-faq')">❓ Preguntas</button>
       </div>
@@ -599,16 +601,20 @@ tr:hover td{background:var(--pink-lt)}
               <tr><td>👤 <strong>Usuarios</strong></td><td>Crear usuarios, resetear contraseñas, activar o desactivar accesos</td><td><span class="badge-manual badge-admin">Solo Admin</span></td></tr>
               <tr><td>📥 <strong>Exportar</strong></td><td>Descargar datos en Excel (.xlsx) o CSV para importar en Access</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
               <tr><td>🛒 <strong>Importar Shopify</strong></td><td>Traer pedidos de la tienda web al Dashboard</td><td><span class="badge-manual badge-op">Todos</span></td></tr>
+              <tr><td>🧸 <strong>Salas Lúdicas</strong></td><td>Consultar beneficiarios, su historial de apoyos, metas anuales y la encuesta de satisfacción</td><td><span class="badge-manual badge-op">Según permisos del rol</span></td></tr>
             </tbody>
           </table>
+          <div class="tip">💡 Qué módulos ves en el menú lateral depende de los <strong>permisos configurados para tu rol</strong> (los administradores los configuran desde Usuarios → Permisos por rol).</div>
         </div>
         <div class="manual-card">
           <h3>🔗 URLs del sistema</h3>
           <table class="tabla-manual">
-            <thead><tr><th>Herramienta</th><th>URL</th></tr></thead>
+            <thead><tr><th>Herramienta</th><th>URL</th><th>¿Quién la usa?</th></tr></thead>
             <tbody>
-              <tr><td>📝 Formulario de pedidos</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/</a></td></tr>
-              <tr><td>📊 Dashboard administrativo</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/dashboard.html" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/dashboard.html</a></td></tr>
+              <tr><td>📝 Formulario de pedidos</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/</a></td><td>Público general y equipo</td></tr>
+              <tr><td>📊 Dashboard administrativo</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/dashboard.html" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/dashboard.html</a></td><td>Equipo (con usuario y contraseña)</td></tr>
+              <tr><td>🧸 Registro de Salas Lúdicas</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/index_sala_ludica.html" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/index_sala_ludica.html</a></td><td>Equipo en campo (hospital), sin necesidad de iniciar sesión</td></tr>
+              <tr><td>📋 Encuesta de satisfacción</td><td><a href="https://santiagocorazon.github.io/FormularioPedidos/encuesta.html" target="_blank" style="color:var(--pink)">santiagocorazon.github.io/FormularioPedidos/encuesta.html</a></td><td>Familias — se comparte por QR o link</td></tr>
             </tbody>
           </table>
         </div>
@@ -790,6 +796,14 @@ tr:hover td{background:var(--pink-lt)}
           <div class="step"><div class="step-num">4</div><div class="step-content">Clic en <strong>Crear usuario</strong> y comunica la contraseña</div></div>
           <div class="warning">⚠️ Las contraseñas no se pueden ver — solo resetear con el botón 🔑 Reset.</div>
         </div>
+        <div class="manual-card">
+          <h3>⚙️ Permisos por rol <span class="badge-manual badge-admin">Solo Admin</span></h3>
+          <p>Más abajo en la misma página de Usuarios hay una tarjeta <strong>Permisos por rol</strong> que controla qué módulos ve cada rol en el menú lateral (Pedidos, Clientes, Salas Lúdicas, etc.).</p>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Clic en <strong>⚙️ Configurar</strong> junto al rol que quieres ajustar</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Marca o desmarca los módulos a los que ese rol debe tener acceso</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Guarda los cambios</div></div>
+          <div class="tip">💡 El rol Administrador siempre tiene acceso total y no se puede restringir.</div>
+        </div>
       </div>
 
       <div class="manual-section" id="m-excel">
@@ -853,6 +867,117 @@ tr:hover td{background:var(--pink-lt)}
         <div class="manual-card">
           <h3>🧾 Factura, recibo y legalización</h3>
           <p>En el último paso del formulario hay campos opcionales para registrar desde el inicio: N° Factura, N° Recibo y checkboxes de legalización. También se pueden completar o actualizar después desde el Dashboard.</p>
+        </div>
+      </div>
+
+      <div class="manual-section" id="m-salaludica">
+        <div class="manual-card">
+          <h3>🧸 ¿Qué es Salas Lúdicas?</h3>
+          <p>Es el programa de acompañamiento hospitalario de la Fundación. Tiene <strong>dos herramientas</strong> separadas:</p>
+          <ul>
+            <li>📱 <strong>Registro de campo</strong> (<span class="kbd">index_sala_ludica.html</span>) — lo usa el equipo en el hospital para anotar, en el momento, qué apoyo se le entregó a cada niño o niña. No necesita iniciar sesión.</li>
+            <li>📊 <strong>Dashboard</strong> (sección 🧸 Salas Lúdicas) — para consultar beneficiarios, ver metas, exportar información y revisar la encuesta de satisfacción.</li>
+          </ul>
+          <div class="tip">💡 Se registran 4 tipos de apoyo: Kits de Bienvenida, Sala Lúdica, Apoyo Alimentario y Fortalecimiento a Cuidadores.</div>
+        </div>
+
+        <div class="manual-card">
+          <h3>📝 Registrar un apoyo entregado (desde el hospital)</h3>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Abre el link de <strong>Registro de Salas Lúdicas</strong> desde el celular o tablet</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Elige qué apoyo vas a registrar: Kit de Bienvenida, Sala Lúdica, Apoyo Alimentario o Fortalecimiento a Cuidadores</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Escribe el <strong>documento del paciente</strong> y busca — si ya existe, se autocompletan sus datos; si no, se crea al guardar</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-content">Completa los datos del paciente y del acudiente que falten (nombre, edad, régimen de salud, municipio, etc.)</div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-content">Completa el detalle propio de ese apoyo (ver tabla abajo), y si aplica, adjunta una <strong>foto</strong>, la <strong>firma</strong> de quien recibe y marca si <strong>autoriza el uso de la imagen</strong></div></div>
+          <div class="step"><div class="step-num">6</div><div class="step-content">Revisa el resumen y haz clic en <strong>Guardar</strong></div></div>
+          <div class="tip">💡 Si el paciente ya fue registrado antes (aunque sea para otro apoyo), basta con buscar su documento — no hay que volver a escribir todos sus datos.</div>
+        </div>
+
+        <div class="manual-card">
+          <h3>🧒 Los 4 tipos de apoyo</h3>
+          <table class="tabla-manual">
+            <thead><tr><th>Apoyo</th><th>¿Qué se registra?</th></tr></thead>
+            <tbody>
+              <tr><td>🎁 <strong>Kit de Bienvenida</strong></td><td>A quién se entregó (paciente, acudiente, o ambos) y si está en etapa de pañales</td></tr>
+              <tr><td>🧸 <strong>Sala Lúdica</strong></td><td>Tipo de actividad realizada y número de asistentes</td></tr>
+              <tr><td>🍽 <strong>Apoyo Alimentario</strong></td><td>Cantidad de desayunos, almuerzos, meriendas y refrigerios entregados</td></tr>
+              <tr><td>💛 <strong>Fortalecimiento a Cuidadores</strong></td><td>Taller o actividad realizada y número de asistentes</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="manual-card">
+          <h3>🔍 Buscador de beneficiarios (Dashboard)</h3>
+          <p>En el Dashboard, sección 🧸 Salas Lúdicas → Buscador de beneficiarios.</p>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Escribe nombre o documento, <strong>o</strong> elige un rango de fechas (formato DD/MM/AAAA) para ver a quiénes se les entregó algo en ese período</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Los resultados quedan ordenados por fecha del último beneficio recibido — el más reciente primero</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Haz clic en el <strong>nombre</strong> del beneficiario (o en el ícono 📋) para ver su historial completo</div></div>
+          <div class="tip">💡 Activa el checkbox "Mostrar retirados" si necesitas ver también a los beneficiarios que fueron retirados.</div>
+        </div>
+
+        <div class="manual-card">
+          <h3>📋 Historial 360 del beneficiario</h3>
+          <p>Muestra la ficha del niño o niña (documento, edad, municipio, régimen, acudiente) y todos los apoyos recibidos, con fecha, tipo de apoyo, detalle y evidencia (📷 foto, ✍️ firma, ✅ autorización de imagen si fueron adjuntadas).</p>
+          <p>Se puede filtrar dentro del historial por tipo de apoyo y por rango de fechas — si veías el buscador con un rango de fechas activo, el historial abre ya filtrado a ese mismo rango.</p>
+        </div>
+
+        <div class="manual-card">
+          <h3>✏️ Editar, retirar y fusionar beneficiarios <span class="badge-manual badge-admin" style="font-size:.7rem">Solo Admin</span></h3>
+          <table class="tabla-manual">
+            <thead><tr><th>Acción</th><th>¿Para qué sirve?</th></tr></thead>
+            <tbody>
+              <tr><td>✏️ Editar</td><td>Corregir los datos del beneficiario</td></tr>
+              <tr><td>🚫 Retirar</td><td>Deja de aparecer en el buscador por defecto (no se borra su historial)</td></tr>
+              <tr><td>✅ Reactivar</td><td>Vuelve a aparecer en el buscador normal</td></tr>
+              <tr><td>🔄 Actualizar identificación</td><td>Corrige el documento de un beneficiario. Si ya existe otro registro con el documento nuevo, fusiona el historial de los dos automáticamente</td></tr>
+            </tbody>
+          </table>
+          <div class="warning">⚠️ Usa "Actualizar identificación" cuando detectes que el mismo niño o niña quedó registrado dos veces con documentos distintos.</div>
+        </div>
+
+        <div class="manual-card">
+          <h3>🎯 Metas anuales <span class="badge-manual badge-admin" style="font-size:.7rem">Solo Admin</span></h3>
+          <p>En la tabla <strong>Cumplimiento de Metas por Componente</strong>, las administradoras pueden escribir la meta anual de cada apoyo y guardarla con el ícono 💾.</p>
+          <p>La columna "Meta del período" y el "% Meta ejecutado" se recalculan automáticamente según el rango de fechas seleccionado arriba — por ejemplo, si el período elegido cubre 3 meses del año, la meta se prorratea a esos 3 meses.</p>
+        </div>
+
+        <div class="manual-card">
+          <h3>📊 Desglose de apoyos por ítem</h3>
+          <p>Muestra, para el mismo período seleccionado arriba, el detalle de cada apoyo: kits entregados a paciente/acudiente, tipo de actividad en sala lúdica, raciones de alimentación por tipo (desayuno/almuerzo/merienda/refrigerio) y actividades de fortalecimiento a cuidadores.</p>
+        </div>
+
+        <div class="manual-card">
+          <h3>📥 Exportar a Excel (Salas Lúdicas)</h3>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Clic en <strong>📥 Descargar Excel</strong> arriba de las métricas de Salas Lúdicas</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Elige un rango de fechas, o déjalo vacío para exportar todo el histórico</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Clic en <strong>Descargar Excel</strong></div></div>
+          <p>El archivo trae dos hojas: <strong>Movimientos</strong> (detalle fila por fila, con los datos del beneficiario) y <strong>Resumen</strong> (totales por componente y por mes).</p>
+        </div>
+      </div>
+
+      <div class="manual-section" id="m-encuesta">
+        <div class="manual-card">
+          <h3>📋 Encuesta de Satisfacción</h3>
+          <p>Formulario corto para que las familias califiquen los apoyos recibidos. Se comparte con un link o código QR — no necesita iniciar sesión.</p>
+          <table class="tabla-manual">
+            <thead><tr><th>Tipo de link</th><th>¿Qué evalúa?</th></tr></thead>
+            <tbody>
+              <tr><td>Por un solo servicio</td><td>La familia elige cuál de los 4 apoyos quiere calificar (una sola pregunta)</td></tr>
+              <tr><td>"Evaluar todos los servicios"</td><td>Las 4 preguntas en un solo formulario — la familia responde según lo que haya recibido</td></tr>
+            </tbody>
+          </table>
+          <div class="tip">💡 El link general (<span class="kbd">encuesta.html</span>) deja elegir a la familia; si quieres que abra directo en un apoyo específico, comparte <span class="kbd">index_sala_ludica.html?encuesta=sala_ludica</span> (cambia el nombre por el apoyo que quieras).</div>
+        </div>
+        <div class="manual-card">
+          <h3>🍩 Cómo leer los resultados en el Dashboard</h3>
+          <p>En la tarjeta 📋 Encuesta de Satisfacción aparece una gráfica de dona por cada apoyo, con el porcentaje de personas que marcó cada opción.</p>
+          <div class="step"><div class="step-num">1</div><div class="step-content">Por defecto se muestra <strong>todo el histórico</strong> de respuestas</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-content">Usa los campos <strong>Desde</strong> / <strong>Hasta</strong> arriba a la derecha de la tarjeta para ver solo un período — las donas y los comentarios se actualizan</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-content">Clic en <strong>Ver todo</strong> para quitar el filtro de fechas</div></div>
+        </div>
+        <div class="manual-card">
+          <h3>💬 Comentarios abiertos</h3>
+          <p>Debajo de las donas aparecen todos los comentarios escritos por las familias, con el apoyo al que aplican y la fecha.</p>
+          <div class="tip">💡 Cuando alguien responde con "Evaluar todos los servicios" y escribe un solo comentario, este aparece <strong>una sola vez</strong> indicando a qué apoyos aplica — no se repite 4 veces.</div>
         </div>
       </div>
 
