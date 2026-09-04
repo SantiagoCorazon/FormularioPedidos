@@ -982,6 +982,7 @@ tr:hover td{background:var(--pink-lt)}
           <label style="font-size:.72rem;color:var(--ink-mid)">Hasta</label>
           <input type="date" id="slFechaHasta" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
         </div>
+        <button class="btn btn-secondary" onclick="abrirModalExportarSL()" style="margin-left:auto">📥 Descargar Excel</button>
       </div>
 
       <div class="metrics" id="slMetricsGrid"></div>
@@ -1074,7 +1075,10 @@ tr:hover td{background:var(--pink-lt)}
 
       <div class="card">
         <div class="card-header"><div class="card-title">📋 Encuesta de Satisfacción</div></div>
-        <div class="card-body" id="slEncuestaResumen">Cargando...</div>
+        <div class="card-body">
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Mismo período seleccionado arriba.</div>
+          <div id="slEncuestaResumen">Cargando...</div>
+        </div>
       </div>
 
     </div>
@@ -3579,9 +3583,9 @@ function onCambioPeriodoSL() {
 
 async function cargarSalaLudica() {
   $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
-  cargarEncuestas();
   try {
     const { desde, hasta } = slRangoFechas();
+    cargarEncuestas(desde, hasta);
     const anioSel = desde ? Number(desde.slice(0, 4)) : new Date().getFullYear();
     const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}`;
@@ -3792,6 +3796,123 @@ async function cargarSalaLudica() {
   }
 }
 
+// ── Exportar a Excel (histórico de movimientos, con rango de fechas) ──
+function abrirModalExportarSL() {
+  $('expsl-desde').value = '';
+  $('expsl-hasta').value = '';
+  $('modal-exportar-sl').style.display = 'flex';
+}
+function cerrarModalExportarSL() {
+  $('modal-exportar-sl').style.display = 'none';
+}
+async function exportarExcelSLConFiltro() {
+  const desde = $('expsl-desde').value;
+  const hasta = $('expsl-hasta').value;
+  cerrarModalExportarSL();
+  await exportarExcelSL(desde, hasta);
+}
+
+async function exportarExcelSL(desde, hasta) {
+  toast('Generando Excel...', '');
+  try {
+    // Cargar SheetJS dinámicamente (misma librería que usa la exportación de Pedidos)
+    if (!window.XLSX) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    let filtrosReg = 'select=*&order=fecha.asc&limit=50000';
+    if (desde) filtrosReg += `&fecha=gte.${desde}`;
+    if (hasta) filtrosReg += `&fecha=lte.${hasta}`;
+    const camposBen = 'id,documento_paciente,nombre_paciente,genero_paciente,edad_texto,regimen_salud,estado,departamento,municipio,comuna,nombre_acudiente,celular_acudiente';
+
+    const [rReg, rBen] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?${filtrosReg}`, { headers: hdrs() }),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=${camposBen}&limit=10000`, { headers: hdrs() }),
+    ]);
+    const registros = await rReg.json();
+    const beneficiarios = await rBen.json();
+    if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
+    if (!registros.length) { toast('No hay movimientos en ese rango de fechas', 'error'); return; }
+
+    const benMap = {};
+    (beneficiarios || []).forEach(b => benMap[b.id] = b);
+
+    const wb = XLSX.utils.book_new();
+
+    // Hoja MOVIMIENTOS (detalle)
+    const movimientos = registros.map(r => {
+      const b = benMap[r.beneficiario_id] || {};
+      return {
+        fecha: r.fecha || '',
+        componente: SL_LABELS[r.componente] || r.componente || '',
+        documento_paciente: b.documento_paciente || '',
+        nombre_paciente: b.nombre_paciente || '',
+        genero: b.genero_paciente || '',
+        edad: b.edad_texto || '',
+        regimen_salud: b.regimen_salud || '',
+        estado_beneficiario: b.estado || '',
+        departamento: b.departamento || '',
+        municipio: b.municipio || '',
+        comuna: b.comuna || '',
+        nombre_acudiente: b.nombre_acudiente || '',
+        celular_acudiente: b.celular_acudiente || '',
+        servicio: r.servicio || '',
+        etapa_panales: r.etapa_panales || '',
+        kit_paciente: r.kit_paciente === true ? 'Sí' : (r.kit_paciente === false ? 'No' : ''),
+        kit_acudiente: r.kit_acudiente === true ? 'Sí' : (r.kit_acudiente === false ? 'No' : ''),
+        asistentes_sala_ludica: r.asistentes_sala_ludica ?? '',
+        actividad_sala_ludica: r.actividad_sala_ludica || '',
+        desayuno: r.desayuno ?? '',
+        almuerzo: r.almuerzo ?? '',
+        merienda: r.merienda ?? '',
+        refrigerio: r.refrigerio ?? '',
+        asistentes_fortalecimiento: r.asistentes_fortalecimiento ?? '',
+        actividad_fortalecimiento: r.actividad_fortalecimiento || '',
+        observacion: r.observacion || '',
+        autorizacion_imagen: r.autorizacion_imagen ? 'Sí' : 'No',
+        firmado_por: r.firma_nombre || '',
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movimientos), 'Movimientos');
+
+    // Hoja RESUMEN (totales por componente y por mes)
+    const conteoComp = {};
+    const conteoMes = {};
+    registros.forEach(r => {
+      conteoComp[r.componente] = (conteoComp[r.componente] || 0) + 1;
+      const mes = (r.fecha || '').slice(0, 7) || 'Sin fecha';
+      conteoMes[mes] = (conteoMes[mes] || 0) + 1;
+    });
+    const filasResumen = [
+      ['Informe de Movimientos - Salas Lúdicas'],
+      [`Generado el ${new Date().toLocaleString('es-CO')}`],
+      [`Rango exportado: ${desde || 'inicio del histórico'} a ${hasta || 'hoy'}`],
+      [`Total de movimientos: ${registros.length}`],
+      [`Total de beneficiarios: ${beneficiarios.length}`],
+      [],
+      ['Componente', 'Cantidad de movimientos'],
+      ...Object.keys(SL_LABELS).map(k => [SL_LABELS[k], conteoComp[k] || 0]),
+      [],
+      ['Mes', 'Cantidad de movimientos'],
+      ...Object.keys(conteoMes).sort().map(m => [m, conteoMes[m]]),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(filasResumen), 'Resumen');
+
+    const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const etiqueta = desde || hasta ? `_${desde || 'inicio'}_a_${hasta || 'hoy'}` : '_completo';
+    XLSX.writeFile(wb, `SantiagoCorazon_SalasLudicas_${fecha}${etiqueta}.xlsx`);
+    toast('✅ Excel descargado correctamente', 'success');
+  } catch (e) {
+    console.error(e);
+    toast('Error generando Excel', 'error');
+  }
+}
+
 // ── Encuesta de Satisfacción ───────────────────────────────
 const ENCUESTA_LABELS = {
   sala_ludica: 'Sala Lúdica',
@@ -3799,52 +3920,110 @@ const ENCUESTA_LABELS = {
   apoyo_alimentario: 'Apoyo Alimentario',
   fortalecimiento_cuidadores: 'Talleres y Acompañamiento',
 };
+// Mismo orden de opciones que ve la familia al responder (ver ENCUESTA_CONFIG en app_sala_ludica.js).
+// Se usa para que cada opción tenga siempre el mismo color en la dona, sin importar cuál tenga más votos.
+const ENCUESTA_OPCIONES = {
+  sala_ludica: [
+    'Reducir el estrés del niño.',
+    'Hacer más llevadera la espera y hospitalización.',
+    'Fortalecer el bienestar emocional del niño y la familia.',
+    'No generaron mayor impacto.',
+    'No participé en las actividades.',
+  ],
+  kits_bienvenida: ['Muy útiles.', 'Útiles en parte.', 'Poco útiles.', 'No fueron útiles.'],
+  apoyo_alimentario: ['Muy importante.', 'Importante.', 'Poco importante.', 'No fue necesario.', 'No recibí este apoyo.'],
+  fortalecimiento_cuidadores: [
+    'Excelente: Me brindaron herramientas útiles para mi bienestar y autocuidado.',
+    'Bueno: Fueron espacios agradables de distracción.',
+    'Regular: No sentí que aportaran a mi situación actual.',
+    'No participé en los talleres para cuidadoras.',
+  ],
+};
+// Paleta fija (orden validado para daltonismo) — cada posición de opción usa siempre el mismo color.
+const ENCUESTA_PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#4a3aa7'];
+
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
-async function cargarEncuestas() {
+
+// Dona en SVG puro (círculos concéntricos), sin librerías externas.
+function svgDonutChart(slices, total) {
+  const size = 132, r = 48, sw = 20, cx = size / 2, cy = size / 2;
+  const circ = 2 * Math.PI * r;
+  const activos = slices.filter(s => s.value > 0);
+  const gap = activos.length > 1 ? 3 : 0; // separación visual entre porciones
+  let acc = 0;
+  const arcos = activos.map(s => {
+    const bruto = circ * (s.value / total);
+    const largo = Math.max(bruto - gap, 0);
+    const circulo = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
+      stroke-dasharray="${largo} ${circ - largo}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${cx} ${cy})"></circle>`;
+    acc += bruto;
+    return circulo;
+  }).join('');
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="flex-shrink:0">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"></circle>
+    ${arcos}
+    <text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)">${total}</text>
+    <text x="${cx}" y="${cy + 15}" text-anchor="middle" font-size="9" fill="var(--ink-lt)">respuesta${total === 1 ? '' : 's'}</text>
+  </svg>`;
+}
+
+async function cargarEncuestas(desde, hasta) {
   const cont = $('slEncuestaResumen');
   if (!cont) return;
   cont.innerHTML = 'Cargando...';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/encuesta_satisfaccion?select=componente,respuestas,comentario,fecha&order=fecha.desc&limit=2000`, { headers: hdrs() });
+    let url = `${SUPABASE_URL}/rest/v1/encuesta_satisfaccion?select=componente,respuestas,comentario,fecha&order=fecha.desc&limit=5000`;
+    if (desde) url += `&fecha=gte.${desde}`;
+    if (hasta) url += `&fecha=lte.${hasta}T23:59:59.999`; // incluye todo el día "hasta" (la columna guarda fecha y hora)
+    const r = await fetch(url, { headers: hdrs() });
     const datos = await r.json();
     if (!Array.isArray(datos)) throw new Error(datos.message || 'No se pudo leer encuesta_satisfaccion (revisa permisos/RLS)');
 
     if (!datos.length) {
-      cont.innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem">Todavía no hay respuestas registradas.</div>';
+      cont.innerHTML = '<div style="color:var(--ink-lt);font-size:.85rem">No hay respuestas registradas en este período.</div>';
       return;
     }
 
-    let html = '';
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:20px">';
     Object.keys(ENCUESTA_LABELS).forEach(comp => {
       const delComp = datos.filter(d => d.componente === comp);
       if (!delComp.length) return;
       const conteo = {};
       delComp.forEach(d => (d.respuestas || []).forEach(op => { conteo[op] = (conteo[op] || 0) + 1; }));
-      const maxOp = Math.max(1, ...Object.values(conteo));
-      html += `<div style="margin-bottom:22px">
-        <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:8px">${escapeHtml(ENCUESTA_LABELS[comp])} <span style="color:var(--ink-lt);font-weight:400">(${delComp.length} respuestas)</span></div>` +
-        Object.entries(conteo).sort((a, b) => b[1] - a[1]).map(([op, n]) => `
-          <div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px;gap:10px">
-              <span style="color:var(--ink-mid)">${escapeHtml(op)}</span><strong style="white-space:nowrap">${n} (${Math.round(n / delComp.length * 100)}%)</strong>
-            </div>
-            <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden">
-              <div style="background:${SL_COLORS[comp] || '#1565c0'};height:100%;width:${Math.round(n / maxOp * 100)}%;border-radius:6px"></div>
-            </div>
-          </div>`).join('') +
-        `</div>`;
+      // Orden fijo: primero las opciones conocidas de la encuesta, luego cualquier valor
+      // inesperado que aparezca en los datos (para no perder información silenciosamente).
+      const conocidas = ENCUESTA_OPCIONES[comp] || [];
+      const orden = [...conocidas, ...Object.keys(conteo).filter(op => !conocidas.includes(op))];
+      const slices = orden.map((op, i) => ({ label: op, value: conteo[op] || 0, color: ENCUESTA_PALETTE[i % ENCUESTA_PALETTE.length] }));
+      const total = delComp.length;
+      html += `<div style="border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:12px">${escapeHtml(ENCUESTA_LABELS[comp])}</div>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          ${svgDonutChart(slices, total)}
+          <div style="flex:1;min-width:160px">` +
+            slices.filter(s => s.value > 0).map(s => `
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:.78rem">
+                <span style="width:10px;height:10px;border-radius:3px;background:${s.color};flex-shrink:0"></span>
+                <span style="color:var(--ink-mid);flex:1">${escapeHtml(s.label)}</span>
+                <strong style="white-space:nowrap">${s.value} (${Math.round(s.value / total * 100)}%)</strong>
+              </div>`).join('') +
+          `</div>
+        </div>
+      </div>`;
     });
+    html += '</div>';
 
-    const comentarios = datos.filter(d => d.comentario && d.comentario.trim()).slice(0, 30);
+    const comentarios = datos.filter(d => d.comentario && d.comentario.trim());
     html += `<hr class="div" style="margin:18px 0">
-      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos recientes (${comentarios.length})</div>` +
-      (comentarios.length ? comentarios.map(c => `
+      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos (${comentarios.length})</div>` +
+      (comentarios.length ? `<div style="max-height:420px;overflow-y:auto;padding-right:4px">` +
+        comentarios.map(c => `
         <div style="background:var(--cream);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;line-height:1.5">
           <div style="color:var(--ink-lt);font-size:.7rem;margin-bottom:4px">${escapeHtml(ENCUESTA_LABELS[c.componente] || c.componente)} · ${new Date(c.fecha).toLocaleDateString('es-CO')}</div>
           ${escapeHtml(c.comentario)}
-        </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin comentarios todavía.</div>');
+        </div>`).join('') + `</div>` : '<div style="color:var(--ink-lt);font-size:.85rem">Sin comentarios todavía.</div>');
 
     cont.innerHTML = html;
   } catch (e) {
@@ -4013,6 +4192,14 @@ async function buscarSLServidor(q) {
       todos.forEach(b => { b.ultimo_beneficio = ultimoPorId[b.id] || null; });
     }
 
+    // ── Orden descendente por último beneficio recibido: el más reciente primero ──
+    todos.sort((a, b) => {
+      if (!a.ultimo_beneficio && !b.ultimo_beneficio) return 0;
+      if (!a.ultimo_beneficio) return 1;
+      if (!b.ultimo_beneficio) return -1;
+      return b.ultimo_beneficio.localeCompare(a.ultimo_beneficio);
+    });
+
     _slResultados = todos;
     renderSL(todos);
     const sufijoRango = (desde || hasta) ? ' en el rango de fechas' : '';
@@ -4047,7 +4234,7 @@ function renderSL(lista) {
     }
     return `<tr style="white-space:nowrap">
     <td>${b.documento_paciente || ''}</td>
-    <td><strong>${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b)}</td>
+    <td><strong style="cursor:pointer;text-decoration:underline" onclick="verHistorialSL(${b.id})" title="Ver beneficios recibidos">${b.nombre_paciente || '—'}</strong>${badgeEstadoSL(b)}</td>
     <td>${b.municipio || '—'}</td>
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
@@ -5264,6 +5451,31 @@ function resetShopify() {
       <button class="btn btn-primary" style="flex:1" onclick="exportarExcelConFiltro()">📥 Descargar Excel</button>
       <button class="btn btn-secondary" style="flex:1" onclick="exportarCSVConFiltro()">📋 Descargar CSV</button>
       <button class="btn btn-secondary" onclick="cerrarModalExportar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORTAR EXCEL — SALAS LÚDICAS -->
+<div id="modal-exportar-sl" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:90%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:6px">📥 Exportar movimientos de Salas Lúdicas</div>
+    <div style="font-size:.83rem;color:var(--ink-lt);margin-bottom:20px">Elige el rango de fechas que quieres exportar, o deja los campos vacíos para exportar todo el histórico.</div>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Fecha desde</label>
+        <input type="date" id="expsl-desde" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:.78rem;font-weight:600;color:var(--ink-mid);display:block;margin-bottom:4px">Fecha hasta</label>
+        <input type="date" id="expsl-hasta" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.85rem;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-top:8px;padding:10px 12px;background:var(--cream);border-radius:8px;font-size:.75rem;color:var(--ink-lt)">
+      💡 Si dejas las fechas vacías, se exporta todo el historial de movimientos.
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" style="flex:1" onclick="exportarExcelSLConFiltro()">📥 Descargar Excel</button>
+      <button class="btn btn-secondary" onclick="cerrarModalExportarSL()">Cancelar</button>
     </div>
   </div>
 </div>
