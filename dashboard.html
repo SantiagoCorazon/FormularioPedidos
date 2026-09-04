@@ -1074,9 +1074,18 @@ tr:hover td{background:var(--pink-lt)}
       </div>
 
       <div class="card">
-        <div class="card-header"><div class="card-title">📋 Encuesta de Satisfacción</div></div>
+        <div class="card-header" style="flex-wrap:wrap;gap:10px">
+          <div class="card-title">📋 Encuesta de Satisfacción</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto">
+            <label style="font-size:.72rem;color:var(--ink-mid)">Desde</label>
+            <input type="date" id="encDesde" onchange="cargarEncuestas()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+            <label style="font-size:.72rem;color:var(--ink-mid)">Hasta</label>
+            <input type="date" id="encHasta" onchange="cargarEncuestas()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem">
+            <button class="btn btn-secondary btn-sm" onclick="limpiarFiltroEncuestas()">Ver todo</button>
+          </div>
+        </div>
         <div class="card-body">
-          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Mismo período seleccionado arriba.</div>
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Por defecto muestra todo el histórico. Filtra por fecha si quieres ver solo un período.</div>
           <div id="slEncuestaResumen">Cargando...</div>
         </div>
       </div>
@@ -3584,8 +3593,8 @@ function onCambioPeriodoSL() {
 async function cargarSalaLudica() {
   $('slMetricsGrid').innerHTML = `<div class="metric-card"><div class="metric-label">Cargando...</div></div>`;
   try {
+    cargarEncuestas(); // filtro propio (Desde/Hasta de la tarjeta), independiente del período de arriba
     const { desde, hasta } = slRangoFechas();
-    cargarEncuestas(desde, hasta);
     const anioSel = desde ? Number(desde.slice(0, 4)) : new Date().getFullYear();
     const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}`;
@@ -3969,9 +3978,19 @@ function svgDonutChart(slices, total) {
   </svg>`;
 }
 
-async function cargarEncuestas(desde, hasta) {
+function limpiarFiltroEncuestas() {
+  if ($('encDesde')) $('encDesde').value = '';
+  if ($('encHasta')) $('encHasta').value = '';
+  cargarEncuestas();
+}
+
+// Filtro propio de esta tarjeta (Desde/Hasta): por defecto, sin fechas, muestra todo el histórico.
+// Es independiente del filtro de período de arriba, que solo aplica a las métricas de Salas Lúdicas.
+async function cargarEncuestas() {
   const cont = $('slEncuestaResumen');
   if (!cont) return;
+  const desde = $('encDesde') ? $('encDesde').value : '';
+  const hasta = $('encHasta') ? $('encHasta').value : '';
   cont.innerHTML = 'Cargando...';
   try {
     let url = `${SUPABASE_URL}/rest/v1/encuesta_satisfaccion?select=componente,respuestas,comentario,fecha&order=fecha.desc&limit=5000`;
