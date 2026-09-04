@@ -4016,12 +4016,23 @@ async function cargarEncuestas(desde, hasta) {
     html += '</div>';
 
     const comentarios = datos.filter(d => d.comentario && d.comentario.trim());
+    // La encuesta "Evaluar todos los servicios" guarda una fila por componente con el
+    // mismo comentario repetido — se agrupan por fecha+comentario para mostrar una sola
+    // tarjeta por persona, indicando a qué componentes aplica.
+    const gruposComentario = {};
+    comentarios.forEach(c => {
+      const key = c.fecha + '||' + c.comentario;
+      if (!gruposComentario[key]) gruposComentario[key] = { fecha: c.fecha, comentario: c.comentario, componentes: [] };
+      gruposComentario[key].componentes.push(c.componente);
+    });
+    const listaComentarios = Object.values(gruposComentario).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
     html += `<hr class="div" style="margin:18px 0">
-      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos (${comentarios.length})</div>` +
-      (comentarios.length ? `<div style="max-height:420px;overflow-y:auto;padding-right:4px">` +
-        comentarios.map(c => `
+      <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:10px">Comentarios abiertos (${listaComentarios.length})</div>` +
+      (listaComentarios.length ? `<div style="max-height:420px;overflow-y:auto;padding-right:4px">` +
+        listaComentarios.map(c => `
         <div style="background:var(--cream);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.82rem;line-height:1.5">
-          <div style="color:var(--ink-lt);font-size:.7rem;margin-bottom:4px">${escapeHtml(ENCUESTA_LABELS[c.componente] || c.componente)} · ${new Date(c.fecha).toLocaleDateString('es-CO')}</div>
+          <div style="color:var(--ink-lt);font-size:.7rem;margin-bottom:4px">${c.componentes.map(comp => escapeHtml(ENCUESTA_LABELS[comp] || comp)).join(', ')} · ${new Date(c.fecha).toLocaleDateString('es-CO')}</div>
           ${escapeHtml(c.comentario)}
         </div>`).join('') + `</div>` : '<div style="color:var(--ink-lt);font-size:.85rem">Sin comentarios todavía.</div>');
 
