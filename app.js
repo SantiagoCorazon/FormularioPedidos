@@ -596,7 +596,7 @@ function validar(secId) {
         razonSocial:$('e_razon').value.trim(), contacto:$('e_contacto').value.trim(),
         celular:$('e_telefono').value.trim(), correo:$('e_correo_contacto').value.trim(),
         correoFactura:$('e_correo_factura').value.trim(), ciudad:$('e_ciudad').value,
-        departamento:$('e_departamento').value, esNuevo:S.esNuevo };
+        departamento:$('e_departamento').value, direccion:$('e_direccion').value.trim(), esNuevo:S.esNuevo };
     }
     return true;
   }
@@ -729,6 +729,7 @@ async function buscarTercero() {
         $('e_departamento').value    = t.departamento || '';
         cargarMunicipios('e_departamento','e_ciudad');
         $('e_ciudad').value          = t.ciudad || '';
+        $('e_direccion').value       = t.direccion || '';
       }
       mostrarStatus('found', '✓', '¡Encontrado! Datos cargados. Puedes corregir si es necesario.');
     } else {
@@ -1240,6 +1241,7 @@ async function confirmarPedido() {
         canal: S.canal || 'Formulario Web', tipo_cliente: c.tipo || 'Personal',
         tercero_id: terceroId, id_nit_comprador: docNum,
         nombre_razon_social: nombreComprador,
+        contacto_comprador: c.tipo === 'Empresa' ? (c.contacto||'') : '',
         direccion_comprador: c.direccion||'', departamento: c.departamento||'',
         ciudad_comprador: c.ciudad||'', telefono_comprador: c.celular||'',
         correo_comprador: c.correo||'', correo_factura: c.correoFactura||'',

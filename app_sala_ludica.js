@@ -301,10 +301,28 @@ function linea(label, valor) {
 async function guardarRegistro() {
   loading(true, 'Guardando registro...');
   try {
-    let beneficiarioId = S.beneficiarioId;
+    const docActual = $('inDocPaciente').value.trim();
+
+    // Volvemos a verificar contra la base de datos si este documento ya existe,
+    // sin depender de que el usuario haya presionado "Buscar" antes (o de que
+    // haya cambiado el documento después de buscar). Esto evita el error
+    // "duplicate key" al intentar crear un beneficiario que ya existía.
+    let beneficiarioId = null;
+    try {
+      const chk = await fetch(
+        SUPABASE_URL + '/rest/v1/sl_beneficiarios?documento_paciente=eq.' + encodeURIComponent(docActual) + '&select=id&limit=1',
+        { headers: sbH() }
+      );
+      const chkData = await chk.json();
+      beneficiarioId = (chkData && chkData.length) ? chkData[0].id : null;
+    } catch (e) {
+      // Si la verificación falla (p.ej. sin conexión), seguimos con lo que ya
+      // teníamos en memoria en vez de bloquear el guardado.
+      beneficiarioId = S.beneficiarioId;
+    }
 
     const beneficiarioPayload = {
-      documento_paciente: $('inDocPaciente').value.trim(),
+      documento_paciente: docActual,
       nombre_paciente: $('inNombrePaciente').value.trim(),
       genero_paciente: $('inGeneroPaciente').value || null,
       regimen_salud: $('inRegimen').value || null,
@@ -330,9 +348,33 @@ async function guardarRegistro() {
         headers: { ...sbH(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(beneficiarioPayload),
       });
-      const created = await r.json();
-      if (!r.ok) throw new Error(created.message || 'No se pudo crear el beneficiario');
-      beneficiarioId = created[0].id;
+      let created = await r.json();
+      if (!r.ok) {
+        // Caso raro: alguien más registró este mismo documento en el instante
+        // entre la verificación y este guardado. En vez de mostrar el error
+        // técnico, buscamos el registro que ya quedó creado y lo actualizamos.
+        if (String(created.message || '').includes('duplicate key')) {
+          const retry = await fetch(
+            SUPABASE_URL + '/rest/v1/sl_beneficiarios?documento_paciente=eq.' + encodeURIComponent(docActual) + '&select=id&limit=1',
+            { headers: sbH() }
+          );
+          const retryData = await retry.json();
+          if (retryData && retryData.length) {
+            beneficiarioId = retryData[0].id;
+            await fetch(SUPABASE_URL + '/rest/v1/sl_beneficiarios?id=eq.' + beneficiarioId, {
+              method: 'PATCH',
+              headers: { ...sbH(), 'Content-Type': 'application/json' },
+              body: JSON.stringify(beneficiarioPayload),
+            });
+          } else {
+            throw new Error(created.message || 'No se pudo crear el beneficiario');
+          }
+        } else {
+          throw new Error(created.message || 'No se pudo crear el beneficiario');
+        }
+      } else {
+        beneficiarioId = created[0].id;
+      }
     }
 
     // ── Subir foto y firma (si existen) ──

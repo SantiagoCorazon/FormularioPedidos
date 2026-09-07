@@ -2553,7 +2553,8 @@ async function verPedido(id) {
       <!-- COMPRADOR -->
       <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px">
         <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:#E8176B;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">📦 Comprador / Pagador</div>
-        ${blk('Nombre', p.nombre_razon_social)}
+        ${blk(p.tipo_cliente === 'Empresa' ? 'Empresa' : 'Nombre', p.nombre_razon_social)}
+        ${p.tipo_cliente === 'Empresa' ? blk('Quien realiza el pedido', p.contacto_comprador) : ''}
         ${blk('Documento', p.id_nit_comprador)}
         ${blk('Teléfono', p.telefono_comprador)}
         ${blk('Correo contacto', p.correo_comprador)}
