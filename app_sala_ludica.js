@@ -9,6 +9,21 @@ const STORAGE_BUCKET = 'salaludica-evidencias';
 const sbH = () => ({ 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY });
 const $ = id => document.getElementById(id);
 
+// Igual que fetch(), pero si falla por un corte de conexión (no por un error
+// del servidor) reintenta una vez más antes de rendirse. Esto evita que una
+// caída breve de señal en el celular obligue al usuario a repetir todo el
+// formulario.
+async function fetchConReintento(url, opts, intentos = 2) {
+  for (let i = 0; i < intentos; i++) {
+    try {
+      return await fetch(url, opts);
+    } catch (e) {
+      if (i === intentos - 1) throw e;
+      await new Promise(res => setTimeout(res, 1500));
+    }
+  }
+}
+
 const COMPONENTE_LABELS = {
   kits_bienvenida: { titulo: 'Kit de Bienvenida', sub: 'Registra a quién se le entregó el kit.' },
   sala_ludica: { titulo: 'Sala Lúdica', sub: 'Registra la actividad de estimulación realizada.' },
@@ -239,7 +254,7 @@ function firmaABlob() {
 
 // ── Subida a Supabase Storage ────────────────────────────────
 async function subirArchivo(path, blob, contentType) {
-  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${path}`, {
+  const r = await fetchConReintento(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${path}`, {
     method: 'POST',
     headers: { ...sbH(), 'Content-Type': contentType },
     body: blob,
@@ -309,7 +324,7 @@ async function guardarRegistro() {
     // "duplicate key" al intentar crear un beneficiario que ya existía.
     let beneficiarioId = null;
     try {
-      const chk = await fetch(
+      const chk = await fetchConReintento(
         SUPABASE_URL + '/rest/v1/sl_beneficiarios?documento_paciente=eq.' + encodeURIComponent(docActual) + '&select=id&limit=1',
         { headers: sbH() }
       );
@@ -337,13 +352,13 @@ async function guardarRegistro() {
     };
 
     if (beneficiarioId) {
-      await fetch(SUPABASE_URL + '/rest/v1/sl_beneficiarios?id=eq.' + beneficiarioId, {
+      await fetchConReintento(SUPABASE_URL + '/rest/v1/sl_beneficiarios?id=eq.' + beneficiarioId, {
         method: 'PATCH',
         headers: { ...sbH(), 'Content-Type': 'application/json' },
         body: JSON.stringify(beneficiarioPayload),
       });
     } else {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/sl_beneficiarios', {
+      const r = await fetchConReintento(SUPABASE_URL + '/rest/v1/sl_beneficiarios', {
         method: 'POST',
         headers: { ...sbH(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(beneficiarioPayload),
@@ -354,14 +369,14 @@ async function guardarRegistro() {
         // entre la verificación y este guardado. En vez de mostrar el error
         // técnico, buscamos el registro que ya quedó creado y lo actualizamos.
         if (String(created.message || '').includes('duplicate key')) {
-          const retry = await fetch(
+          const retry = await fetchConReintento(
             SUPABASE_URL + '/rest/v1/sl_beneficiarios?documento_paciente=eq.' + encodeURIComponent(docActual) + '&select=id&limit=1',
             { headers: sbH() }
           );
           const retryData = await retry.json();
           if (retryData && retryData.length) {
             beneficiarioId = retryData[0].id;
-            await fetch(SUPABASE_URL + '/rest/v1/sl_beneficiarios?id=eq.' + beneficiarioId, {
+            await fetchConReintento(SUPABASE_URL + '/rest/v1/sl_beneficiarios?id=eq.' + beneficiarioId, {
               method: 'PATCH',
               headers: { ...sbH(), 'Content-Type': 'application/json' },
               body: JSON.stringify(beneficiarioPayload),
@@ -416,7 +431,7 @@ async function guardarRegistro() {
       autorizacion_imagen: $('inAutorizaImagen').checked,
     };
 
-    const rr = await fetch(SUPABASE_URL + '/rest/v1/sl_registros', {
+    const rr = await fetchConReintento(SUPABASE_URL + '/rest/v1/sl_registros', {
       method: 'POST',
       headers: { ...sbH(), 'Content-Type': 'application/json' },
       body: JSON.stringify(registro),
@@ -430,7 +445,11 @@ async function guardarRegistro() {
     irA('sec-ok');
   } catch (e) {
     console.error(e);
-    alert('Ocurrió un error guardando el registro: ' + e.message);
+    const esErrorDeConexion = e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(e.message || '');
+    const mensaje = esErrorDeConexion
+      ? 'No se pudo conectar con el servidor. Revisa tu señal o wifi e intenta guardar de nuevo (tus datos siguen aquí, no se perdieron).'
+      : e.message;
+    alert('Ocurrió un error guardando el registro: ' + mensaje);
   } finally {
     loading(false);
   }
