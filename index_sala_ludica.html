@@ -57,6 +57,10 @@
   .check-row{display:flex;align-items:flex-start;gap:10px;background:var(--pink-lt);border-radius:10px;padding:14px;margin-top:6px}
   .check-row input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--pink)}
   .check-row label{font-size:.83rem;line-height:1.5;color:var(--ink-mid)}
+  .radio-ayuda{display:block;font-weight:600;color:var(--ink);line-height:1.5;margin-top:2px;text-transform:none;letter-spacing:0}
+  .radio-list{display:flex;flex-direction:column;gap:14px;padding:6px 0 4px 8px}
+  .radio-opt{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--ink-mid);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-weight:400}
+  .radio-opt input[type=radio]{width:20px;height:20px;margin:0;accent-color:var(--pink);cursor:pointer}
 </style>
 </head>
 <body ontouchstart="">
@@ -130,10 +134,15 @@
         <div class="field"><label>Género del paciente</label>
           <select id="inGeneroPaciente"><option value="">Seleccionar</option><option>Masculino</option><option>Femenino</option></select>
         </div>
-        <div class="field"><label>Régimen de salud</label>
-          <select id="inRegimen"><option value="">Seleccionar</option><option>Subsidiado</option><option>Contributivo</option></select>
-        </div>
         <div class="field"><label>Edad</label><input type="text" id="inEdad" placeholder="Ej. 4 Años, 8 Meses"></div>
+        <div class="field col-full"><label>Tipo de seguridad social <strong class="radio-ayuda">(Subsidiado: El Estado paga la salud. Contributivo: La persona paga su salud (porque trabaja o tiene ingresos). Sin definir: No está registrado. Especial: empleados de Fuerzas Militares, Policía Nacional, Docentes del Magisterio, Universidades Públicas, entre otros)</strong></label>
+          <div class="radio-list" id="inRegimen">
+            <label class="radio-opt"><input type="radio" name="inRegimen" value="Subsidiado"> SUBSIDIADO</label>
+            <label class="radio-opt"><input type="radio" name="inRegimen" value="Contributivo"> CONTRIBUTIVO</label>
+            <label class="radio-opt"><input type="radio" name="inRegimen" value="Sin definir"> SIN DEFINIR</label>
+            <label class="radio-opt"><input type="radio" name="inRegimen" value="Especial"> ESPECIAL</label>
+          </div>
+        </div>
         <div class="field"><label>Departamento</label>
           <select id="inDepartamento" onchange="cargarMunicipiosSL()">
             <option value="">Seleccionar departamento...</option>

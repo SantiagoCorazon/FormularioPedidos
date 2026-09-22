@@ -122,7 +122,7 @@ async function buscarBeneficiario() {
       S.beneficiarioId = b.id;
       $('inNombrePaciente').value = b.nombre_paciente || '';
       $('inGeneroPaciente').value = b.genero_paciente || '';
-      $('inRegimen').value = b.regimen_salud || '';
+      setRegimen(b.regimen_salud);
       $('inEdad').value = b.edad_texto || '';
       $('inDocAcudiente').value = b.documento_acudiente || '';
       $('inNombreAcudiente').value = b.nombre_acudiente || '';
@@ -142,8 +142,9 @@ async function buscarBeneficiario() {
       status.style.display = 'flex';
     } else {
       S.beneficiarioId = null;
-      ['inNombrePaciente','inGeneroPaciente','inRegimen','inEdad',
+      ['inNombrePaciente','inGeneroPaciente','inEdad',
        'inDocAcudiente','inNombreAcudiente','inCelular','inGeneroAcudiente'].forEach(id => $(id).value = '');
+      setRegimen('');
       $('inDepartamento').value = '';
       cargarMunicipiosSL();
       status.className = 'status notfound';
@@ -340,7 +341,7 @@ async function guardarRegistro() {
       documento_paciente: docActual,
       nombre_paciente: $('inNombrePaciente').value.trim(),
       genero_paciente: $('inGeneroPaciente').value || null,
-      regimen_salud: $('inRegimen').value || null,
+      regimen_salud: getRegimen(),
       departamento: $('inDepartamento').value.trim() || null,
       municipio: $('inMunicipio').value.trim() || null,
       comuna: $('inComuna').value.trim() || null,
@@ -455,6 +456,15 @@ async function guardarRegistro() {
   }
 }
 
+// "Tipo de seguridad social" se elige con círculos (radio), no con lista desplegable
+function getRegimen() {
+  const r = document.querySelector('input[name="inRegimen"]:checked');
+  return r ? r.value : null;
+}
+function setRegimen(valor) {
+  document.querySelectorAll('input[name="inRegimen"]').forEach(r => { r.checked = (r.value === valor); });
+}
+
 function nuevoRegistro() {
   S.componente = '';
   S.beneficiarioId = null;
@@ -463,7 +473,8 @@ function nuevoRegistro() {
   S.etapaPanales = null;
   S.fotoBlob = null;
   document.querySelectorAll('.pill.sel').forEach(p => p.classList.remove('sel'));
-  ['inDocPaciente','inNombrePaciente','inGeneroPaciente','inRegimen','inEdad',
+  setRegimen('');
+  ['inDocPaciente','inNombrePaciente','inGeneroPaciente','inEdad',
    'inDocAcudiente','inNombreAcudiente','inCelular','inGeneroAcudiente','inServicio','inObservacion',
    'inAsistentesSala','inActividadSala','inDesayuno','inAlmuerzo','inMerienda','inRefrigerio',
    'inAsistentesFort','inActividadFort','inFecha','inFirmaNombre'].forEach(id => { if ($(id)) $(id).value = ''; });
