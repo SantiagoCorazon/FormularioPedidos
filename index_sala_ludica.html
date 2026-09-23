@@ -184,7 +184,12 @@
     <div class="section-sub" id="subDetalle"></div>
 
     <div class="grid-2">
-      <div class="field"><label>Fecha</label><input type="date" id="inFecha"></div>
+      <div class="field"><label>Fecha en que se entregó la ayuda *</label>
+        <div style="display:flex;gap:6px">
+          <input type="date" id="inFecha" style="flex:1;min-width:0">
+          <button type="button" class="btn-secondary" style="padding:7px 12px" onclick="ponerFechaHoy()">Hoy</button>
+        </div>
+      </div>
       <div class="field"><label>Servicio</label>
         <select id="inServicio"><option value="">Seleccionar</option><option>Pediatria</option><option>Ambulatorio</option><option>UCI</option></select>
       </div>

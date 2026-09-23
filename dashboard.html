@@ -1251,7 +1251,7 @@ tr:hover td{background:var(--pink-lt)}
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Fecha</th><th>Componente</th><th>Servicio</th><th>Detalle</th><th>Evidencia</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Componente</th><th>Servicio</th><th>Detalle</th><th>Evidencia</th><th id="slHistThAcciones" style="display:none">Acciones</th></tr></thead>
         <tbody id="bodyHistorialSL"></tbody>
       </table>
     </div>
@@ -1327,6 +1327,53 @@ tr:hover td{background:var(--pink-lt)}
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalActualizarDoc')">Cerrar</button>
       <button class="btn btn-primary" id="btnConfirmarActualizarDoc" style="display:none" onclick="confirmarActualizarDoc()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Editar una ayuda (registro) de Salas Lúdicas — solo admin -->
+<div class="modal-overlay" id="modalEditarRegistroSL">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">✏️ Editar ayuda</div>
+    <div class="modal-sub" id="regsl_sub"></div>
+    <input type="hidden" id="regsl_id">
+    <div class="form-grid">
+      <div class="form-field"><label>Fecha de la ayuda <span style="color:var(--pink)">*</span></label><input type="date" id="regsl_fecha"></div>
+      <div class="form-field"><label>Servicio</label>
+        <select id="regsl_servicio"><option value="">—</option><option>Pediatria</option><option>Ambulatorio</option><option>UCI</option></select>
+      </div>
+    </div>
+    <div id="regsl_campos_kits_bienvenida" class="form-grid" style="display:none;margin-top:10px">
+      <div class="form-field"><label>¿Etapa de pañales?</label>
+        <select id="regsl_etapa_panales"><option value="">—</option><option value="true">Sí</option><option value="false">No</option></select>
+      </div>
+      <div class="form-field"><label>Kit entregado a</label>
+        <label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="regsl_kit_paciente" style="padding:0;width:auto"> Paciente</label>
+        <label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="regsl_kit_acudiente" style="padding:0;width:auto"> Acudiente</label>
+      </div>
+    </div>
+    <div id="regsl_campos_sala_ludica" class="form-grid" style="display:none;margin-top:10px">
+      <div class="form-field"><label>Asistentes</label><input type="number" min="1" id="regsl_asistentes_sala_ludica"></div>
+      <div class="form-field"><label>Tipo de actividad</label>
+        <select id="regsl_actividad_sala_ludica"><option value="">—</option><option>Est. Motora</option><option>Est. Sensorial</option><option>Est. Socioemocional</option><option>Est. Cognitiva</option></select>
+      </div>
+    </div>
+    <div id="regsl_campos_apoyo_alimentario" class="form-grid" style="display:none;margin-top:10px">
+      <div class="form-field"><label>Desayuno</label><input type="number" min="0" id="regsl_desayuno"></div>
+      <div class="form-field"><label>Almuerzo</label><input type="number" min="0" id="regsl_almuerzo"></div>
+      <div class="form-field"><label>Merienda</label><input type="number" min="0" id="regsl_merienda"></div>
+      <div class="form-field"><label>Refrigerio</label><input type="number" min="0" id="regsl_refrigerio"></div>
+    </div>
+    <div id="regsl_campos_fortalecimiento_cuidadores" class="form-grid" style="display:none;margin-top:10px">
+      <div class="form-field"><label>Asistentes</label><input type="number" min="1" id="regsl_asistentes_fortalecimiento"></div>
+      <div class="form-field"><label>Actividad o taller</label><input type="text" id="regsl_actividad_fortalecimiento"></div>
+    </div>
+    <div class="form-grid" style="margin-top:10px">
+      <div class="form-field col-full"><label>Observación</label><input type="text" id="regsl_observacion"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalEditarRegistroSL')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionRegistroSL()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -4628,7 +4675,9 @@ async function confirmarActualizarDoc() {
 
 // ── Historial 360 del beneficiario ──
 let _slHistorial = [];
+let _slHistBeneficiarioId = null;
 async function verHistorialSL(beneficiarioId) {
+  _slHistBeneficiarioId = beneficiarioId;
   abrirModal('modalHistorialSL');
   $('slHistNombre').textContent = '📋 Cargando...';
   $('slFichaResumen').innerHTML = 'Cargando ficha...';
@@ -4687,13 +4736,139 @@ function detalleRegistroSL(r) {
 }
 
 function renderHistorialSL(lista) {
+  const esAdmin = usuarioActual?.rol === 'admin';
+  $('slHistThAcciones').style.display = esAdmin ? '' : 'none';
   $('bodyHistorialSL').innerHTML = lista.length ? lista.map(r => `<tr>
     <td>${(r.fecha || '').slice(0, 10)}</td>
     <td>${SL_LABELS[r.componente] || r.componente}</td>
     <td>${r.servicio || '—'}</td>
     <td>${detalleRegistroSL(r)}</td>
     <td>${celdaEvidenciaSL(r)}</td>
-  </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:20px">Sin registros para este filtro</td></tr>';
+    ${esAdmin ? `<td style="white-space:nowrap"><div style="display:flex;gap:5px">
+      <button class="btn-icon" title="Editar esta ayuda" onclick="abrirEditarRegistroSL(${r.id})">✏️</button>
+      <button class="btn-icon" title="Eliminar esta ayuda" style="color:#c0392b;border-color:#f5a0a0" onclick="eliminarRegistroSL(${r.id})">🗑️</button>
+    </div></td>` : ''}
+  </tr>`).join('') : `<tr><td colspan="${esAdmin ? 6 : 5}" style="text-align:center;color:var(--ink-lt);padding:20px">Sin registros para este filtro</td></tr>`;
+}
+
+// ── Editar / eliminar una ayuda (registro) — solo admin ──
+function fechaCOSL(iso) {
+  const [a, m, d] = (iso || '').slice(0, 10).split('-');
+  return d ? `${d}/${m}/${a}` : '—';
+}
+function hoyColombiaSL() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+}
+
+function abrirEditarRegistroSL(id) {
+  if (bloqueadoParaNoAdminSL()) return;
+  const r = _slHistorial.find(x => x.id === id);
+  if (!r) return;
+  $('regsl_id').value = r.id;
+  $('regsl_sub').textContent = `${SL_LABELS[r.componente] || r.componente} · registrada con fecha ${fechaCOSL(r.fecha)}`;
+  $('regsl_fecha').value = (r.fecha || '').slice(0, 10);
+  $('regsl_fecha').max = hoyColombiaSL();
+  $('regsl_servicio').value = r.servicio || '';
+  $('regsl_observacion').value = r.observacion || '';
+  $('regsl_etapa_panales').value = r.etapa_panales === null || r.etapa_panales === undefined ? '' : String(r.etapa_panales);
+  $('regsl_kit_paciente').checked = !!r.kit_paciente;
+  $('regsl_kit_acudiente').checked = !!r.kit_acudiente;
+  $('regsl_asistentes_sala_ludica').value = r.asistentes_sala_ludica ?? '';
+  $('regsl_actividad_sala_ludica').value = r.actividad_sala_ludica || '';
+  ['desayuno', 'almuerzo', 'merienda', 'refrigerio'].forEach(k => { $('regsl_' + k).value = r[k] ?? ''; });
+  $('regsl_asistentes_fortalecimiento').value = r.asistentes_fortalecimiento ?? '';
+  $('regsl_actividad_fortalecimiento').value = r.actividad_fortalecimiento || '';
+  ['kits_bienvenida', 'sala_ludica', 'apoyo_alimentario', 'fortalecimiento_cuidadores'].forEach(c => {
+    $('regsl_campos_' + c).style.display = (c === r.componente) ? '' : 'none';
+  });
+  abrirModal('modalEditarRegistroSL');
+}
+
+async function guardarEdicionRegistroSL() {
+  if (bloqueadoParaNoAdminSL()) return;
+  const id = Number($('regsl_id').value);
+  const r = _slHistorial.find(x => x.id === id);
+  if (!r) return;
+  const fecha = $('regsl_fecha').value;
+  if (!fecha) { alert('Escribe la fecha de la ayuda.'); return; }
+  if (fecha > hoyColombiaSL()) { alert('La fecha no puede ser posterior a hoy.'); return; }
+
+  const num = v => (v === '' ? null : Number(v));
+  const cambios = {
+    fecha,
+    servicio: $('regsl_servicio').value || null,
+    observacion: $('regsl_observacion').value.trim() || null,
+  };
+  const c = r.componente;
+  if (c === 'kits_bienvenida') {
+    const ep = $('regsl_etapa_panales').value;
+    cambios.etapa_panales = ep === '' ? null : ep === 'true';
+    cambios.kit_paciente = $('regsl_kit_paciente').checked;
+    cambios.kit_acudiente = $('regsl_kit_acudiente').checked;
+  } else if (c === 'sala_ludica') {
+    if (!$('regsl_actividad_sala_ludica').value) { alert('Selecciona el tipo de actividad.'); return; }
+    cambios.asistentes_sala_ludica = num($('regsl_asistentes_sala_ludica').value);
+    cambios.actividad_sala_ludica = $('regsl_actividad_sala_ludica').value;
+  } else if (c === 'apoyo_alimentario') {
+    ['desayuno', 'almuerzo', 'merienda', 'refrigerio'].forEach(k => { cambios[k] = num($('regsl_' + k).value) || null; });
+    if (!cambios.desayuno && !cambios.almuerzo && !cambios.merienda && !cambios.refrigerio) {
+      alert('Registra al menos una ración entregada.'); return;
+    }
+  } else if (c === 'fortalecimiento_cuidadores') {
+    if (!$('regsl_actividad_fortalecimiento').value.trim()) { alert('Describe la actividad o taller.'); return; }
+    cambios.asistentes_fortalecimiento = num($('regsl_asistentes_fortalecimiento').value);
+    cambios.actividad_fortalecimiento = $('regsl_actividad_fortalecimiento').value.trim();
+  }
+
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...hdrs(), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(cambios)
+    });
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) throw new Error(data?.message || `Error ${resp.status}`);
+    // Si la base de datos no deja modificar, responde "ok" pero sin filas: lo tratamos como error
+    if (!Array.isArray(data) || !data.length) throw new Error('La base de datos no permitió guardar el cambio (permisos).');
+    toast('Ayuda actualizada', 'success');
+    cerrarModal('modalEditarRegistroSL');
+    await refrescarTrasCambioRegistroSL();
+  } catch (e) {
+    console.error('Error editando ayuda SL:', e);
+    alert('No se pudo guardar el cambio: ' + e.message);
+  }
+}
+
+async function eliminarRegistroSL(id) {
+  if (bloqueadoParaNoAdminSL()) return;
+  const r = _slHistorial.find(x => x.id === id);
+  if (!r) return;
+  const nombre = $('slHistNombre').textContent.replace('📋 Historial de ', '');
+  if (!confirm(`¿Seguro que deseas eliminar esta ayuda?\n\n${SL_LABELS[r.componente] || r.componente} del ${fechaCOSL(r.fecha)}\nBeneficiario: ${nombre}\n\nSe borrará definitivamente y no se puede deshacer.`)) return;
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { ...hdrs(), 'Prefer': 'return=representation' }
+    });
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) throw new Error(data?.message || `Error ${resp.status}`);
+    // Si la base de datos no deja borrar, responde "ok" pero sin filas: lo tratamos como error
+    if (!Array.isArray(data) || !data.length) throw new Error('La base de datos no permitió eliminar la ayuda (permisos).');
+    toast('Ayuda eliminada', 'success');
+    await refrescarTrasCambioRegistroSL();
+  } catch (e) {
+    console.error('Error eliminando ayuda SL:', e);
+    alert('No se pudo eliminar la ayuda: ' + e.message);
+  }
+}
+
+// Recarga el historial abierto, la lista de beneficiarios ("último beneficio") y las cifras del tablero
+async function refrescarTrasCambioRegistroSL() {
+  const rR = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?beneficiario_id=eq.${_slHistBeneficiarioId}&order=fecha.desc&limit=500`, { headers: hdrs() });
+  _slHistorial = await rR.json();
+  filtrarHistorialSL();
+  buscarSLServidor($('searchSL').value);
+  cargarSalaLudica();
 }
 
 function celdaEvidenciaSL(r) {

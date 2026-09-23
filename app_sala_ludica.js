@@ -170,14 +170,29 @@ function irADetalle() {
   ['kits_bienvenida','sala_ludica','apoyo_alimentario','fortalecimiento_cuidadores'].forEach(comp => {
     $('campos-' + comp).style.display = (comp === c) ? 'block' : 'none';
   });
-  if (!$('inFecha').value) {
-    $('inFecha').value = new Date().toISOString().slice(0, 10);
-  }
+  // La fecha NO se llena sola: el usuario debe escoger el día real de la ayuda
+  // (antes se ponía la de hoy y quedaban ayudas atrasadas con fecha equivocada).
+  $('inFecha').max = hoyColombia();
   if (!$('inFirmaNombre').value) {
     $('inFirmaNombre').value = $('inNombreAcudiente').value || $('inNombrePaciente').value || '';
   }
   irA('sec-detalle');
   setTimeout(initFirmaCanvas, 50); // esperar a que el canvas sea visible para medir su tamaño real
+}
+
+// Fecha de hoy en hora de Colombia (toISOString usa hora UTC y después de
+// las 7 p.m. devolvía el día siguiente)
+function hoyColombia() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+}
+function ponerFechaHoy() {
+  $('inFecha').value = hoyColombia();
+}
+// "2026-09-18" → "jueves 18/09/2026"
+function fechaLegible(iso) {
+  const [a, m, d] = iso.split('-');
+  const dia = new Date(Number(a), Number(m) - 1, Number(d)).toLocaleDateString('es-CO', { weekday: 'long' });
+  return `${dia} ${d}/${m}/${a}`;
 }
 
 // ── Pills (selección visual) ────────────────────────────────
@@ -269,7 +284,8 @@ async function subirArchivo(path, blob, contentType) {
 
 // ── PASO 3 → Resumen ─────────────────────────────────────────
 function irAResumen() {
-  if (!$('inFecha').value) { alert('Selecciona la fecha del registro.'); return; }
+  if (!$('inFecha').value) { alert('Selecciona la fecha en que se entregó la ayuda.'); return; }
+  if ($('inFecha').value > hoyColombia()) { alert('La fecha no puede ser posterior a hoy. Revisa la fecha de la ayuda.'); return; }
 
   const c = S.componente;
   let detalleHtml = '';
@@ -297,7 +313,11 @@ function irAResumen() {
   $('resumenContenido').innerHTML = `
     <div class="ficha-box">
       <strong>${$('inNombrePaciente').value}</strong> · Doc. ${$('inDocPaciente').value}<br>
-      ${COMPONENTE_LABELS[c].titulo} · ${$('inFecha').value}
+      ${COMPONENTE_LABELS[c].titulo}
+    </div>
+    <div style="font-size:1.05rem;margin:10px 0;padding:10px 12px;border:2px solid var(--pink);border-radius:10px">
+      📅 Fecha de la ayuda: <strong>${fechaLegible($('inFecha').value)}</strong><br>
+      <small>Si no es correcta, vuelve atrás y corrígela antes de guardar.</small>
     </div>
     ${linea('Servicio', $('inServicio').value || '—')}
     ${detalleHtml}
