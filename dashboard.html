@@ -1235,7 +1235,7 @@ tr:hover td{background:var(--pink-lt)}
         <option value="kits_bienvenida">Kits de bienvenida</option>
         <option value="sala_ludica">Sala lúdica</option>
         <option value="apoyo_alimentario">Apoyo alimentario</option>
-        <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores</option>
+        <option value="fortalecimiento_cuidadores">Fortalecimiento a cuidadores (talleres)</option>
       </select>
       <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ink-lt)">Desde
         <input type="text" inputmode="numeric" id="slHistDesde" placeholder="DD/MM/AAAA" maxlength="10" oninput="formatearFechaInput(this)" onchange="filtrarHistorialSL()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.8rem;width:100px">
@@ -3721,7 +3721,7 @@ const SL_LABELS = {
   kits_bienvenida: 'Kits de bienvenida',
   sala_ludica: 'Sala lúdica',
   apoyo_alimentario: 'Apoyo alimentario',
-  fortalecimiento_cuidadores: 'Fortalecimiento a cuidadores',
+  fortalecimiento_cuidadores: 'Fortalecimiento a cuidadores (talleres)',
 };
 const SL_COLORS = {
   kits_bienvenida: '#E8176B',
@@ -3812,13 +3812,13 @@ async function cargarSalaLudica() {
     const normTaller = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
     const regTalleres = registros.filter(r => r.componente === 'fortalecimiento_cuidadores');
     const talleres = new Set(regTalleres.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
-    const cuidadoresTalleres = regTalleres.length;
+    const asistentesTalleres = regTalleres.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0); // misma cifra que metas y desglose
 
     $('slMetricsGrid').innerHTML = `
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
       <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Registros del Período</div><div class="metric-value" style="color:#1565c0">${totalRegistros.toLocaleString()}</div><div class="metric-sub">${benUnicos} niños atendidos</div></div>
       <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
-      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Talleres Realizados</div><div class="metric-value" style="color:#e65100">${talleres.toLocaleString()}</div><div class="metric-sub">${cuidadoresTalleres.toLocaleString()} asistencias de cuidadores</div></div>
+      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Talleres Realizados</div><div class="metric-value" style="color:#e65100">${talleres.toLocaleString()}</div><div class="metric-sub">${asistentesTalleres.toLocaleString()} asistentes</div></div>
     `;
 
     // ── Cumplimiento de Metas por Componente (total del período seleccionado, meta del año que cae en "desde") ──
@@ -3833,11 +3833,6 @@ async function cargarSalaLudica() {
       if (comp === 'sala_ludica') return f.reduce((s, r) => s + (Number(r.asistentes_sala_ludica) || 0), 0);
       if (comp === 'apoyo_alimentario') return f.reduce((s, r) => s + (Number(r.desayuno)||0) + (Number(r.almuerzo)||0) + (Number(r.merienda)||0) + (Number(r.refrigerio)||0), 0);
       if (comp === 'fortalecimiento_cuidadores') return f.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0);
-      // "talleres" no es un componente de sl_registros: se cuenta como la tarjeta "Talleres Realizados" (fecha + actividad distintas)
-      if (comp === 'talleres') {
-        const fort = filas.filter(r => r.componente === 'fortalecimiento_cuidadores');
-        return new Set(fort.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
-      }
       return 0;
     }
 
@@ -3853,8 +3848,7 @@ async function cargarSalaLudica() {
     const fraccionPeriodo = diasPeriodo / diasEnAnio(anioSel);
 
     const esAdminMetas = usuarioActual?.rol === 'admin';
-    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores', 'talleres'];
-    const labelMeta = c => c === 'talleres' ? 'Talleres realizados' : (SL_LABELS[c] || c); // "talleres" va fuera de SL_LABELS para no sumarse al resumen del Excel
+    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
       const metaPeriodo = meta != null ? meta * fraccionPeriodo : null;
@@ -3865,10 +3859,10 @@ async function cargarSalaLudica() {
            <button class="btn-icon" title="Guardar meta" onclick="guardarMetaSL('${c}', ${anioSel})">💾</button>`
         : (meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>');
       return `<tr>
-        <td>${labelMeta(c)}</td>
+        <td>${SL_LABELS[c] || c}</td>
         <td>${celdaMeta}</td>
         <td>${metaPeriodo != null ? Math.round(metaPeriodo).toLocaleString() : '—'}</td>
-        <td>${total.toLocaleString()}</td>
+        <td>${total.toLocaleString()}${c === 'fortalecimiento_cuidadores' ? ` <span style="color:var(--ink-lt);font-size:.8rem">· ${talleres.toLocaleString()} talleres</span>` : ''}</td>
         <td><strong style="color:${metaPeriodo && total/metaPeriodo>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
       </tr>`;
     }).join('');
