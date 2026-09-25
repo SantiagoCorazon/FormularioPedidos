@@ -3833,6 +3833,11 @@ async function cargarSalaLudica() {
       if (comp === 'sala_ludica') return f.reduce((s, r) => s + (Number(r.asistentes_sala_ludica) || 0), 0);
       if (comp === 'apoyo_alimentario') return f.reduce((s, r) => s + (Number(r.desayuno)||0) + (Number(r.almuerzo)||0) + (Number(r.merienda)||0) + (Number(r.refrigerio)||0), 0);
       if (comp === 'fortalecimiento_cuidadores') return f.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0);
+      // "talleres" no es un componente de sl_registros: se cuenta como la tarjeta "Talleres Realizados" (fecha + actividad distintas)
+      if (comp === 'talleres') {
+        const fort = filas.filter(r => r.componente === 'fortalecimiento_cuidadores');
+        return new Set(fort.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
+      }
       return 0;
     }
 
@@ -3848,7 +3853,8 @@ async function cargarSalaLudica() {
     const fraccionPeriodo = diasPeriodo / diasEnAnio(anioSel);
 
     const esAdminMetas = usuarioActual?.rol === 'admin';
-    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
+    const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores', 'talleres'];
+    const labelMeta = c => c === 'talleres' ? 'Talleres realizados' : (SL_LABELS[c] || c); // "talleres" va fuera de SL_LABELS para no sumarse al resumen del Excel
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
       const metaPeriodo = meta != null ? meta * fraccionPeriodo : null;
@@ -3859,7 +3865,7 @@ async function cargarSalaLudica() {
            <button class="btn-icon" title="Guardar meta" onclick="guardarMetaSL('${c}', ${anioSel})">💾</button>`
         : (meta != null ? meta.toLocaleString() : '<em style="color:var(--ink-lt)">null</em>');
       return `<tr>
-        <td>${SL_LABELS[c] || c}</td>
+        <td>${labelMeta(c)}</td>
         <td>${celdaMeta}</td>
         <td>${metaPeriodo != null ? Math.round(metaPeriodo).toLocaleString() : '—'}</td>
         <td>${total.toLocaleString()}</td>
@@ -4567,12 +4573,12 @@ async function guardarMetaSL(componente, anio) {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_metas?id=eq.${existentes[0].id}`, {
         method: 'PATCH', headers: { ...hdrsSRK, 'Content-Type': 'application/json' }, body: JSON.stringify({ meta: valor })
       });
-      if (!r.ok) throw new Error(`Error ${r.status}`);
+      if (!r.ok) throw new Error((await r.text().catch(() => '')) || `Error ${r.status}`);
     } else {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/sl_metas`, {
         method: 'POST', headers: { ...hdrsSRK, 'Content-Type': 'application/json' }, body: JSON.stringify({ componente, anio, meta: valor })
       });
-      if (!r.ok) throw new Error(`Error ${r.status}`);
+      if (!r.ok) throw new Error((await r.text().catch(() => '')) || `Error ${r.status}`);
     }
     toast('Meta guardada', 'success');
     cargarSalaLudica();
