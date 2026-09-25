@@ -3748,6 +3748,25 @@ function slRangoFechas() {
   return { desde: null, hasta: null }; // todo el histórico
 }
 
+// Supabase devuelve como máximo 1000 filas por consulta aunque se pida limit=10000,
+// así que se piden bloques de 1000 hasta traerlas todas. Se ordena también por id
+// para que ninguna fila se repita ni se salte entre un bloque y el siguiente.
+async function fetchTodasFilasSL(url) {
+  const PAG = 1000;
+  const conOrden = /[?&]order=/.test(url) ? url.replace(/([?&]order=[^&]*)/, '$1,id.asc') : `${url}&order=id.asc`;
+  let todas = [];
+  for (let offset = 0; ; offset += PAG) {
+    const r = await fetch(`${conOrden}&limit=${PAG}&offset=${offset}`, { headers: hdrs() });
+    const filas = await r.json();
+    if (!Array.isArray(filas)) {
+      if (offset === 0) return filas; // deja que quien llama muestre su propio mensaje de error
+      throw new Error('No se pudieron leer todos los registros, intenta de nuevo');
+    }
+    todas = todas.concat(filas);
+    if (filas.length < PAG) return todas;
+  }
+}
+
 function onCambioPeriodoSL() {
   const periodo = $('slPeriodo').value;
   const wrap = $('slRangoFechasWrap');
@@ -3774,16 +3793,12 @@ async function cargarSalaLudica() {
     if (desde) q += `&fecha=gte.${desde}`;
     if (hasta) q += `&fecha=lte.${hasta}`;
 
-    const [rReg, rBen, rMetas, rTodo] = await Promise.all([
-      fetch(q + '&limit=10000', { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.${anioSel}`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&order=fecha.desc&limit=20000`, { headers: hdrs() }), // histórico completo, para las tendencias mensuales (orden por fecha desc: si hay mas de 20000 filas historicas, se prefiere perder historia antigua antes que meses recientes)
+    const [registros, beneficiarios, metas, regTodo] = await Promise.all([
+      fetchTodasFilasSL(q),
+      fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=id,municipio,estado`),
+      fetch(`${SUPABASE_URL}/rest/v1/sl_metas?anio=eq.${anioSel}`, { headers: hdrs() }).then(r => r.json()),
+      fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}&order=fecha.desc`), // histórico completo, para las tendencias mensuales
     ]);
-    const registros = await rReg.json();
-    const beneficiarios = await rBen.json();
-    const metas = await rMetas.json();
-    const regTodo = await rTodo.json();
 
     if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
 
@@ -4014,17 +4029,15 @@ async function exportarExcelSL(desde, hasta) {
       });
     }
 
-    let filtrosReg = 'select=*&order=fecha.asc&limit=50000';
+    let filtrosReg = 'select=*&order=fecha.asc';
     if (desde) filtrosReg += `&fecha=gte.${desde}`;
     if (hasta) filtrosReg += `&fecha=lte.${hasta}`;
     const camposBen = 'id,documento_paciente,nombre_paciente,genero_paciente,edad_texto,regimen_salud,estado,departamento,municipio,comuna,nombre_acudiente,celular_acudiente';
 
-    const [rReg, rBen] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/sl_registros?${filtrosReg}`, { headers: hdrs() }),
-      fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=${camposBen}&limit=10000`, { headers: hdrs() }),
+    const [registros, beneficiarios] = await Promise.all([
+      fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_registros?${filtrosReg}`),
+      fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?select=${camposBen}`),
     ]);
-    const registros = await rReg.json();
-    const beneficiarios = await rBen.json();
     if (!Array.isArray(registros)) throw new Error('No se pudo leer sl_registros (revisa permisos/RLS)');
     if (!registros.length) { toast('No hay movimientos en ese rango de fechas', 'error'); return; }
 
@@ -4360,11 +4373,10 @@ async function buscarSLServidor(q) {
   try {
     let todos;
     if (desde || hasta) {
-      let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id&limit=10000`;
+      let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id`;
       if (desde) urlReg += `&fecha=gte.${desde}`;
       if (hasta) urlReg += `&fecha=lte.${hasta}`;
-      const rReg = await fetch(urlReg, { headers: hdrs() });
-      const filas = await rReg.json();
+      const filas = await fetchTodasFilasSL(urlReg);
       const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))].slice(0, 300);
       if (!ids.length) {
         todos = [];
@@ -4395,8 +4407,7 @@ async function buscarSLServidor(q) {
     // ── Fecha del último beneficio recibido por cada beneficiario listado ──
     if (todos.length) {
       const idsUltimo = todos.map(b => b.id);
-      const rUlt = await fetch(`${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id,fecha&beneficiario_id=in.(${idsUltimo.join(',')})&order=fecha.desc&limit=5000`, { headers: hdrs() });
-      const filasUlt = await rUlt.json();
+      const filasUlt = await fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id,fecha&beneficiario_id=in.(${idsUltimo.join(',')})&order=fecha.desc`);
       const ultimoPorId = {};
       (filasUlt || []).forEach(r => { if (!ultimoPorId[r.beneficiario_id]) ultimoPorId[r.beneficiario_id] = r.fecha; });
       todos.forEach(b => { b.ultimo_beneficio = ultimoPorId[b.id] || null; });
