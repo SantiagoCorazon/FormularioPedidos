@@ -3915,12 +3915,14 @@ async function cargarSalaLudica() {
     const itemsSala = Object.entries(conteoSalaItems);
 
     const regFort = registros.filter(r => r.componente === 'fortalecimiento_cuidadores');
+    // Una barra por taller (fecha + actividad), igual que el conteo de la tarjeta: un mismo taller repetido en otra fecha es otra barra
     const conteoFortItems = {};
     regFort.forEach(r => {
-      const clave = r.actividad_fortalecimiento || 'Sin actividad registrada';
-      conteoFortItems[clave] = (conteoFortItems[clave] || 0) + (Number(r.asistentes_fortalecimiento) || 0);
+      const clave = `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`;
+      if (!conteoFortItems[clave]) conteoFortItems[clave] = [`${r.actividad_fortalecimiento || 'Sin actividad registrada'} (${fechaCOSL(r.fecha)})`, 0];
+      conteoFortItems[clave][1] += Number(r.asistentes_fortalecimiento) || 0;
     });
-    const itemsFort = Object.entries(conteoFortItems);
+    const itemsFort = Object.values(conteoFortItems);
 
     $('slDesglose').innerHTML =
       bloqueDesglose('apoyo_alimentario', itemsAlim) +
