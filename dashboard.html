@@ -3769,7 +3769,7 @@ async function cargarSalaLudica() {
     cargarEncuestas(); // filtro propio (Desde/Hasta de la tarjeta), independiente del período de arriba
     const { desde, hasta } = slRangoFechas();
     const anioSel = desde ? Number(desde.slice(0, 4)) : new Date().getFullYear();
-    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento';
+    const camposCompletos = 'componente,fecha,beneficiario_id,actividad_sala_ludica,kit_paciente,kit_acudiente,asistentes_sala_ludica,desayuno,almuerzo,merienda,refrigerio,asistentes_fortalecimiento,actividad_fortalecimiento';
     let q = `${SUPABASE_URL}/rest/v1/sl_registros?select=${camposCompletos}`;
     if (desde) q += `&fecha=gte.${desde}`;
     if (hasta) q += `&fecha=lte.${hasta}`;
@@ -3792,11 +3792,18 @@ async function cargarSalaLudica() {
     const benUnicos = new Set(registros.map(r => r.beneficiario_id).filter(Boolean)).size;
     const kits = registros.filter(r => r.componente === 'kits_bienvenida').length;
     const activos = (beneficiarios || []).filter(b => b.estado !== 'Fallecido' && b.estado !== 'Dado de alta' && b.estado !== 'Retirado' && b.estado !== 'Fusionado').length;
+    // Talleres: en sl_registros hay una fila por cuidador asistente, así que un taller = misma fecha + mismo nombre de actividad
+    // (normalizado sin mayúsculas/tildes/espacios extra para que "Taller de Velas" y "taller de velas " cuenten como uno)
+    const normTaller = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const regTalleres = registros.filter(r => r.componente === 'fortalecimiento_cuidadores');
+    const talleres = new Set(regTalleres.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
+    const cuidadoresTalleres = regTalleres.length;
 
     $('slMetricsGrid').innerHTML = `
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
       <div class="metric-card" style="border-color:#1565c0"><div class="metric-label">Registros del Período</div><div class="metric-value" style="color:#1565c0">${totalRegistros.toLocaleString()}</div><div class="metric-sub">${benUnicos} niños atendidos</div></div>
       <div class="metric-card" style="border-color:#E8176B"><div class="metric-label">Kits Entregados</div><div class="metric-value" style="color:#E8176B">${kits.toLocaleString()}</div><div class="metric-sub">En el período</div></div>
+      <div class="metric-card" style="border-color:#e65100"><div class="metric-label">Talleres Realizados</div><div class="metric-value" style="color:#e65100">${talleres.toLocaleString()}</div><div class="metric-sub">${cuidadoresTalleres.toLocaleString()} asistencias de cuidadores</div></div>
     `;
 
     // ── Cumplimiento de Metas por Componente (total del período seleccionado, meta del año que cae en "desde") ──
