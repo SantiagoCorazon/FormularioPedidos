@@ -1126,7 +1126,7 @@ tr:hover td{background:var(--pink-lt)}
       <div class="card">
         <div class="card-header"><div class="card-title">Desglose de apoyos por ítem</div></div>
         <div class="card-body">
-          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Mismo período seleccionado arriba. El total de cada rubro coincide con la columna "Total beneficiarios" de la tabla de metas.</div>
+          <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:14px">Mismo período seleccionado arriba. El total de cada rubro coincide con la columna "Total beneficiarios" de la tabla de metas, excepto Fortalecimiento a cuidadores: allí la meta cuenta talleres y aquí se muestran los asistentes de cada taller.</div>
           <div id="slDesglose" style="display:grid;grid-template-columns:1fr 1fr;gap:22px" class="sl-grid-2">Cargando...</div>
         </div>
       </div>
@@ -3812,7 +3812,7 @@ async function cargarSalaLudica() {
     const normTaller = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
     const regTalleres = registros.filter(r => r.componente === 'fortalecimiento_cuidadores');
     const talleres = new Set(regTalleres.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
-    const asistentesTalleres = regTalleres.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0); // misma cifra que metas y desglose
+    const asistentesTalleres = regTalleres.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0); // misma cifra que el desglose
 
     $('slMetricsGrid').innerHTML = `
       <div class="metric-card"><div class="metric-label">Beneficiarios Activos</div><div class="metric-value">${activos.toLocaleString()}</div><div class="metric-sub">En seguimiento</div></div>
@@ -3832,7 +3832,8 @@ async function cargarSalaLudica() {
       if (comp === 'kits_bienvenida') return f.reduce((s, r) => s + (r.kit_paciente ? 1 : 0) + (r.kit_acudiente ? 1 : 0), 0);
       if (comp === 'sala_ludica') return f.reduce((s, r) => s + (Number(r.asistentes_sala_ludica) || 0), 0);
       if (comp === 'apoyo_alimentario') return f.reduce((s, r) => s + (Number(r.desayuno)||0) + (Number(r.almuerzo)||0) + (Number(r.merienda)||0) + (Number(r.refrigerio)||0), 0);
-      if (comp === 'fortalecimiento_cuidadores') return f.reduce((s, r) => s + (Number(r.asistentes_fortalecimiento) || 0), 0);
+      // Fortalecimiento = talleres: la meta cuenta talleres realizados (fecha + actividad distintas), no asistentes
+      if (comp === 'fortalecimiento_cuidadores') return new Set(f.map(r => `${r.fecha}|${normTaller(r.actividad_fortalecimiento)}`)).size;
       return 0;
     }
 
@@ -3862,7 +3863,7 @@ async function cargarSalaLudica() {
         <td>${SL_LABELS[c] || c}</td>
         <td>${celdaMeta}</td>
         <td>${metaPeriodo != null ? Math.round(metaPeriodo).toLocaleString() : '—'}</td>
-        <td>${total.toLocaleString()}${c === 'fortalecimiento_cuidadores' ? ` <span style="color:var(--ink-lt);font-size:.8rem">· ${talleres.toLocaleString()} talleres</span>` : ''}</td>
+        <td>${total.toLocaleString()}${c === 'fortalecimiento_cuidadores' ? ` talleres <span style="color:var(--ink-lt);font-size:.8rem">· ${asistentesTalleres.toLocaleString()} asistentes</span>` : ''}</td>
         <td><strong style="color:${metaPeriodo && total/metaPeriodo>=1 ? '#2e7d32' : 'var(--ink)'}">${pct}</strong></td>
       </tr>`;
     }).join('');
