@@ -3767,6 +3767,19 @@ async function fetchTodasFilasSL(url) {
   }
 }
 
+// Consulta por lista de ids en tandas (la dirección de la consulta no admite cientos de ids de una vez)
+// y sin tope de filas: junta todo lo que existe.
+async function fetchPorIdsSL(urlBase, ids, campo = 'id', tam = 150) {
+  let todas = [];
+  for (let i = 0; i < ids.length; i += tam) {
+    const grupo = ids.slice(i, i + tam);
+    const filas = await fetchTodasFilasSL(`${urlBase}${campo}=in.(${grupo.join(',')})`);
+    if (!Array.isArray(filas)) throw new Error('No se pudieron leer todos los registros, intenta de nuevo');
+    todas = todas.concat(filas);
+  }
+  return todas;
+}
+
 // Copia el período de arriba (Este mes / Este año / Rango / Todo) al Desde/Hasta del buscador de beneficiarios,
 // para que la usuaria no tenga que digitar el rango dos veces. Abajo se puede seguir ajustando a mano.
 function sincronizarRangoBusquedaSL() {
@@ -4395,12 +4408,12 @@ async function buscarSLServidor(q) {
       if (hasta) urlReg += `&fecha=lte.${hasta}`;
       const filas = await fetchTodasFilasSL(urlReg);
       (filas || []).forEach(r => { if (r.beneficiario_id) regsEnRango[r.beneficiario_id] = (regsEnRango[r.beneficiario_id] || 0) + 1; });
-      const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))].slice(0, 300);
+      const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))];
       if (!ids.length) {
         todos = [];
       } else {
-        const rBen = await fetch(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?id=in.(${ids.join(',')})&order=nombre_paciente.asc&limit=300`, { headers: hdrs() });
-        todos = await rBen.json();
+        todos = await fetchPorIdsSL(`${SUPABASE_URL}/rest/v1/sl_beneficiarios?`, ids);
+        todos.sort((a, b) => (a.nombre_paciente || '').localeCompare(b.nombre_paciente || '', 'es'));
         if (q) {
           const qLower = q.toLowerCase();
           todos = todos.filter(b => (b.nombre_paciente || '').toLowerCase().includes(qLower) || (b.documento_paciente || '').includes(q));
@@ -4425,7 +4438,7 @@ async function buscarSLServidor(q) {
     // ── Fecha del último beneficio recibido por cada beneficiario listado ──
     if (todos.length) {
       const idsUltimo = todos.map(b => b.id);
-      const filasUlt = await fetchTodasFilasSL(`${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id,fecha&beneficiario_id=in.(${idsUltimo.join(',')})&order=fecha.desc`);
+      const filasUlt = await fetchPorIdsSL(`${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id,fecha&order=fecha.desc&`, idsUltimo, 'beneficiario_id');
       const ultimoPorId = {};
       (filasUlt || []).forEach(r => { if (!ultimoPorId[r.beneficiario_id]) ultimoPorId[r.beneficiario_id] = r.fecha; });
       todos.forEach(b => { b.ultimo_beneficio = ultimoPorId[b.id] || null; });
