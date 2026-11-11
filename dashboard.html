@@ -1103,9 +1103,9 @@ tr:hover td{background:var(--pink-lt)}
         </select>
         <div id="slRangoFechasWrap" style="display:none;gap:10px;align-items:center">
           <label style="font-size:.72rem;color:var(--ink-mid)">Desde</label>
-          <input type="date" id="slFechaDesde" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
+          <input type="date" id="slFechaDesde" onchange="onCambioFechasSL()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
           <label style="font-size:.72rem;color:var(--ink-mid)">Hasta</label>
-          <input type="date" id="slFechaHasta" onchange="cargarSalaLudica()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
+          <input type="date" id="slFechaHasta" onchange="onCambioFechasSL()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.82rem">
         </div>
         <button class="btn btn-secondary" onclick="abrirModalExportarSL()" style="margin-left:auto">📥 Descargar Excel</button>
       </div>
@@ -1188,9 +1188,9 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-body">
           <div class="table-wrap"><table>
             <thead><tr>
-              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Último beneficio</th><th>Acciones</th>
+              <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Rango consultado</th><th>Beneficios en el rango</th><th>Último beneficio</th><th>Acciones</th>
             </tr></thead>
-            <tbody id="bodySL"><tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
+            <tbody id="bodySL"><tr><td colspan="9" style="text-align:center;color:var(--ink-lt);padding:30px">
               <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
               Escribe el nombre o documento del beneficiario
             </td></tr></tbody>
@@ -3767,6 +3767,22 @@ async function fetchTodasFilasSL(url) {
   }
 }
 
+// Copia el período de arriba (Este mes / Este año / Rango / Todo) al Desde/Hasta del buscador de beneficiarios,
+// para que la usuaria no tenga que digitar el rango dos veces. Abajo se puede seguir ajustando a mano.
+function sincronizarRangoBusquedaSL() {
+  const { desde, hasta } = slRangoFechas();
+  const aCO = iso => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
+  const hoyISO = new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD en hora local
+  $('slBenDesde').value = desde ? aCO(desde) : '';
+  $('slBenHasta').value = desde ? aCO(hasta || hoyISO) : '';
+  onBuscarSL($('searchSL').value);
+}
+
+function onCambioFechasSL() {
+  sincronizarRangoBusquedaSL();
+  cargarSalaLudica();
+}
+
 function onCambioPeriodoSL() {
   const periodo = $('slPeriodo').value;
   const wrap = $('slRangoFechasWrap');
@@ -3779,6 +3795,7 @@ function onCambioPeriodoSL() {
   } else {
     wrap.style.display = 'none';
   }
+  sincronizarRangoBusquedaSL();
   cargarSalaLudica();
 }
 
@@ -3986,15 +4003,10 @@ async function cargarSalaLudica() {
         </div>
       </div>`).join('') : '<div style="color:var(--ink-lt);font-size:.85rem">Sin actividades registradas en el período.</div>';
 
-    // ── Sugerir un rango inicial de un mes en el buscador de beneficiarios (solo la primera vez) ──
+    // ── Primera carga: el buscador de beneficiarios arranca con el mismo rango del período de arriba ──
     if (!_slRangoInicialAplicado) {
       _slRangoInicialAplicado = true;
-      const fmtCO = d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-      const haceUnMes = new Date();
-      haceUnMes.setMonth(haceUnMes.getMonth() - 1);
-      if ($('slBenDesde') && !$('slBenDesde').value) $('slBenDesde').value = fmtCO(haceUnMes);
-      if ($('slBenHasta') && !$('slBenHasta').value) $('slBenHasta').value = fmtCO(new Date());
-      onBuscarSL($('searchSL').value);
+      sincronizarRangoBusquedaSL();
     }
 
   } catch (e) {
@@ -4332,7 +4344,7 @@ function onBuscarSL(q) {
   if (q.length < 3 && !hayRango) {
     if (hint) hint.textContent = q.length ? `${3 - q.length} carácter${3 - q.length !== 1 ? 'es' : ''} más...` : 'Escribe para buscar o elige un rango de fechas';
     if (q.length === 0) {
-      $('bodySL').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:30px">
+      $('bodySL').innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-lt);padding:30px">
         <div style="font-size:1.5rem;margin-bottom:8px">🔍</div>
         Escribe el nombre o documento del beneficiario, o elige un rango de fechas
       </td></tr>`;
@@ -4369,17 +4381,20 @@ function buscarPorFechaSL() {
 
 let _slRangoInicialAplicado = false;
 let _slResultados = [];
+let _slRangoTextoSL = '—';
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
   const desde = parseFechaCO($('slBenDesde').value);
   const hasta = parseFechaCO($('slBenHasta').value);
   try {
     let todos;
+    const regsEnRango = {}; // beneficiario_id → cantidad de registros dentro del rango consultado
     if (desde || hasta) {
       let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id`;
       if (desde) urlReg += `&fecha=gte.${desde}`;
       if (hasta) urlReg += `&fecha=lte.${hasta}`;
       const filas = await fetchTodasFilasSL(urlReg);
+      (filas || []).forEach(r => { if (r.beneficiario_id) regsEnRango[r.beneficiario_id] = (regsEnRango[r.beneficiario_id] || 0) + 1; });
       const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))].slice(0, 300);
       if (!ids.length) {
         todos = [];
@@ -4424,6 +4439,10 @@ async function buscarSLServidor(q) {
       return b.ultimo_beneficio.localeCompare(a.ultimo_beneficio);
     });
 
+    todos.forEach(b => { b.regs_en_rango = (desde || hasta) ? (regsEnRango[b.id] || 0) : null; });
+    // Texto del rango consultado, para mostrarlo en la tabla (así no se confunde con "Último beneficio")
+    const aCO = iso => iso ? iso.split('-').reverse().join('/') : '';
+    _slRangoTextoSL = (desde || hasta) ? `${aCO(desde) || 'inicio'} – ${aCO(hasta) || 'hoy'}` : '—';
     _slResultados = todos;
     renderSL(todos);
     const sufijoRango = (desde || hasta) ? ' en el rango de fechas' : '';
@@ -4462,10 +4481,12 @@ function renderSL(lista) {
     <td>${b.municipio || '—'}</td>
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
+    <td>${_slRangoTextoSL}</td>
+    <td>${b.regs_en_rango == null ? '—' : `<a href="#" style="color:inherit;text-decoration:underline" onclick="verHistorialSL(${b.id});return false" title="Ver el detalle de cada ayuda">${b.regs_en_rango} registro${b.regs_en_rango !== 1 ? 's' : ''}</a>`}</td>
     <td>${b.ultimo_beneficio ? b.ultimo_beneficio.slice(0, 10) : '—'}</td>
     <td style="display:flex;gap:5px">${acciones.join('')}</td>
   </tr>`;
-  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
+  }).join('') : '<tr><td colspan="9"style="text-align:center;color:var(--ink-lt);padding:20px">No se encontraron beneficiarios</td></tr>';
 }
 
 // ── Nuevo / Editar beneficiario ──
