@@ -4394,6 +4394,7 @@ function buscarPorFechaSL() {
 
 let _slRangoInicialAplicado = false;
 let _slResultados = [];
+let _slRegsRangoPorId = {}; // beneficiario_id → todas sus ayudas dentro del rango consultado
 let _slRangoTextoSL = '—';
 async function buscarSLServidor(q) {
   const hint = $('sl-hint');
@@ -4403,11 +4404,16 @@ async function buscarSLServidor(q) {
     let todos;
     const regsEnRango = {}; // beneficiario_id → cantidad de registros dentro del rango consultado
     if (desde || hasta) {
-      let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=beneficiario_id`;
+      let urlReg = `${SUPABASE_URL}/rest/v1/sl_registros?select=*`;
       if (desde) urlReg += `&fecha=gte.${desde}`;
       if (hasta) urlReg += `&fecha=lte.${hasta}`;
       const filas = await fetchTodasFilasSL(urlReg);
-      (filas || []).forEach(r => { if (r.beneficiario_id) regsEnRango[r.beneficiario_id] = (regsEnRango[r.beneficiario_id] || 0) + 1; });
+      _slRegsRangoPorId = {};
+      (filas || []).forEach(r => {
+        if (!r.beneficiario_id) return;
+        regsEnRango[r.beneficiario_id] = (regsEnRango[r.beneficiario_id] || 0) + 1;
+        (_slRegsRangoPorId[r.beneficiario_id] = _slRegsRangoPorId[r.beneficiario_id] || []).push(r);
+      });
       const ids = [...new Set((filas || []).map(r => r.beneficiario_id).filter(Boolean))];
       if (!ids.length) {
         todos = [];
@@ -4476,6 +4482,25 @@ function badgeEstadoSL(b) {
   return ` <span class="badge" style="background:${bg};color:${color}">${texto}</span>`;
 }
 
+// Celda "Beneficios en el rango": lista cada ayuda recibida dentro del rango (no solo la última)
+// y avisa si el kit de bienvenida quedó sin registrar al paciente o al acudiente.
+function celdaBeneficiosRangoSL(b) {
+  if (b.regs_en_rango == null) return '—';
+  const regs = (_slRegsRangoPorId[b.id] || []).slice().sort((x, y) => (x.fecha || '').localeCompare(y.fecha || ''));
+  if (!regs.length) return '—';
+  const aCO = f => (f || '').slice(0, 10).split('-').reverse().join('/');
+  const lineas = regs.map(r => `<div>${aCO(r.fecha)} · <strong>${SL_LABELS[r.componente] || r.componente}</strong>: ${detalleRegistroSL(r)}</div>`);
+  const kits = regs.filter(r => r.componente === 'kits_bienvenida');
+  const hayPac = kits.some(r => r.kit_paciente);
+  const hayAcu = kits.some(r => r.kit_acudiente);
+  let aviso = '';
+  if (hayPac && !hayAcu) aviso = '⚠️ Falta registrar el kit del acudiente';
+  else if (hayAcu && !hayPac) aviso = '⚠️ Falta registrar el kit del paciente';
+  if (aviso) lineas.unshift(`<div style="color:#c0392b;font-weight:600">${aviso}</div>`);
+  return `<div style="font-size:.78rem;line-height:1.45">${lineas.join('')}
+    <a href="#" style="color:var(--ink-lt);text-decoration:underline" onclick="verHistorialSL(${b.id});return false" title="Ver el detalle de cada ayuda">ver historial</a></div>`;
+}
+
 function renderSL(lista) {
   const esAdmin = usuarioActual?.rol === 'admin';
   $('bodySL').innerHTML = lista.length ? lista.map(b => {
@@ -4495,7 +4520,7 @@ function renderSL(lista) {
     <td>${b.regimen_salud || '—'}</td>
     <td>${b.nombre_acudiente || '—'}</td>
     <td>${_slRangoTextoSL}</td>
-    <td>${b.regs_en_rango == null ? '—' : `<a href="#" style="color:inherit;text-decoration:underline" onclick="verHistorialSL(${b.id});return false" title="Ver el detalle de cada ayuda">${b.regs_en_rango} registro${b.regs_en_rango !== 1 ? 's' : ''}</a>`}</td>
+    <td style="white-space:normal;min-width:260px">${celdaBeneficiosRangoSL(b)}</td>
     <td>${b.ultimo_beneficio ? b.ultimo_beneficio.slice(0, 10) : '—'}</td>
     <td style="display:flex;gap:5px">${acciones.join('')}</td>
   </tr>`;
