@@ -1793,7 +1793,7 @@ async function iniciarApp() {
   });
 
   // Gestión de beneficiarios (crear/editar/retirar/actualizar documento): solo admin
-  if (esAdminGlobal) {
+  if (puedeAdministrarSL()) {
     if ($('btnNuevoBeneficiario')) $('btnNuevoBeneficiario').style.display = 'inline-flex';
     if ($('btnActualizarDoc')) $('btnActualizarDoc').style.display = 'inline-flex';
     if ($('lblMostrarRetirados')) $('lblMostrarRetirados').style.display = 'flex';
@@ -3878,7 +3878,7 @@ async function cargarSalaLudica() {
     const diasPeriodo = Math.max(1, Math.round((new Date(hastaEfectivo) - new Date(desdeEfectivo)) / 86400000) + 1);
     const fraccionPeriodo = diasPeriodo / diasEnAnio(anioSel);
 
-    const esAdminMetas = usuarioActual?.rol === 'admin';
+    const esAdminMetas = puedeAdministrarSL();
     const ordenComp = ['apoyo_alimentario', 'kits_bienvenida', 'sala_ludica', 'fortalecimiento_cuidadores'];
     $('slMetasBody').innerHTML = ordenComp.map(c => {
       const meta = metaMap[c];
@@ -4502,7 +4502,7 @@ function celdaBeneficiosRangoSL(b) {
 }
 
 function renderSL(lista) {
-  const esAdmin = usuarioActual?.rol === 'admin';
+  const esAdmin = puedeAdministrarSL();
   $('bodySL').innerHTML = lista.length ? lista.map(b => {
     const acciones = [`<button class="btn-icon" title="Ver historial" onclick="verHistorialSL(${b.id})">📋</button>`];
     if (esAdmin) {
@@ -4532,9 +4532,14 @@ const BEN_CAMPOS = ['documento_paciente','nombre_paciente','genero_paciente','ed
 
 // Bloquea cualquier intento de modificar beneficiarios si el rol no es admin,
 // aunque alguien intente saltarse la interfaz (ej. desde la consola del navegador).
+// Administradora y el rol Salas Lúdicas tienen el mismo acceso dentro de este módulo.
+function puedeAdministrarSL() {
+  return usuarioActual?.rol === 'admin' || usuarioActual?.rol === 'salas_ludicas';
+}
+
 function bloqueadoParaNoAdminSL() {
-  if (usuarioActual?.rol !== 'admin') {
-    alert('Solo una administradora puede modificar beneficiarios de Salas Lúdicas. Tu rol solo tiene acceso de consulta.');
+  if (!puedeAdministrarSL()) {
+    alert('Tu rol solo tiene acceso de consulta en Salas Lúdicas y no puede modificar beneficiarios.');
     return true;
   }
   return false;
@@ -4816,7 +4821,7 @@ function detalleRegistroSL(r) {
 }
 
 function renderHistorialSL(lista) {
-  const esAdmin = usuarioActual?.rol === 'admin';
+  const esAdmin = puedeAdministrarSL();
   $('slHistThAcciones').style.display = esAdmin ? '' : 'none';
   $('bodyHistorialSL').innerHTML = lista.length ? lista.map(r => `<tr>
     <td>${(r.fecha || '').slice(0, 10)}</td>
