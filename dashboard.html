@@ -153,8 +153,6 @@ tr:hover td{background:var(--pink-lt)}
 .toast.error{background:#c0392b}
 
 @media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
-  .main{margin-left:0}
   .metrics{grid-template-columns:1fr 1fr}
   .form-grid{grid-template-columns:1fr}
 }
@@ -163,6 +161,68 @@ tr:hover td{background:var(--pink-lt)}
 .nav-item,.tipo-pedido-card,.pill,.sug-item,.badge,.btn,.btn-primary,.btn-secondary,.btn-sm,
 .btn-login,.metric-card,.card-header button,.table-wrap td button{
   -webkit-tap-highlight-color:transparent
+}
+/* ── MENÚ EN CELULAR Y TABLET ── */
+.main{min-width:0}
+.btn-menu,.menu-fondo{display:none}
+@media(max-width:1024px){
+  .sidebar{transform:translateX(-100%);transition:transform .25s;height:100dvh}
+  .sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.35)}
+  .sidebar .nav-item{padding-top:11px;padding-bottom:11px}
+  .main{margin-left:0;padding:68px 20px 28px}
+  /* franja superior fija para que el botón ☰ no tape los títulos al bajar */
+  .app::before{content:'';position:fixed;top:0;left:0;right:0;height:64px;background:var(--white);box-shadow:var(--shadow);z-index:89}
+  #page-salaludica .metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  #slMetasBody td:nth-child(2){white-space:nowrap}
+  .btn-menu{display:flex;align-items:center;justify-content:center;position:fixed;top:12px;left:12px;width:44px;height:44px;z-index:90;background:var(--pink);color:var(--white);border:none;border-radius:10px;font-size:1.3rem;box-shadow:var(--shadow);cursor:pointer}
+  .menu-fondo.show{display:block;position:fixed;inset:0;background:rgba(26,10,16,.45);z-index:99}
+}
+
+/* ── SALAS LÚDICAS: bloques, listas largas y barras de desplazamiento ── */
+.sl-grid-2>*{min-width:0}
+.sl-lista{max-height:70vh;overflow:auto}
+.sl-lista th{position:sticky;top:0;z-index:1}
+#modalHistorialSL .sl-lista{max-height:50vh}
+#slDesglose>div{max-height:360px;overflow-y:auto;padding-right:6px}
+[data-barras]{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* la barra horizontal del navegador se oculta: usamos las nuestras (arriba y abajo) */
+[data-barras]::-webkit-scrollbar{width:10px;height:0}
+[data-barras]::-webkit-scrollbar-thumb{background:#d9a9bf;border-radius:6px}
+.sl-barra{display:none;position:relative;height:24px;cursor:pointer;touch-action:none;user-select:none}
+.sl-barra.visible{display:block}
+.sl-barra::before{content:'';position:absolute;left:0;right:0;top:6px;height:12px;background:var(--pink-lt);border-radius:6px}
+.sl-barra-thumb{position:absolute;top:6px;left:0;height:12px;background:var(--pink);border-radius:6px;cursor:grab}
+
+@media(max-width:1024px){
+  .sl-grid-charts{grid-template-columns:minmax(0,1fr)!important}
+  .sl-chart svg{min-width:640px}
+  #modalHistorialSL table{min-width:640px}
+  #page-salaludica .btn,#modalHistorialSL .btn{min-height:42px}
+  #page-salaludica .btn-icon,#modalHistorialSL .btn-icon{width:38px;height:38px;font-size:1rem}
+  #page-salaludica input[type=checkbox]{width:20px;height:20px}
+}
+@media(max-width:768px){
+  #page-salaludica input:not([type=checkbox]),#page-salaludica select,
+  #modalHistorialSL input,#modalHistorialSL select,
+  #modalBeneficiario input,#modalBeneficiario select,
+  #modalActualizarDoc input,#modalEditarRegistroSL input:not([type=checkbox]),#modalEditarRegistroSL select{font-size:16px!important;min-height:42px}
+  #page-salaludica .metrics{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  #slBenDesde,#slBenHasta,#slHistDesde,#slHistHasta{width:140px!important}
+  #slHistFiltro{width:100%;min-width:0}
+  #modalHistorialSL,#modalBeneficiario,#modalActualizarDoc,#modalEditarRegistroSL,#lightboxSL{padding:10px}
+  #modalHistorialSL .modal,#modalBeneficiario .modal,#modalActualizarDoc .modal,#modalEditarRegistroSL .modal,#lightboxSL .modal{padding:18px 14px;max-height:92vh;max-height:92dvh}
+}
+@media(max-width:640px){
+  .main{padding-left:12px;padding-right:12px}
+  .sl-grid-2,#slDesglose{grid-template-columns:minmax(0,1fr)!important}
+  #page-salaludica .card-header,#page-salaludica .card-body{padding:14px 12px}
+  #page-salaludica .metrics{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  #page-salaludica .metric-card{padding:14px 12px}
+  #page-salaludica .metric-value{font-size:1.5rem}
+  #slPeriodo,#page-salaludica button[onclick="abrirModalExportarSL()"]{width:100%;justify-content:center;margin-left:0!important}
+  #slRangoFechasWrap{flex-wrap:wrap;width:100%}
+  #searchSL{flex-basis:100%!important}
+  #modalHistorialSL .modal-footer .btn,#modalBeneficiario .modal-footer .btn{flex:1;justify-content:center}
 }
 </style>
 </head>
@@ -193,6 +253,10 @@ tr:hover td{background:var(--pink-lt)}
 <!-- APP -->
 <!-- ══════════════════════════════════════════ -->
 <div class="app" id="app">
+
+  <!-- Botón de menú (solo celular y tablet) -->
+  <button type="button" class="btn-menu" aria-label="Abrir menú" onclick="alternarMenu()">☰</button>
+  <div class="menu-fondo" id="menuFondo" onclick="alternarMenu(false)"></div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -1116,7 +1180,7 @@ tr:hover td{background:var(--pink-lt)}
         <div class="card-header"><div class="card-title">Cumplimiento de Metas por Componente</div></div>
         <div class="card-body">
           <div style="font-size:.78rem;color:var(--ink-lt);margin-bottom:10px">Meta anual <span id="slMetaAnioTxt">—</span> · "Meta del período" y "% ejecutado" se ajustan al rango de fechas seleccionado arriba</div>
-          <div class="table-wrap"><table>
+          <div class="table-wrap" data-barras><table>
             <thead><tr><th>Componente</th><th>Meta anual <span id="slMetaAnioTh">—</span></th><th>Meta del período</th><th>Total beneficiarios</th><th>% Meta ejecutado</th></tr></thead>
             <tbody id="slMetasBody"><tr><td colspan="5" style="text-align:center;color:var(--ink-lt);padding:20px">Cargando...</td></tr></tbody>
           </table></div>
@@ -1133,17 +1197,17 @@ tr:hover td{background:var(--pink-lt)}
 
       <div class="card">
         <div class="card-header"><div class="card-title">Participantes en Actividades de la Sala Lúdica por Mes</div></div>
-        <div class="card-body" id="slChartSala">Cargando...</div>
+        <div class="card-body"><div class="sl-chart" id="slChartSala" data-barras>Cargando...</div></div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" class="sl-grid-2 sl-grid-charts">
         <div class="card">
           <div class="card-header"><div class="card-title">Kits de Bienvenida Entregados por Mes</div></div>
-          <div class="card-body" id="slChartKits">Cargando...</div>
+          <div class="card-body"><div class="sl-chart" id="slChartKits" data-barras>Cargando...</div></div>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">Beneficiarios de Alimentación por Mes</div></div>
-          <div class="card-body" id="slChartAlimentacion">Cargando...</div>
+          <div class="card-body"><div class="sl-chart" id="slChartAlimentacion" data-barras>Cargando...</div></div>
         </div>
       </div>
 
@@ -1186,7 +1250,7 @@ tr:hover td{background:var(--pink-lt)}
           </label>
         </div>
         <div class="card-body">
-          <div class="table-wrap"><table>
+          <div class="table-wrap sl-lista" data-barras><table>
             <thead><tr>
               <th>Documento</th><th>Nombre</th><th>Municipio</th><th>Régimen</th><th>Acudiente</th><th>Rango consultado</th><th>Beneficios en el rango</th><th>Último beneficio</th><th>Acciones</th>
             </tr></thead>
@@ -1249,7 +1313,7 @@ tr:hover td{background:var(--pink-lt)}
       </label>
       <button class="btn btn-secondary btn-sm" onclick="$('slHistDesde').value='';$('slHistHasta').value='';filtrarHistorialSL()">✕ Ver todo el historial</button>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap sl-lista" data-barras>
       <table>
         <thead><tr><th>Fecha</th><th>Componente</th><th>Servicio</th><th>Detalle</th><th>Evidencia</th><th id="slHistThAcciones" style="display:none">Acciones</th></tr></thead>
         <tbody id="bodyHistorialSL"></tbody>
@@ -4226,7 +4290,7 @@ async function cargarEncuestas() {
       return;
     }
 
-    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-bottom:20px">';
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:18px;margin-bottom:20px">';
     Object.keys(ENCUESTA_LABELS).forEach(comp => {
       const delComp = datos.filter(d => d.componente === comp);
       if (!delComp.length) return;
@@ -5895,5 +5959,72 @@ function resetShopify() {
     </div>
   </div>
 </div>
+<script>
+// ── Menú lateral en celular y tablet ──
+function alternarMenu(abrir) {
+  const menu = document.querySelector('.sidebar');
+  const mostrar = abrir === undefined ? !menu.classList.contains('open') : abrir;
+  menu.classList.toggle('open', mostrar);
+  document.getElementById('menuFondo').classList.toggle('show', mostrar);
+}
+document.querySelector('.sidebar').addEventListener('click', e => {
+  if (e.target.closest('.nav-item, .btn-logout')) alternarMenu(false);
+});
+
+// ── Barras de desplazamiento arriba y abajo para los bloques [data-barras] ──
+// Solo se muestran cuando el contenido no cabe a lo ancho.
+document.querySelectorAll('[data-barras]').forEach(bloque => {
+  const barras = ['beforebegin', 'afterend'].map(lugar => {
+    const barra = document.createElement('div');
+    barra.className = 'sl-barra';
+    barra.setAttribute('aria-hidden', 'true');
+    barra.innerHTML = '<div class="sl-barra-thumb"></div>';
+    bloque.insertAdjacentElement(lugar, barra);
+    return barra;
+  });
+
+  function actualizar() {
+    const sobra = bloque.scrollWidth - bloque.clientWidth;
+    barras.forEach(barra => {
+      barra.classList.toggle('visible', sobra > 1);
+      if (sobra <= 1) return;
+      const control = barra.firstElementChild;
+      const ancho = Math.max(48, barra.clientWidth * bloque.clientWidth / bloque.scrollWidth);
+      control.style.width = ancho + 'px';
+      control.style.left = (bloque.scrollLeft / sobra) * (barra.clientWidth - ancho) + 'px';
+    });
+  }
+
+  barras.forEach(barra => {
+    const control = barra.firstElementChild;
+    let agarre = null; // distancia entre el dedo/cursor y el borde izquierdo del control
+    function mover(e) {
+      const recorrido = barra.clientWidth - control.offsetWidth;
+      if (recorrido <= 0) return;
+      const x = e.clientX - barra.getBoundingClientRect().left - agarre;
+      bloque.scrollLeft = (x / recorrido) * (bloque.scrollWidth - bloque.clientWidth);
+    }
+    barra.addEventListener('pointerdown', e => {
+      agarre = e.target === control ? e.clientX - control.getBoundingClientRect().left : control.offsetWidth / 2;
+      barra.setPointerCapture(e.pointerId);
+      mover(e);
+      e.preventDefault();
+    });
+    barra.addEventListener('pointermove', e => { if (agarre !== null) mover(e); });
+    ['pointerup', 'pointercancel'].forEach(ev => barra.addEventListener(ev, () => { agarre = null; }));
+  });
+
+  bloque.addEventListener('scroll', actualizar, { passive: true });
+  // Recalcular cuando cambia el tamaño de la pantalla o el contenido (tablas y gráficas se llenan después)
+  const tamano = new ResizeObserver(() => requestAnimationFrame(actualizar));
+  function observar() {
+    tamano.observe(bloque);
+    Array.from(bloque.children).forEach(hijo => tamano.observe(hijo));
+  }
+  new MutationObserver(() => { observar(); requestAnimationFrame(actualizar); })
+    .observe(bloque, { childList: true, subtree: true });
+  observar();
+});
+</script>
 </body>
 </html>
